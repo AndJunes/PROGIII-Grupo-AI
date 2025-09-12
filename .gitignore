@@ -1,0 +1,29 @@
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Carpeta de dependencias
+node_modules/
+
+# Logs y archivos temporales
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Archivos de configuración local
+*.local
+
+# Directorios de IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
