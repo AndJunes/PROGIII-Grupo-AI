@@ -173,7 +173,7 @@ MIT License
 `env
 DB_NAME=reservas
 DB_USER=root
-DB_PASS=12345678
+DB_PASS=(tu misterioso alguien)
 DB_HOST=localhost
 DB_DIALECT=mysql
 PORT=3006
