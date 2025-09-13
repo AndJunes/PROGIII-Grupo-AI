@@ -1,6 +1,6 @@
 const Usuario = require('../models/Usuario');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 class AuthController {
   async login(req, res) {
@@ -17,12 +17,17 @@ class AuthController {
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
-      const esContraseniaValida = await bcrypt.compare(contrasenia, usuario.contrasenia);
+      // ✅ Comparación MD5
+      const esContraseniaValida = crypto
+        .createHash('md5')
+        .update(contrasenia)
+        .digest('hex') === usuario.contrasenia;
 
       if (!esContraseniaValida) {
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
+      // Generar JWT
       const token = jwt.sign(
         { 
           usuario_id: usuario.usuario_id, 
@@ -45,6 +50,7 @@ class AuthController {
           foto: usuario.foto
         }
       });
+
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Error en el servidor' });
