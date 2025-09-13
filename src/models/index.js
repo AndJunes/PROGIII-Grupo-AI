@@ -4,12 +4,12 @@ const sequelize = new Sequelize('reservas', 'TU_USUARIO', 'TU_PASSWORD', {
   dialect: 'mysql',
 });
 
-const Reserva = require('./reserva');
-const ReservaServicio = require('./reservaServicio');
+const Reserva = require('./Reserva');
+const ReservaServicio = require('./ReservaServicio');
 const Usuario = require('./Usuario');
 const Salon = require('./Salon');
 const Servicio = require('./Servicio');
-const Turno = require('./turno');
+const Turno = require('./Turno');
 
 
 Usuario.hasMany(Reserva, { foreignKey: 'usuario_id' });

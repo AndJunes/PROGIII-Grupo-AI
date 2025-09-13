@@ -2,12 +2,17 @@ const express = require('express');
 const morgan = require('morgan');
 require('dotenv').config({ path: __dirname + '/../.env' });
 const routes = require('./routes/index');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.use('/', routes);
+// Rutas públicas
+app.use('/auth', authRoutes);
+
+// Rutas protegidas
+app.use('/api', routes);
 
 
 const PORT = process.env.PORT || 3006;
