@@ -1,9 +1,11 @@
 const Salones = require("../../models/Salon");
 const Reservas = require("../../models/Reserva");
+const ReservaServicio = require('../../models/ReservaServicio');
+
 
 class SalonesController {
 
-    // Listar todos los salones
+    //Listar todos los salones
     async getAll(req, res) {
         try {
             const salones = await Salones.findAll();
@@ -14,7 +16,7 @@ class SalonesController {
         }
     }
 
-    // Crear un nuevo salón
+    //Crear un nuevo salón
     async create(req, res) {
         try {
             const { titulo, direccion, importe, capacidad, latitud, longitud } = req.body;
@@ -26,7 +28,7 @@ class SalonesController {
         }
     }
 
-    // Actualizar un salón existente
+    //Actualizar un salón existente
     async update(req, res) {
         try {
             const id = req.params.id;
@@ -44,27 +46,38 @@ class SalonesController {
         }
     }
 
-    // Eliminar un salón
+    //Eliminar un salón
     async delete(req, res) {
         try {
             const id = req.params.id;
             const salon = await Salones.findByPk(id);
-            if (!salon) return res.status(404).json({ error: "salon no encontrado" });
-
-            // Validación: no eliminar si tiene reservas
-            const reservasAsociadas = await Reservas.count({ where: { salon_id: id } });
-            if (reservasAsociadas > 0) {
-                return res.status(400).json({ error: "no se puede eliminar el salon porque tiene reservas asociadas." });
+            if (!salon) {
+                return res.status(404).json({ error: "salón no encontrado" });
             }
 
+            //Obtener reservas asociadas al salón
+            const reservas = await Reservas.findAll({ where: { salon_id: id } });
+            const reservasIds = reservas.map(r => r.reserva_id);
+
+            if (reservasIds.length > 0) {
+                //Eliminar primero los reservas_servicios asociados
+                await ReservaServicio.destroy({ where: { reserva_id: reservasIds } });
+
+                //Luego eliminar las reservas
+                await Reservas.destroy({ where: { salon_id: id } });
+            }
+
+            //Finalmente eliminar el salón
             await salon.destroy();
-            res.json({ message: `salon con id ${id} eliminado correctamente.` });
+
+            res.json({ message: "Salón y reservas asociadas eliminadas correctamente." });
 
         } catch (error) {
             console.error(error);
-            res.status(500).json({ error: 'error al eliminar el salon' });
+            res.status(500).json({ error: "Error al eliminar el salón" });
         }
     }
+
 }
 
 module.exports = new SalonesController();
