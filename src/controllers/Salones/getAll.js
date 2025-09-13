@@ -3,7 +3,7 @@ const Salones = require("../../models/Salon");
 module.exports = async(req, res) => {
     try {
         const salones = await Salones.findAll();
-        console.log(salones);
+        //console.log(salones); esta linea para debuggear
         res.json(salones);
         
     }catch(error){
