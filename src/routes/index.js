@@ -2,15 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 // Controllers Salones
-const getAllSalones = require("../controllers/Salones/getAll");
-const createSalon = require("../controllers/Salones/create");
-const updateSalon = require("../controllers/Salones/update");
-const deleteSalon = require("../controllers/Salones/delete");
+const SalonesController = require('../controllers/Salones/SalonesController');
 
-// Rutas CRUD Salones
-router.get('/salones', getAllSalones);
-router.post('/salones', createSalon);
-router.put('/salones/:id', updateSalon);
-router.delete('/salones/:id', deleteSalon);
+// Rutas de Salones
+router.get('/salones', SalonesController.getAll.bind(SalonesController));
+router.post('/salones', SalonesController.create.bind(SalonesController));
+router.put('/salones/:id', SalonesController.update.bind(SalonesController));
+router.delete('/salones/:id', SalonesController.delete.bind(SalonesController));
 
 module.exports = router;
