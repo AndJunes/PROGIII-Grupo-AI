@@ -15,8 +15,12 @@ router.put('/salones/:id', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), SalonesCo
 router.delete('/salones/:id', auth, roleCheck([ADMINISTRADOR]), SalonesController.delete.bind(SalonesController));
 
 //Rutas de Reservas
-router.post('/reservas', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ReservaController.crear.bind(ReservaController));
+router.post('/reservas', auth, roleCheck([EMPLEADO, ADMINISTRADOR, CLIENTE]), ReservaController.crear.bind(ReservaController));
 router.get('/reservas', auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), ReservaController.listar.bind(ReservaController));
+router.put('/reservas/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.actualizar.bind(ReservaController));
+router.delete('/reservas/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.eliminar.bind(ReservaController));
+//GET especifico para Administrador y Empleado
+router.get('/reservas/all', auth, roleCheck([ADMINISTRADOR, EMPLEADO]), ReservaController.listarTodas.bind(ReservaController));
 
 
 
