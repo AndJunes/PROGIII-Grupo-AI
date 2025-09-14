@@ -17,7 +17,7 @@ class AuthController {
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
-      // ✅ Comparación MD5
+      // Comparación MD5
       const esContraseniaValida = crypto
         .createHash('md5')
         .update(contrasenia)
