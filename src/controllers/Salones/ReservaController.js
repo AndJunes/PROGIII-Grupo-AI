@@ -1,10 +1,12 @@
 const Reserva = require ('../../models/Reserva');
 const Salon = require('../../models/Salon');
 const Servicio = require('../../models/Servicio');
+const Usuario = require('../../models/Usuario')
 
 //Relacion Sequelize
 Reserva.belongsTo(Salon, { foreignKey: 'salon_id' });
 Reserva.belongsTo(Servicio, { foreignKey: 'turno_id' });
+Reserva.belongsTo(Usuario, { foreignKey: 'usuario_id' });
 
 class ReservaController {
     //POST -> crea una reserva (cliente)
@@ -61,6 +63,72 @@ class ReservaController {
             //console.error(error); Debbug
             console.error('error al listar reservas:', error);
             res.status(500).json({ mensaje: 'error al buscar listar', error });
+        }
+    }
+
+    //PUT -> actualizar reservas (solo admin)
+    static async actualizar(req, res) {
+        try {
+            const { id } = req.params;
+            const { fecha_reserva, salon_id, turno_id, tematica, importe_total } = req.body;
+
+            const reserva = await Reserva.findByPk(id);
+            //console.log('Buscando reserva con id:', id); Debugg
+
+            if (!reserva || reserva.activo === 0) {
+                return res.status(404).json({ mensaje: 'reserva no encontrada'});
+            }
+
+            await reserva.update({
+                fecha_reserva,
+                salon_id,
+                turno_id,
+                tematica,
+                importe_total
+            });
+
+            res.json({ mensaje: 'reserva actualizada correctamnete', reserva });
+        } catch (error) {
+            console.error('error al actualizar reservas:', error);
+            res.status(500).json({ mensaje: 'error al actualizar reserva', error });
+        }
+    }
+
+    //Delete -> eliminar reserva (con soft delete, solo admin)
+    static async eliminar (req, res) {
+        try {
+            const { id } = req.params;
+
+            const reserva = await Reserva.findByPk(id);
+            if (!reserva || reserva.activo === 0) {
+                return res.status(404).json({ mensaje: 'reserva no encontrada o ya eliminada' });
+            }
+
+            await reserva.update({ activo: 0})
+
+            res.json({ mensaje: 'reserva eliminada correcta (soft delete)' });
+        } catch (error) {
+            console.error('error al eliminar reservas:', error);
+            res.status(500).json({ mensaje: 'error al eliminar reservas', error });
+        }
+    }
+
+    //GET -> solo para admin o empleado
+    static async listarTodas(req, res) {
+        try {
+            const reservas = await Reserva.findAll({
+                where: { activo: 1 },
+                include: [
+                    { model: Salon },
+                    { model: Servicio },
+                    { model: Usuario, attributes: ['usuario_id', 'nombre', 'email'] }
+                ]
+            });
+
+            res.json(reservas);
+        } catch (error) {
+            console.error('error al listar todas las reservas:', error);
+            res.status(500).json({ mensaje: 'error al listar todas las reservas', error });
         }
     }
 }
