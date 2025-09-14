@@ -57,18 +57,19 @@ class SalonesController {
 
             //Obtener reservas asociadas al salón
             const reservas = await Reservas.findAll({ where: { salon_id: id } });
-            const reservasIds = reservas.map(r => r.reserva_id);
 
-            if (reservasIds.length > 0) {
-                //Eliminar primero los reservas_servicios asociados
-                await ReservaServicio.destroy({ where: { reserva_id: reservasIds } });
+            //Soft delete de reservas y reservas_servicios asociados
+            for (const reserva of reservas) {
+                await ReservaServicio.update(
+                    { activo: 0 },
+                    { where: { reserva_id: reserva.reserva_id } }
+                );
 
-                //Luego eliminar las reservas
-                await Reservas.destroy({ where: { salon_id: id } });
+                await reserva.update({ activo: 0 });
             }
 
-            //Finalmente eliminar el salón
-            await salon.destroy();
+            //Finalmente eliminar el salón (soft delete)
+            await salon.update({ activo: 0 });
 
             res.json({ message: "Salón y reservas asociadas eliminadas correctamente." });
 
