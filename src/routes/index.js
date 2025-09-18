@@ -16,7 +16,7 @@ router.delete('/salones/:id', auth, roleCheck([ADMINISTRADOR]), SalonesControlle
 
 //Rutas de Reservas
 router.post('/reservas', auth, roleCheck([EMPLEADO, ADMINISTRADOR, CLIENTE]), ReservaController.crear.bind(ReservaController));
-router.get('/reservas', auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), ReservaController.listar.bind(ReservaController));
+router.get('/reservas', auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), ReservaController.listar.bind(ReservaController)); // Sacar Empleado y Administrador
 router.put('/reservas/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.actualizar.bind(ReservaController));
 router.delete('/reservas/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.eliminar.bind(ReservaController));
 //GET especifico para Administrador y Empleado
