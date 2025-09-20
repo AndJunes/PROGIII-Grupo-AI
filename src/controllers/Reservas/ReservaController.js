@@ -121,7 +121,7 @@ class ReservaController {
                 include: [
                     { model: Salon },
                     { model: Servicio },
-                    { model: Usuario, attributes: ['usuario_id', 'nombre', 'email'] }
+                    { model: Usuario, attributes: ['usuario_id', 'nombre', 'nombre_usuario'] }
                 ]
             });
 
