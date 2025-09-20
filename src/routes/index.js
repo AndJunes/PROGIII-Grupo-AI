@@ -6,7 +6,7 @@ const { CLIENTE, EMPLEADO, ADMINISTRADOR } = require('../constants/roles');
 
 // Controllers Salones
 const SalonesController = require('../controllers/Salones/SalonesController');
-const ReservaController = require('../controllers/Salones/ReservaController')
+const ReservaController = require('../controllers/Reservas/ReservaController')
 
 // Rutas de Salones
 router.get('/salones', auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), SalonesController.getAll.bind(SalonesController));
