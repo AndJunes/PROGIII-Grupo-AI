@@ -50,6 +50,24 @@ class UsuariosController {
         }
     }
 
+    // Listar solo clientes (tipo_usuario = 1)
+    static async getClientes(req, res) {
+        try {
+            const clientes = await Usuario.findAll({
+                where: {
+                    activo: true,
+                    tipo_usuario: 1
+                },
+                attributes: { exclude: ["contrasenia"] },
+                order: [["usuario_id", "ASC"]],
+            });
+            res.json(clientes);
+        } catch (error) {
+            console.error("error al obtener usuarios:", error);
+            res.status(500).json({ error: "error al obtener usuarios" });
+        }
+    }
+
     // Obtener usuario por ID
     static async getById(req, res) {
         try {
