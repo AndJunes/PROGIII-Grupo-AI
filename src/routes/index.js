@@ -8,6 +8,8 @@ const { CLIENTE, EMPLEADO, ADMINISTRADOR } = require('../constants/roles');
 const SalonesController = require('../controllers/Salones/SalonesController');
 const ReservaController = require('../controllers/Reservas/ReservaController');
 const ServiciosController = require('../controllers/Servicios/ServiciosController');
+const TurnosController = require('../controllers/Turnos/TurnosController');
+const UsuariosController = require('../controllers/Usuarios/UsuariosController');
 
 // Rutas de Salones
 router.get('/salones', auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), SalonesController.getAll.bind(SalonesController));
@@ -31,6 +33,24 @@ router.post('/servicios', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ServiciosC
 router.put('/servicios/:id', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ServiciosController.update.bind(ServiciosController));
 router.delete('/servicios/:id', auth, roleCheck([ADMINISTRADOR]), ServiciosController.delete.bind(ServiciosController));
 
+//Rutas de Turnos
+router.get("/turnos", auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), TurnosController.getAll.bind(TurnosController));
+router.get("/turnos/:id", auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), TurnosController.getById.bind(TurnosController));
+router.post("/turnos", auth, roleCheck([EMPLEADO, ADMINISTRADOR]), TurnosController.create.bind(TurnosController));
+router.put("/turnos/:id", auth, roleCheck([EMPLEADO, ADMINISTRADOR]), TurnosController.update.bind(TurnosController));
+router.delete("/turnos/:id", auth, roleCheck([ADMINISTRADOR]), TurnosController.delete.bind(TurnosController));
+
+
+//Rutas de Usuarios
+router.get("/usuarios", auth, roleCheck([ADMINISTRADOR]), UsuariosController.getAll.bind(UsuariosController));
+// Obtener usuario por ID (admin y empleado pueden consultar datos, cliente solo su perfil)
+router.get("/usuarios/:id", auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), UsuariosController.getById.bind(UsuariosController));
+// Crear usuario (admin puede crear cualquier, registro cliente si querés habilitarlo en público)
+router.post("/usuarios", auth, roleCheck([ADMINISTRADOR]), UsuariosController.create.bind(UsuariosController));
+// Actualizar usuario (admin puede todos, cliente solo el suyo)
+router.put("/usuarios/:id", auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), UsuariosController.update.bind(UsuariosController));
+// Eliminar usuario (soft delete, solo admin)
+router.delete("/usuarios/:id", auth, roleCheck([ADMINISTRADOR]), UsuariosController.delete.bind(UsuariosController));
 
 
 module.exports = router;
