@@ -1,7 +1,9 @@
+
 const Reserva = require ('../../models/Reserva');
 const Salon = require('../../models/Salon');
 const Servicio = require('../../models/Servicio');
 const Usuario = require('../../models/Usuario')
+
 
 //Relacion Sequelize
 Reserva.belongsTo(Salon, { foreignKey: 'salon_id' });
