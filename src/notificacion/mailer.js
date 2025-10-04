@@ -1,4 +1,3 @@
-// src/notificacion/mailer.js
 const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
 const { readFile } = require('fs/promises');
