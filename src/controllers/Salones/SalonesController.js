@@ -16,6 +16,23 @@ class SalonesController {
         }
     }
 
+    // Consultar salones especificos por id
+    async getById(req, res) {
+        try {
+            const id = req.params.id;
+            const salon = await Salones.findByPk(id);
+
+            if (!salon) {
+                return res.status(404).json({ error: "salón no encontrado" });
+            }
+
+            res.json(salon);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'error al buscar el salón' });
+        }
+    }
+
     //Crear un nuevo salón
     async create(req, res) {
         try {
