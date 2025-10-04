@@ -1,12 +1,22 @@
-const express = require('express');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const fs = require('fs');
-const https = require('https');
-require('dotenv').config({ path: __dirname + '/../.env' });
+import express from 'express';
+import morgan from 'morgan';
+import helmet from 'helmet';
+import fs from 'fs';
+import https from 'https';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
 
-const routes = require('./routes/index');
-const authRoutes = require('./routes/auth');
+import routes from './routes/index.js';
+import authRoutes from './routes/auth.js';
+
+// __dirname equivalente en ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Configuración de dotenv
+dotenv.config({ path: __dirname + '/../.env' });
 
 const app = express();
 
@@ -27,13 +37,13 @@ app.use('/auth', authRoutes);
 app.use('/api', routes);
 
 // HTTPS credentials (archivos locales)
-const key = fs.readFileSync(__dirname + '../../certs/server.key');
-const cert = fs.readFileSync(__dirname + '../../certs/server.crt');
+const key = fs.readFileSync(path.join(__dirname, '../certs/server.key'));
+const cert = fs.readFileSync(path.join(__dirname, '../certs/server.crt'));
 
 const PORT = process.env.PORT || 3006;
 
 https.createServer({ key, cert }, app).listen(PORT, () => {
-  console.log(`Servidor HTTPS corriendo en https://localhost:${PORT}`);
-  console.log('DB_USER:', process.env.DB_USER);
-  console.log('DB_PASS:', process.env.DB_PASS);
+    console.log(`Servidor HTTPS corriendo en https://localhost:${PORT}`);
+    console.log('DB_USER:', process.env.DB_USER);
+    console.log('DB_PASS:', process.env.DB_PASS);
 });
