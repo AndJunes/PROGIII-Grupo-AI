@@ -4,44 +4,66 @@
   <title>Nueva Reserva</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #fdf2f7; /* rosa muy clarito */
       margin: 0;
       padding: 0;
     }
     .container {
       max-width: 650px;
-      margin: 20px auto;
-      padding: 25px;
+      margin: 30px auto;
+      padding: 30px;
       background-color: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      border-top: 6px solid #e91e63; /* rosa principal */
     }
     header {
       text-align: center;
       padding-bottom: 15px;
-      border-bottom: 2px solid #e0e0e0;
+      border-bottom: 1px solid #f0f0f0;
     }
     header h1 {
       margin: 0;
-      color: #03912e;
+      font-size: 28px;
+      color: #e91e63;
+    }
+    h2 {
+      color: #333;
+      font-size: 20px;
+      margin-top: 20px;
     }
     ul {
-      list-style-type: "📌 ";
-      padding-left: 20px;
+      list-style-type: "🎀 "; /* divertido y rosa */
+      padding-left: 25px;
+      margin-top: 10px;
     }
     li {
-      margin: 8px 0;
+      margin: 10px 0;
       font-size: 16px;
-      color: #333;
+      color: #555;
     }
-    footer {
+    .footer {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 25px;
       font-size: 13px;
-      color: #666;
-      border-top: 1px solid #e0e0e0;
-      padding-top: 10px;
+      color: #888;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 12px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #e91e63; /* rosa botón */
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    .btn:hover {
+      background-color: #c2185b; /* rosa más oscuro al pasar el mouse */
     }
   </style>
 </head>
@@ -51,16 +73,20 @@
       <h1>Reservas de Casas de Cumpleaños 🎉</h1>
     </header>
 
-    <h2>Notificación de nueva reserva</h2>
+    <h2>¡Tu reserva ha sido confirmada!</h2>
     <ul>
       <li><strong>Fecha de reserva:</strong> {{ fecha }}</li>
       <li><strong>Salón:</strong> {{ salon }}</li>
       <li><strong>Turno:</strong> {{ turno }}</li>
     </ul>
 
-    <footer>
-      &copy; 2025 Reservas de Casas de Cumpleaños
-    </footer>
+    <p>Gracias por elegirnos para tu celebración. Estamos emocionados de recibirte y hacer tu día especial inolvidable.</p>
+
+    <a href="#" class="btn">Ver detalles de tu reserva</a>
+
+    <div class="footer">
+      &copy; 2025 Reservas de Casas de Cumpleaños. Todos los derechos reservados.
+    </div>
   </div>
 </body>
 </html>
