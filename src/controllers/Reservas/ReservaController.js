@@ -1,11 +1,9 @@
-const Reserva = require('../../models/Reserva');
+const Reserva = require ('../../models/Reserva');
 const Salon = require('../../models/Salon');
 const Servicio = require('../../models/Servicio');
-const Usuario = require('../../models/Usuario');
-const nodemailer = require('nodemailer');
-const handlebars = require('handlebars');
-const { readFile } = require('fs/promises');
-const path = require('path');
+const Usuario = require('../../models/Usuario')
+const { enviarNotificacion } = require('../../notificacion/mailer');
+
 
 //Relacion Sequelize
 Reserva.belongsTo(Salon, { foreignKey: 'salon_id' });
@@ -14,7 +12,6 @@ Reserva.belongsTo(Usuario, { foreignKey: 'usuario_id' });
 
 class ReservaController {
     //POST -> crea una reserva (cliente)
-    
     static async crear(req, res) {
         try {
             const {
@@ -33,59 +30,15 @@ class ReservaController {
                 salon_id,
                 turno_id,
                 usuario_id: req.usuario.usuario_id,
+
                 foto_cumpleaniero,
                 tematica,
                 importe_salon,
                 importe_total,
                 activo: 1
             });
+            await enviarNotificacion(nuevaReserva, { email: 'reymanaos22@gmail.com', nombre_usuario: 'Test' });
 
-            // --- ENVÍO DE NOTIFICACIONES POR CORREO ---
-            try {
-                // Ubicación de la plantilla
-                const plantillaPath = path.join(__dirname, '../../utils/plantilla.hbs');
-                const archivoHbs = await readFile(plantillaPath, 'utf-8');
-                const template = handlebars.compile(archivoHbs);
-
-                // Datos para el template
-                const html = template({
-                    fecha: fecha_reserva,
-                    salon: await (await Salon.findByPk(salon_id)).titulo,
-                    turno: await (await Servicio.findByPk(turno_id)).descripcion
-                });
-
-                // Configuración de transporte
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: process.env.USER,
-                        pass: process.env.PASS
-                    }
-                });
-
-                // Opciones para el correo al cliente
-                const mailCliente = {
-                    from: process.env.USER,
-                    to: req.usuario.email || req.usuario.nombre_usuario, // usar email real del usuario si existe
-                    subject: 'Confirmación de tu reserva',
-                    html: html
-                };
-
-                // Opciones para el correo al admin
-                const mailAdmin = {
-                    from: process.env.USER,
-                    to: process.env.ADMIN_CORREO,
-                    subject: 'Nueva reserva realizada',
-                    html: html
-                };
-
-                // Envío de correos
-                await transporter.sendMail(mailCliente);
-                await transporter.sendMail(mailAdmin);
-
-            } catch (errorMail) {
-                console.error('Error al enviar notificación:', errorMail);
-            }
 
             res.status(201).json({
                 mensaje: 'Reserva creada correctamente',
@@ -98,6 +51,7 @@ class ReservaController {
     }
 
     //GET -> listar reservas del cliente autenticado
+    //Listaremos las reservas del cliente
     static async listar(req, res) {
         try {
             const reservas = await Reserva.findAll({
@@ -110,6 +64,7 @@ class ReservaController {
 
             res.json(reservas);
         } catch (error) {
+            //console.error(error); Debbug
             console.error('error al listar reservas:', error);
             res.status(500).json({ mensaje: 'error al buscar listar', error });
         }
@@ -122,6 +77,7 @@ class ReservaController {
             const { fecha_reserva, salon_id, turno_id, tematica, importe_total } = req.body;
 
             const reserva = await Reserva.findByPk(id);
+            //console.log('Buscando reserva con id:', id); Debugg
 
             if (!reserva || reserva.activo === 0) {
                 return res.status(404).json({ mensaje: 'reserva no encontrada'});
