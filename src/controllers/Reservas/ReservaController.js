@@ -63,11 +63,39 @@ class ReservaController {
                 ]
             });
 
+            if (reservas.length === 0) {
+                return res.json({ mensaje: "No tienes ninguna reserva" });
+            }
+
             res.json(reservas);
         } catch (error) {
             //console.error(error); Debbug
             console.error('error al listar reservas:', error);
             res.status(500).json({ mensaje: 'error al buscar listar', error });
+        }
+    }
+
+    // GET -> obtener una reserva específica por ID
+    static async obtenerPorId(req, res) {
+        try {
+            const { id } = req.params;
+
+            const reserva = await Reserva.findByPk(id, {
+                include: [
+                    { model: Salon },
+                    { model: Servicio },
+                    { model: Usuario, attributes: ['usuario_id', 'nombre', 'nombre_usuario'] }
+                ]
+            });
+
+            if (!reserva || reserva.activo === 0) {
+                return res.status(404).json({ mensaje: 'reserva no encontrada' });
+            }
+
+            res.json(reserva);
+        } catch (error) {
+            console.error('error al obtener reserva:', error);
+            res.status(500).json({ mensaje: 'error al obtener reserva', error });
         }
     }
 
