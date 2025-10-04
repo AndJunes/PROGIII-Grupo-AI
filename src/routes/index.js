@@ -1,12 +1,12 @@
-const express = require('express');
-const router = express.Router();
+import express from 'express';
 
-// Importar rutas por recurso
-const salonesRoutes = require('./salones');
-const reservasRoutes = require('./reservas');
-const serviciosRoutes = require('./servicios');
-const turnosRoutes = require('./turnos');
-const usuariosRoutes = require('./usuarios');
+import salonesRoutes from './salones.js';
+import reservasRoutes from './reservas.js';
+import serviciosRoutes from './servicios.js';
+import turnosRoutes from './turnos.js';
+import usuariosRoutes from './usuarios.js';
+
+const router = express.Router();
 
 // Enlazar cada grupo de rutas
 router.use('/salones', salonesRoutes);
@@ -15,4 +15,4 @@ router.use('/servicios', serviciosRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/usuarios', usuariosRoutes);
 
-module.exports = router;
+export default router;

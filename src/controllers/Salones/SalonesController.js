@@ -1,11 +1,10 @@
-const Salones = require("../../models/Salon");
-const Reservas = require("../../models/Reserva");
-const ReservaServicio = require('../../models/ReservaServicio');
-
+import Salones from "../../models/Salon.js";
+import Reservas from "../../models/Reserva.js";
+import ReservaServicio from '../../models/ReservaServicio.js';
 
 class SalonesController {
 
-    //Listar todos los salones
+    // Listar todos los salones
     async getAll(req, res) {
         try {
             const salones = await Salones.findAll();
@@ -16,7 +15,7 @@ class SalonesController {
         }
     }
 
-    // Consultar salones especificos por id
+    // Consultar salones específicos por id
     async getById(req, res) {
         try {
             const id = req.params.id;
@@ -33,7 +32,7 @@ class SalonesController {
         }
     }
 
-    //Crear un nuevo salón
+    // Crear un nuevo salón
     async create(req, res) {
         try {
             const { titulo, direccion, importe, capacidad, latitud, longitud } = req.body;
@@ -45,7 +44,7 @@ class SalonesController {
         }
     }
 
-    //Actualizar un salón existente
+    // Actualizar un salón existente
     async update(req, res) {
         try {
             const id = req.params.id;
@@ -63,7 +62,7 @@ class SalonesController {
         }
     }
 
-    //Eliminar un salón
+    // Eliminar un salón
     async delete(req, res) {
         try {
             const id = req.params.id;
@@ -72,10 +71,10 @@ class SalonesController {
                 return res.status(404).json({ error: "salón no encontrado" });
             }
 
-            //Obtener reservas asociadas al salón
+            // Obtener reservas asociadas al salón
             const reservas = await Reservas.findAll({ where: { salon_id: id } });
 
-            //Soft delete de reservas y reservas_servicios asociados
+            // Soft delete de reservas y reservas_servicios asociados
             for (const reserva of reservas) {
                 await ReservaServicio.update(
                     { activo: 0 },
@@ -85,7 +84,7 @@ class SalonesController {
                 await reserva.update({ activo: 0 });
             }
 
-            //Finalmente eliminar el salón (soft delete)
+            // Finalmente eliminar el salón (soft delete)
             await salon.update({ activo: 0 });
 
             res.json({ message: "Salón y reservas asociadas eliminadas correctamente." });
@@ -98,4 +97,4 @@ class SalonesController {
 
 }
 
-module.exports = new SalonesController();
+export default new SalonesController();

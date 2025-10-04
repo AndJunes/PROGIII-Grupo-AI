@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+import auth from '../middleware/auth.js';
+import roleCheck from '../middleware/roleCheck.js';
+import { CLIENTE, EMPLEADO, ADMINISTRADOR } from '../constants/roles.js';
+import SalonesController from '../controllers/Salones/SalonesController.js';
+
 const router = express.Router();
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
-const { CLIENTE, EMPLEADO, ADMINISTRADOR } = require('../constants/roles');
-const SalonesController = require('../controllers/Salones/SalonesController');
 
 // Salones
 router.get('/', auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), SalonesController.getAll.bind(SalonesController));
@@ -12,4 +13,4 @@ router.post('/', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), SalonesController.c
 router.put('/:id', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), SalonesController.update.bind(SalonesController));
 router.delete('/:id', auth, roleCheck([ADMINISTRADOR]), SalonesController.delete.bind(SalonesController));
 
-module.exports = router;
+export default router;

@@ -1,19 +1,18 @@
-const Turno = require("../../models/Turno");
-
+import Turno from "../../models/Turno.js";
 
 class TurnosController {
-    //Crear el turno
+    // Crear el turno
     static async create(req, res) {
         try {
             const turno = await Turno.create(req.body);
             res.status(201).send(turno);
         } catch (error) {
             console.error("error al crear turno:", error);
-            res.status(500).json({ error: "error al crear el turno"});
+            res.status(500).json({ error: "error al crear el turno" });
         }
     }
 
-    //Listamos todos los turnos
+    // Listamos todos los turnos
     static async getAll(req, res) {
         try {
             const turnos = await Turno.findAll({
@@ -27,7 +26,7 @@ class TurnosController {
         }
     }
 
-    //Obtenemos los turnos por id
+    // Obtenemos los turnos por id
     static async getById(req, res) {
         try {
             const { id } = req.params;
@@ -75,4 +74,4 @@ class TurnosController {
     }
 }
 
-module.exports = TurnosController;
+export default TurnosController;

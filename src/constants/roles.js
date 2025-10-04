@@ -1,5 +1,3 @@
-module.exports = {
-  CLIENTE: 1,
-  EMPLEADO: 2,
-  ADMINISTRADOR: 3
-};
+export const CLIENTE = 1;
+export const EMPLEADO = 2;
+export const ADMINISTRADOR = 3;

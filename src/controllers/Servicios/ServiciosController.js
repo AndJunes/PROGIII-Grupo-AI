@@ -1,9 +1,8 @@
-const Servicio = require("../../models/Servicio");
-const Reserva = require("../../models/Reserva");
-const ReservaServicio = require("../../models/ReservaServicio");
+import Servicio from "../../models/Servicio.js";
+import Reserva from "../../models/Reserva.js";
+import ReservaServicio from "../../models/ReservaServicio.js";
 
-
-//Relaciones Sequelize
+// Relaciones Sequelize
 ReservaServicio.belongsTo(Reserva, { foreignKey: 'reserva_id' });
 ReservaServicio.belongsTo(Servicio, { foreignKey: 'servicio_id' });
 
@@ -15,7 +14,6 @@ class ServiciosController {
                 where: { activo: 1 },
                 order: [['servicio_id', 'ASC']]
             });
-
             res.json(servicios);
         } catch (error) {
             console.error('error al listar todos los servicios:', error);
@@ -23,12 +21,11 @@ class ServiciosController {
         }
     }
 
-    //GET -> obtener un servicio por id
+    // GET -> obtener servicios vinculados al usuario
     static async getByUser(req, res) {
         try {
             const usuarioId = req.usuario.usuario_id;
 
-            // Buscar todos los servicios vinculados a reservas del usuario
             const reservasServicios = await ReservaServicio.findAll({
                 include: [
                     {
@@ -43,11 +40,9 @@ class ServiciosController {
                 ]
             });
 
-            // Extraer solo los servicios únicos
             const servicios = reservasServicios.map(rs => rs.Servicio);
             const serviciosUnicos = Array.from(new Map(servicios.map(s => [s.servicio_id, s])).values());
 
-            //mensaje por si no hay servicios para ese usuario
             if (serviciosUnicos.length === 0) {
                 return res.json({ mensaje: "No tienes ningun servicio vinculado" });
             }
@@ -59,11 +54,10 @@ class ServiciosController {
         }
     }
 
-    //GET -> solo para admin o empleado (mostrar por id especifico)
+    // GET -> solo para admin o empleado (por id específico)
     static async getById(req, res) {
         try {
             const { id } = req.params;
-
             const servicio = await Servicio.findByPk(id);
 
             if (!servicio || servicio.activo === 0) {
@@ -77,8 +71,7 @@ class ServiciosController {
         }
     }
 
-
-    //POST -> crear un nuevo servicio
+    // POST -> crear un nuevo servicio
     static async create(req, res) {
         try {
             const { descripcion, importe } = req.body;
@@ -95,7 +88,7 @@ class ServiciosController {
             });
         } catch (error) {
             console.error('error al crear servicio:', error);
-            res.status(500).json({ mensaje: 'error al crear servicio', error});
+            res.status(500).json({ mensaje: 'error al crear servicio', error });
         }
     }
 
@@ -107,8 +100,8 @@ class ServiciosController {
 
             const servicio = await Servicio.findByPk(id);
 
-            if(!servicio || servicio.activo === 0) {
-                return res.status(400).json({ mensaje: 'servicio no encontrado'});
+            if (!servicio || servicio.activo === 0) {
+                return res.status(400).json({ mensaje: 'servicio no encontrado' });
             }
 
             await servicio.update({ descripcion, importe });
@@ -119,7 +112,7 @@ class ServiciosController {
             });
         } catch (error) {
             console.error('error al actualizar servicio:', error);
-            res.status(500).json({ mensaje: 'error al actualizar el servicio', error});
+            res.status(500).json({ mensaje: 'error al actualizar el servicio', error });
         }
     }
 
@@ -130,10 +123,10 @@ class ServiciosController {
             const servicio = await Servicio.findByPk(id);
 
             if (!servicio || servicio.activo === 0) {
-                return res.status(404).json({ mensaje: 'servicio no encontrado o ya eliminado'});
+                return res.status(404).json({ mensaje: 'servicio no encontrado o ya eliminado' });
             }
 
-            await servicio.update({ activo: 0});
+            await servicio.update({ activo: 0 });
 
             res.json({ mensaje: 'servicio eliminado correctamente (soft delete)' });
         } catch (error) {
@@ -143,4 +136,4 @@ class ServiciosController {
     }
 }
 
-module.exports = ServiciosController;
+export default ServiciosController;

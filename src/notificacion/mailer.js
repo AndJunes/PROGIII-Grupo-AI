@@ -1,11 +1,17 @@
-const nodemailer = require('nodemailer');
-const handlebars = require('handlebars');
-const { readFile } = require('fs/promises');
-const path = require('path');
-const Salon = require('../models/Salon');
-const Servicio = require('../models/Servicio');
+import nodemailer from 'nodemailer';
+import handlebars from 'handlebars';
+import { readFile } from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import Salon from '../models/Salon.js';
+import Servicio from '../models/Servicio.js';
 
-async function enviarNotificacion(reserva, usuario) {
+// __dirname equivalente en ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export async function enviarNotificacion(reserva, usuario) {
     try {
         const plantillaPath = path.join(__dirname, '../utils/plantilla.hbs');
         const archivoHbs = await readFile(plantillaPath, 'utf-8');
@@ -60,5 +66,3 @@ async function enviarNotificacion(reserva, usuario) {
         console.error('Error al enviar notificación:', err);
     }
 }
-
-module.exports = { enviarNotificacion };

@@ -1,69 +1,69 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../database/database');
-const bcrypt = require('bcryptjs');
+import { DataTypes } from 'sequelize';
+import sequelize from '../database/database.js';
+import bcrypt from 'bcryptjs';
 
 const Usuario = sequelize.define('Usuario', {
-  usuario_id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  nombre: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-  },
-  apellido: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-  },
-  nombre_usuario: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-    unique: true,
-  },
-  contrasenia: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
-  },
-  tipo_usuario: {
-    type: DataTypes.TINYINT,
-    allowNull: false,
-  },
-  celular: {
-    type: DataTypes.STRING(20),
-  },
-  foto: {
-    type: DataTypes.STRING(255),
-  },
-  activo: {
-    type: DataTypes.TINYINT,
-    defaultValue: 1,
-  },
-  creado: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-  modificado: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-}, {
-  tableName: 'usuarios',
-  timestamps: false,
-  hooks: {
-    beforeCreate: async (usuario) => {
-      if (usuario.contrasenia) {
-        const salt = await bcrypt.genSalt(10);
-        usuario.contrasenia = await bcrypt.hash(usuario.contrasenia, salt);
-      }
+    usuario_id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
     },
-    beforeUpdate: async (usuario) => {
-      if (usuario.changed('contrasenia')) {
-        const salt = await bcrypt.genSalt(10);
-        usuario.contrasenia = await bcrypt.hash(usuario.contrasenia, salt);
-      }
+    nombre: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+    },
+    apellido: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+    },
+    nombre_usuario: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        unique: true,
+    },
+    contrasenia: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+    },
+    tipo_usuario: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+    },
+    celular: {
+        type: DataTypes.STRING(20),
+    },
+    foto: {
+        type: DataTypes.STRING(255),
+    },
+    activo: {
+        type: DataTypes.TINYINT,
+        defaultValue: 1,
+    },
+    creado: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+    },
+    modificado: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+    },
+}, {
+    tableName: 'usuarios',
+    timestamps: false,
+    hooks: {
+        beforeCreate: async (usuario) => {
+            if (usuario.contrasenia) {
+                const salt = await bcrypt.genSalt(10);
+                usuario.contrasenia = await bcrypt.hash(usuario.contrasenia, salt);
+            }
+        },
+        beforeUpdate: async (usuario) => {
+            if (usuario.changed('contrasenia')) {
+                const salt = await bcrypt.genSalt(10);
+                usuario.contrasenia = await bcrypt.hash(usuario.contrasenia, salt);
+            }
+        }
     }
-  }
 });
 
-module.exports = Usuario;
+export default Usuario;
