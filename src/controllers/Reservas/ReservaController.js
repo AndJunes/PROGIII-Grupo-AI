@@ -37,7 +37,8 @@ class ReservaController {
                 importe_total,
                 activo: 1
             });
-            await enviarNotificacion(nuevaReserva, { email: 'reymanaos22@gmail.com', nombre_usuario: 'Test' });
+            await enviarNotificacion(nuevaReserva, req.usuario);
+
 
 
             res.status(201).json({
