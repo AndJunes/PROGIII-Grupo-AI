@@ -8,6 +8,8 @@ const ReservaController = require('../controllers/Reservas/ReservaController');
 // Reservas
 router.post('/', auth, roleCheck([EMPLEADO, ADMINISTRADOR, CLIENTE]), ReservaController.crear.bind(ReservaController));
 router.get('/', auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), ReservaController.listar.bind(ReservaController));
+router.get('/all', auth, roleCheck([ADMINISTRADOR, EMPLEADO]), ReservaController.listarTodas.bind(ReservaController));
+router.get('/:id', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ReservaController.obtenerPorId.bind(ReservaController));
 router.put('/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.actualizar.bind(ReservaController));
 router.delete('/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.eliminar.bind(ReservaController));
 router.get('/all', auth, roleCheck([ADMINISTRADOR, EMPLEADO]), ReservaController.listarTodas.bind(ReservaController));
