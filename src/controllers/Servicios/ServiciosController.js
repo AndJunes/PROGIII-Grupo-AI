@@ -47,12 +47,36 @@ class ServiciosController {
             const servicios = reservasServicios.map(rs => rs.Servicio);
             const serviciosUnicos = Array.from(new Map(servicios.map(s => [s.servicio_id, s])).values());
 
+            //mensaje por si no hay servicios para ese usuario
+            if (serviciosUnicos.length === 0) {
+                return res.json({ mensaje: "No tienes ningun servicio vinculado" });
+            }
+
             res.json(serviciosUnicos);
         } catch (error) {
             console.error('error al listar servicios del usuario:', error);
             res.status(500).json({ mensaje: 'error al listar servicios', error });
         }
     }
+
+    //GET -> solo para admin o empleado (mostrar por id especifico)
+    static async getById(req, res) {
+        try {
+            const { id } = req.params;
+
+            const servicio = await Servicio.findByPk(id);
+
+            if (!servicio || servicio.activo === 0) {
+                return res.status(404).json({ mensaje: "Servicio no encontrado" });
+            }
+
+            res.json(servicio);
+        } catch (error) {
+            console.error('error al obtener servicio por id:', error);
+            res.status(500).json({ mensaje: 'error al obtener servicio', error });
+        }
+    }
+
 
     //POST -> crear un nuevo servicio
     static async create(req, res) {
