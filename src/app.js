@@ -44,6 +44,6 @@ const PORT = process.env.PORT || 3006;
 
 https.createServer({ key, cert }, app).listen(PORT, () => {
     console.log(`Servidor HTTPS corriendo en https://localhost:${PORT}`);
-    console.log('DB_USER:', process.env.DB_USER);
-    console.log('DB_PASS:', process.env.DB_PASS);
+    //console.log('DB_USER:', process.env.DB_USER);
+    //console.log('DB_PASS:', process.env.DB_PASS);
 });
