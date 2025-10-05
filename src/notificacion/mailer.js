@@ -64,6 +64,5 @@ export async function enviarNotificacion(reserva, usuario, res = null) {
     } catch (err) {
         console.error('Error al enviar notificación:', err);
 
-        // Si se pasa res, responder con mensaje resumido
     }
 }
