@@ -234,3 +234,9 @@ sequelize.sync({ force: true }); ⚠️ Borra datos existentes
 MIT License **© 2025 – Grupo AI**
 
 Proyecto académico para la materia **Programación III** (UNER).
+
+Integrantes:
+* Damián Exequiel Cornejo
+* Facundo Alcides Diaz
+* Andrea Judith Junes
+* Lucas Nieto
