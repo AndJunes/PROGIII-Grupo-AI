@@ -1,6 +1,5 @@
 import Salones from "../../models/Salon.js";
-import Reservas from "../../models/Reserva.js";
-import ReservaServicio from '../../models/ReservaServicio.js';
+import SalonesService from '../../services/SalonesService.js';
 
 class SalonesController {
 
@@ -18,15 +17,12 @@ class SalonesController {
     // Consultar salones específicos por id
     async getById(req, res) {
         try {
-            const id = req.params.id;
-            const salon = await Salones.findByPk(id);
-
-            if (!salon) {
-                return res.status(404).json({ error: "salón no encontrado" });
-            }
-
+            const salon = await SalonesService.getById(req.params.id);
             res.json(salon);
         } catch (error) {
+            if (error.code === "not_found") {
+                return res.status(404).json({ error: "Salon no encontrado"})
+            }
             console.error(error);
             res.status(500).json({ error: 'error al buscar el salón' });
         }
@@ -35,8 +31,7 @@ class SalonesController {
     // Crear un nuevo salón
     async create(req, res) {
         try {
-            const { titulo, direccion, importe, capacidad, latitud, longitud } = req.body;
-            const salon = await Salones.create({ titulo, direccion, importe, capacidad, latitud, longitud });
+            const salon = await SalonesService.create(req.body);
             res.status(201).json(salon);
         } catch (error) {
             console.error(error);
@@ -47,16 +42,12 @@ class SalonesController {
     // Actualizar un salón existente
     async update(req, res) {
         try {
-            const id = req.params.id;
-            const { titulo, direccion, importe, capacidad, latitud, longitud } = req.body;
-
-            const salon = await Salones.findByPk(id);
-            if (!salon) return res.status(404).json({ error: "salon no encontrado" });
-
-            await salon.update({ titulo, direccion, importe, capacidad, latitud, longitud });
+            const salon = await SalonesService.update(req.params.id, req.body);
             res.json(salon);
-
         } catch (error) {
+            if (error.code === "not_found") {
+                return res.status(404).json({ error: "Salon no encontrado"})
+            }
             console.error(error);
             res.status(500).json({ error: 'error al actualizar el salon' });
         }
@@ -65,31 +56,12 @@ class SalonesController {
     // Eliminar un salón
     async delete(req, res) {
         try {
-            const id = req.params.id;
-            const salon = await Salones.findByPk(id);
-            if (!salon) {
-                return res.status(404).json({ error: "salón no encontrado" });
-            }
-
-            // Obtener reservas asociadas al salón
-            const reservas = await Reservas.findAll({ where: { salon_id: id } });
-
-            // Soft delete de reservas y reservas_servicios asociados
-            for (const reserva of reservas) {
-                await ReservaServicio.update(
-                    { activo: 0 },
-                    { where: { reserva_id: reserva.reserva_id } }
-                );
-
-                await reserva.update({ activo: 0 });
-            }
-
-            // Finalmente eliminar el salón (soft delete)
-            await salon.update({ activo: 0 });
-
-            res.json({ message: "Salón y reservas asociadas eliminadas correctamente." });
-
+            const salon = await SalonesService.delete(req.params.id);
+            res.json(salon);
         } catch (error) {
+            if (error.code === "not_found") {
+                return res.status(404).json({ error: "Salon no encontrado"})
+            }
             console.error(error);
             res.status(500).json({ error: "Error al eliminar el salón" });
         }
