@@ -1,9 +1,8 @@
-// controllers/ServiciosController.js
 import ServiciosService from '../../services/ServiciosService.js';
 
 class ServiciosController {
 
-    // GET -> todos los servicios activos
+
     async getAll(req, res) {
         try {
             const servicios = await ServiciosService.getAll();
@@ -14,7 +13,6 @@ class ServiciosController {
         }
     }
 
-    // GET -> servicios por usuario
     async getByUser(req, res) {
         try {
             const usuarioId = req.usuario.usuario_id;
@@ -29,7 +27,6 @@ class ServiciosController {
         }
     }
 
-    // GET -> servicio por ID
     async getById(req, res) {
         try {
             const servicio = await ServiciosService.getById(req.params.id);
@@ -43,7 +40,6 @@ class ServiciosController {
         }
     }
 
-    // POST -> crear servicio
     async create(req, res) {
         try {
             const nuevoServicio = await ServiciosService.create(req.body);
@@ -57,7 +53,6 @@ class ServiciosController {
         }
     }
 
-    // PUT -> actualizar servicio
     async update(req, res) {
         try {
             const servicio = await ServiciosService.update(req.params.id, req.body);
@@ -74,7 +69,6 @@ class ServiciosController {
         }
     }
 
-    // DELETE -> soft delete
     async delete(req, res) {
         try {
             const result = await ServiciosService.delete(req.params.id);
