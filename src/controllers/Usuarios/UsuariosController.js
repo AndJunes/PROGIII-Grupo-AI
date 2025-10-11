@@ -7,13 +7,16 @@ class UsuariosController {
         try {
             const { nombre, apellido, nombre_usuario, contrasenia, tipo_usuario, celular, foto } = req.body;
 
-            const hashedPassword = await bcrypt.hash(contrasenia, 10);
+            if (!contrasenia) {
+                return res.status(400).json({ error: "Contraseña requerida" });
+            }
 
             const usuario = await Usuario.create({
                 nombre,
                 apellido,
                 nombre_usuario,
-                contrasenia: hashedPassword,
+                //Se hashea directamente en el hook
+                contrasenia: contrasenia.trim(),
                 tipo_usuario,
                 celular,
                 foto,
@@ -30,23 +33,23 @@ class UsuariosController {
             });
 
         } catch (error) {
-            console.error("error al crear usuario:", error);
-            res.status(500).json({ error: "error al crear el usuario" });
+            console.error("Error al crear usuario:", error);
+            res.status(500).json({ error: "Error al crear el usuario" });
         }
     }
 
-    // Listar todos los usuarios
+    // Listar todos los usuarios activos
     static async getAll(req, res) {
         try {
             const usuarios = await Usuario.findAll({
-                where: { activo: true },
-                attributes: { exclude: ["password"] },
+                where: { activo: 1 },
+                attributes: { exclude: ["contrasenia"] },
                 order: [["usuario_id", "ASC"]],
             });
             res.json(usuarios);
         } catch (error) {
-            console.error("error al obtener usuarios:", error);
-            res.status(500).json({ error: "error al obtener usuarios" });
+            console.error("Error al obtener usuarios:", error);
+            res.status(500).json({ error: "Error al obtener usuarios" });
         }
     }
 
@@ -54,17 +57,14 @@ class UsuariosController {
     static async getClientes(req, res) {
         try {
             const clientes = await Usuario.findAll({
-                where: {
-                    activo: true,
-                    tipo_usuario: 1
-                },
+                where: { activo: 1, tipo_usuario: 1 },
                 attributes: { exclude: ["contrasenia"] },
                 order: [["usuario_id", "ASC"]],
             });
             res.json(clientes);
         } catch (error) {
-            console.error("error al obtener usuarios:", error);
-            res.status(500).json({ error: "error al obtener usuarios" });
+            console.error("Error al obtener clientes:", error);
+            res.status(500).json({ error: "Error al obtener clientes" });
         }
     }
 
@@ -73,15 +73,15 @@ class UsuariosController {
         try {
             const { id } = req.params;
             const usuario = await Usuario.findByPk(id, {
-                attributes: { exclude: ["password"] },
+                attributes: { exclude: ["contrasenia"] },
             });
-            if (!usuario || !usuario.activo) {
-                return res.status(404).json({ error: "usuario no encontrado" });
+            if (!usuario || usuario.activo === 0) {
+                return res.status(404).json({ error: "Usuario no encontrado" });
             }
             res.json(usuario);
         } catch (error) {
-            console.error("error al obtener usuario:", error);
-            res.status(500).json({ error: "error al obtener el usuario" });
+            console.error("Error al obtener usuario:", error);
+            res.status(500).json({ error: "Error al obtener el usuario" });
         }
     }
 
@@ -90,20 +90,24 @@ class UsuariosController {
         try {
             const { id } = req.params;
             const usuario = await Usuario.findByPk(id);
-            if (!usuario || !usuario.activo) {
-                return res.status(404).json({ error: "usuario no encontrado" });
+            if (!usuario || usuario.activo === 0) {
+                return res.status(404).json({ error: "Usuario no encontrado" });
             }
 
-            // Si se manda nueva password, encriptarla
-            if (req.body.password) {
-                req.body.password = await bcrypt.hash(req.body.password, 10);
+            // Si se manda nueva contraseña, encriptarla
+            if (req.body.contrasenia) {
+                req.body.contrasenia = await bcrypt.hash(req.body.contrasenia, 12);
             }
 
             await usuario.update(req.body);
-            res.json(usuario);
+
+            const usuarioPlano = usuario.get({ plain: true });
+            delete usuarioPlano.contrasenia;
+
+            res.json(usuarioPlano);
         } catch (error) {
-            console.error("error al actualizar usuario:", error);
-            res.status(500).json({ error: "error al actualizar el usuario" });
+            console.error("Error al actualizar usuario:", error);
+            res.status(500).json({ error: "Error al actualizar el usuario" });
         }
     }
 
@@ -112,14 +116,14 @@ class UsuariosController {
         try {
             const { id } = req.params;
             const usuario = await Usuario.findByPk(id);
-            if (!usuario || !usuario.activo) {
-                return res.status(404).json({ error: "usuario no encontrado" });
+            if (!usuario || usuario.activo === 0) {
+                return res.status(404).json({ error: "Usuario no encontrado" });
             }
-            await usuario.update({ activo: false });
-            res.json({ message: "usuario eliminado (soft delete)" });
+            await usuario.update({ activo: 0 });
+            res.json({ message: "Usuario eliminado (soft delete)" });
         } catch (error) {
-            console.error("error al eliminar usuario:", error);
-            res.status(500).json({ error: "error al eliminar el usuario" });
+            console.error("Error al eliminar usuario:", error);
+            res.status(500).json({ error: "Error al eliminar el usuario" });
         }
     }
 }
