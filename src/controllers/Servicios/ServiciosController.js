@@ -1,139 +1,86 @@
-import Servicio from "../../models/Servicio.js";
-import Reserva from "../../models/Reserva.js";
-import ReservaServicio from "../../models/ReservaServicio.js";
-
-// Relaciones Sequelize
-ReservaServicio.belongsTo(Reserva, { foreignKey: 'reserva_id' });
-ReservaServicio.belongsTo(Servicio, { foreignKey: 'servicio_id' });
+import ServiciosService from '../../services/ServiciosService.js';
 
 class ServiciosController {
-    // GET -> Todos los servicios activos (admin/empleado)
-    static async getAll(req, res) {
+
+
+    async getAll(req, res) {
         try {
-            const servicios = await Servicio.findAll({
-                where: { activo: 1 },
-                order: [['servicio_id', 'ASC']]
-            });
+            const servicios = await ServiciosService.getAll();
             res.json(servicios);
         } catch (error) {
-            console.error('error al listar todos los servicios:', error);
-            res.status(500).json({ mensaje: 'error al listar servicios', error });
+            console.error(error);
+            res.status(500).json({ mensaje: 'Error al listar servicios' });
         }
     }
 
-    // GET -> obtener servicios vinculados al usuario
-    static async getByUser(req, res) {
+    async getByUser(req, res) {
         try {
             const usuarioId = req.usuario.usuario_id;
-
-            const reservasServicios = await ReservaServicio.findAll({
-                include: [
-                    {
-                        model: Reserva,
-                        where: { usuario_id: usuarioId, activo: 1 },
-                        attributes: []
-                    },
-                    {
-                        model: Servicio,
-                        attributes: ['servicio_id', 'descripcion', 'importe']
-                    }
-                ]
-            });
-
-            const servicios = reservasServicios.map(rs => rs.Servicio);
-            const serviciosUnicos = Array.from(new Map(servicios.map(s => [s.servicio_id, s])).values());
-
-            if (serviciosUnicos.length === 0) {
-                return res.json({ mensaje: "No tienes ningun servicio vinculado" });
-            }
-
-            res.json(serviciosUnicos);
+            const servicios = await ServiciosService.getByUser(usuarioId);
+            res.json(servicios);
         } catch (error) {
-            console.error('error al listar servicios del usuario:', error);
-            res.status(500).json({ mensaje: 'error al listar servicios', error });
+            if (error.message === "no_services") {
+                return res.json({ mensaje: "No tienes ningún servicio vinculado" });
+            }
+            console.error(error);
+            res.status(500).json({ mensaje: 'Error al listar servicios del usuario' });
         }
     }
 
-    // GET -> solo para admin o empleado (por id específico)
-    static async getById(req, res) {
+    async getById(req, res) {
         try {
-            const { id } = req.params;
-            const servicio = await Servicio.findByPk(id);
-
-            if (!servicio || servicio.activo === 0) {
-                return res.status(404).json({ mensaje: "Servicio no encontrado" });
-            }
-
+            const servicio = await ServiciosService.getById(req.params.id);
             res.json(servicio);
         } catch (error) {
-            console.error('error al obtener servicio por id:', error);
-            res.status(500).json({ mensaje: 'error al obtener servicio', error });
+            if (error.message === "not_found") {
+                return res.status(404).json({ mensaje: "Servicio no encontrado" });
+            }
+            console.error(error);
+            res.status(500).json({ mensaje: 'Error al obtener servicio' });
         }
     }
 
-    // POST -> crear un nuevo servicio
-    static async create(req, res) {
+    async create(req, res) {
         try {
-            const { descripcion, importe } = req.body;
-
-            const nuevoServicio = await Servicio.create({
-                descripcion,
-                importe,
-                activo: 1
-            });
-
+            const nuevoServicio = await ServiciosService.create(req.body);
             res.status(201).json({
-                mensaje: 'el servicio fue creado correctamente',
+                mensaje: 'El servicio fue creado correctamente',
                 servicio: nuevoServicio
             });
         } catch (error) {
-            console.error('error al crear servicio:', error);
-            res.status(500).json({ mensaje: 'error al crear servicio', error });
+            console.error(error);
+            res.status(500).json({ mensaje: 'Error al crear servicio' });
         }
     }
 
-    // PUT -> actualizar un servicio
-    static async update(req, res) {
+    async update(req, res) {
         try {
-            const { id } = req.params;
-            const { descripcion, importe } = req.body;
-
-            const servicio = await Servicio.findByPk(id);
-
-            if (!servicio || servicio.activo === 0) {
-                return res.status(400).json({ mensaje: 'servicio no encontrado' });
-            }
-
-            await servicio.update({ descripcion, importe });
-
+            const servicio = await ServiciosService.update(req.params.id, req.body);
             res.json({
-                mensaje: 'servicio actualizado correctamente',
+                mensaje: 'Servicio actualizado correctamente',
                 servicio
             });
         } catch (error) {
-            console.error('error al actualizar servicio:', error);
-            res.status(500).json({ mensaje: 'error al actualizar el servicio', error });
+            if (error.message === "not_found") {
+                return res.status(404).json({ mensaje: 'Servicio no encontrado' });
+            }
+            console.error(error);
+            res.status(500).json({ mensaje: 'Error al actualizar servicio' });
         }
     }
 
-    // DELETE -> eliminar servicio (soft delete)
-    static async delete(req, res) {
+    async delete(req, res) {
         try {
-            const { id } = req.params;
-            const servicio = await Servicio.findByPk(id);
-
-            if (!servicio || servicio.activo === 0) {
-                return res.status(404).json({ mensaje: 'servicio no encontrado o ya eliminado' });
-            }
-
-            await servicio.update({ activo: 0 });
-
-            res.json({ mensaje: 'servicio eliminado correctamente (soft delete)' });
+            const result = await ServiciosService.delete(req.params.id);
+            res.json(result);
         } catch (error) {
-            console.error('error al eliminar servicio:', error);
-            res.status(500).json({ mensaje: 'error al eliminar servicio', error });
+            if (error.message === "not_found") {
+                return res.status(404).json({ mensaje: 'Servicio no encontrado o ya eliminado' });
+            }
+            console.error(error);
+            res.status(500).json({ mensaje: 'Error al eliminar servicio' });
         }
     }
 }
 
-export default ServiciosController;
+export default new ServiciosController();

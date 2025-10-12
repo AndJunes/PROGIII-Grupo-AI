@@ -14,5 +14,6 @@ router.use('/reservas', reservasRoutes);
 router.use('/servicios', serviciosRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/usuarios', usuariosRoutes);
+router.use('/servicios', serviciosRoutes);
 
 export default router;
