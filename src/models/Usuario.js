@@ -53,16 +53,17 @@ const Usuario = sequelize.define('Usuario', {
     hooks: {
         beforeCreate: async (usuario) => {
             if (usuario.contrasenia) {
-                const salt = await bcrypt.genSalt(10);
-                usuario.contrasenia = await bcrypt.hash(usuario.contrasenia, salt);
+                //const salt = await bcrypt.genSalt(10);
+                usuario.contrasenia = await bcrypt.hash(usuario.contrasenia, 10);
             }
         },
-        beforeUpdate: async (usuario) => {
+        //Esto tenia conflictos a la hora de migrar el hasheo de MD5 a Bcrypt
+        /*beforeUpdate: async (usuario) => {
             if (usuario.changed('contrasenia')) {
                 const salt = await bcrypt.genSalt(10);
                 usuario.contrasenia = await bcrypt.hash(usuario.contrasenia, salt);
             }
-        }
+        }*/
     }
 });
 
