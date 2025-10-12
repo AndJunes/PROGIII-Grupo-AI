@@ -14,7 +14,6 @@ class AuthController {
 
             const usuario = await Usuario.findOne({ where: { nombre_usuario } });
 
-            // Validación de usuario activo (1 = activo, 0 = eliminado)
             if (!usuario || usuario.activo === 0) {
                 return res.status(401).json({ error: 'Credenciales inválidas' });
             }
@@ -23,30 +22,26 @@ class AuthController {
             const hash = usuario.contrasenia;
             let esValida = false;
 
-            console.log('Hash en DB:', hash);
-            console.log('Contraseña ingresada:', passwordLimpia);
-
             // Detectar tipo de hash
             if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
                 // bcrypt
                 esValida = await bcrypt.compare(passwordLimpia, hash);
-                console.log('Resultado bcrypt compare:', esValida);
 
             } else if (hash.length === 32 && /^[a-f0-9]{32}$/i.test(hash)) {
                 // MD5 antiguo
                 const md5 = crypto.createHash('md5').update(passwordLimpia).digest('hex');
                 esValida = md5 === hash;
-                console.log('MD5 calculado:', md5, 'Resultado MD5 compare:', esValida);
 
-                // Migrar a bcrypt automáticamente si el login fue exitoso
+                // Migrar a bcrypt si login correcto
                 if (esValida) {
-                    usuario.contrasenia = await bcrypt.hash(passwordLimpia, 12);
-                    await usuario.save();
-                    console.log(`Contraseña de ${nombre_usuario} migrada a bcrypt.`);
+                    const nuevoHash = await bcrypt.hash(passwordLimpia, 12);
+
+                    //probamos con update sin hooks para no rehashear
+                    await usuario.update({ contrasenia: nuevoHash });
+                    //console.log(`Usuario ${nombre_usuario} migrado a bcrypt`);
                 }
 
             } else {
-                console.log('Hash desconocido o formato incorrecto.');
                 return res.status(401).json({ error: 'Credenciales inválidas' });
             }
 
