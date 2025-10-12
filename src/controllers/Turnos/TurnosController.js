@@ -1,24 +1,21 @@
-import Turno from "../../models/Turno.js";
+import TurnosService from '../../services/TurnosService.js';
 
 class TurnosController {
-    // Crear el turno
-    static async create(req, res) {
+    // Crear turno
+    async create(req, res) {
         try {
-            const turno = await Turno.create(req.body);
-            res.status(201).send(turno);
+            const turno = await TurnosService.create(req.body);
+            res.status(201).json(turno);
         } catch (error) {
             console.error("error al crear turno:", error);
             res.status(500).json({ error: "error al crear el turno" });
         }
     }
 
-    // Listamos todos los turnos
-    static async getAll(req, res) {
+    // Listar todos los turnos activos
+    async getAll(req, res) {
         try {
-            const turnos = await Turno.findAll({
-                where: { activo: true },
-                order: [["turno_id", "ASC"]],
-            });
+            const turnos = await TurnosService.getAll();
             res.json(turnos);
         } catch (error) {
             console.error("error al obtener turnos:", error);
@@ -26,52 +23,47 @@ class TurnosController {
         }
     }
 
-    // Obtenemos los turnos por id
-    static async getById(req, res) {
+    // Obtener turno por ID
+    async getById(req, res) {
         try {
-            const { id } = req.params;
-            const turno = await Turno.findByPk(id);
-            if (!turno || !turno.activo) {
-                return res.status(404).json({ error: "turno no encontrado" });
-            }
+            const turno = await TurnosService.getById(req.params.id);
             res.json(turno);
         } catch (error) {
+            if (error.message === "not_found") {
+                return res.status(404).json({ error: "turno no encontrado" });
+            }
             console.error("error al obtener turno:", error);
             res.status(500).json({ error: "error al obtener el turno" });
         }
     }
 
-    // Actualizamos el turno
-    static async update(req, res) {
+    // Actualizar turno
+    async update(req, res) {
         try {
-            const { id } = req.params;
-            const turno = await Turno.findByPk(id);
-            if (!turno || !turno.activo) {
-                return res.status(404).json({ error: "turno no encontrado" });
-            }
-            await turno.update(req.body);
+            const turno = await TurnosService.update(req.params.id, req.body);
             res.json(turno);
         } catch (error) {
+            if (error.message === "not_found") {
+                return res.status(404).json({ error: "turno no encontrado" });
+            }
             console.error("error al actualizar turno:", error);
             res.status(500).json({ error: "error al actualizar el turno" });
         }
     }
 
-    // Eliminamos el turno (soft delete)
-    static async delete(req, res) {
+    // Eliminar turno (soft delete)
+    async delete(req, res) {
         try {
-            const { id } = req.params;
-            const turno = await Turno.findByPk(id);
-            if (!turno || !turno.activo) {
+            const result = await TurnosService.delete(req.params.id);
+            res.json(result);
+        } catch (error) {
+            if (error.message === "not_found") {
                 return res.status(404).json({ error: "turno no encontrado" });
             }
-            await turno.update({ activo: false });
-            res.json({ message: "turno eliminado (soft delete)" });
-        } catch (error) {
             console.error("error al eliminar turno:", error);
             res.status(500).json({ error: "error al eliminar el turno" });
         }
     }
 }
 
-export default TurnosController;
+export default new TurnosController();

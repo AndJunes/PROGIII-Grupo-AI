@@ -1,3 +1,3 @@
-export const CLIENTE = 1;
+export const CLIENTE = 3;
 export const EMPLEADO = 2;
-export const ADMINISTRADOR = 3;
+export const ADMINISTRADOR = 1;
