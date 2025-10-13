@@ -1,51 +1,21 @@
-import Usuario from "../../models/Usuario.js";
-import bcrypt from "bcryptjs";
+import UsuariosService from '../../services/UsuariosService.js';
 
 class UsuariosController {
     // Crear usuario
     static async create(req, res) {
         try {
-            const { nombre, apellido, nombre_usuario, contrasenia, tipo_usuario, celular, foto } = req.body;
-
-            if (!contrasenia) {
-                return res.status(400).json({ error: "Contraseña requerida" });
-            }
-
-            const usuario = await Usuario.create({
-                nombre,
-                apellido,
-                nombre_usuario,
-                //Se hashea directamente en el hook
-                contrasenia: contrasenia.trim(),
-                tipo_usuario,
-                celular,
-                foto,
-                activo: 1
-            });
-
-            // Convertir a objeto plano y eliminar la contraseña
-            const usuarioPlano = usuario.get({ plain: true });
-            delete usuarioPlano.contrasenia;
-
-            res.status(201).json({
-                mensaje: "Usuario creado exitosamente",
-                usuario: usuarioPlano
-            });
-
+            const usuario = await UsuariosService.crearUsuario(req.body);
+            res.status(201).json({ mensaje: "usuario creado exitosamente", usuario });
         } catch (error) {
             console.error("Error al crear usuario:", error);
-            res.status(500).json({ error: "Error al crear el usuario" });
+            res.status(400).json({ error: error.message });
         }
     }
 
     // Listar todos los usuarios activos
     static async getAll(req, res) {
         try {
-            const usuarios = await Usuario.findAll({
-                where: { activo: 1 },
-                attributes: { exclude: ["contrasenia"] },
-                order: [["usuario_id", "ASC"]],
-            });
+            const usuarios = await UsuariosService.listarUsuarios();
             res.json(usuarios);
         } catch (error) {
             console.error("Error al obtener usuarios:", error);
@@ -56,11 +26,7 @@ class UsuariosController {
     // Listar solo clientes (tipo_usuario = 1)
     static async getClientes(req, res) {
         try {
-            const clientes = await Usuario.findAll({
-                where: { activo: 1, tipo_usuario: 1 },
-                attributes: { exclude: ["contrasenia"] },
-                order: [["usuario_id", "ASC"]],
-            });
+            const clientes = await UsuariosService.listarClientes();
             res.json(clientes);
         } catch (error) {
             console.error("Error al obtener clientes:", error);
@@ -71,13 +37,8 @@ class UsuariosController {
     // Obtener usuario por ID
     static async getById(req, res) {
         try {
-            const { id } = req.params;
-            const usuario = await Usuario.findByPk(id, {
-                attributes: { exclude: ["contrasenia"] },
-            });
-            if (!usuario || usuario.activo === 0) {
-                return res.status(404).json({ error: "Usuario no encontrado" });
-            }
+            const usuario = await UsuariosService.obtenerPorId(req.params.id);
+            if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
             res.json(usuario);
         } catch (error) {
             console.error("Error al obtener usuario:", error);
@@ -88,23 +49,9 @@ class UsuariosController {
     // Actualizar usuario
     static async update(req, res) {
         try {
-            const { id } = req.params;
-            const usuario = await Usuario.findByPk(id);
-            if (!usuario || usuario.activo === 0) {
-                return res.status(404).json({ error: "Usuario no encontrado" });
-            }
-
-            // Si se manda nueva contraseña, encriptarla
-            if (req.body.contrasenia) {
-                req.body.contrasenia = await bcrypt.hash(req.body.contrasenia, 12);
-            }
-
-            await usuario.update(req.body);
-
-            const usuarioPlano = usuario.get({ plain: true });
-            delete usuarioPlano.contrasenia;
-
-            res.json(usuarioPlano);
+            const usuario = await UsuariosService.actualizarUsuario(req.params.id, req.body);
+            if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
+            res.json(usuario);
         } catch (error) {
             console.error("Error al actualizar usuario:", error);
             res.status(500).json({ error: "Error al actualizar el usuario" });
@@ -114,12 +61,8 @@ class UsuariosController {
     // Eliminar usuario (soft delete)
     static async delete(req, res) {
         try {
-            const { id } = req.params;
-            const usuario = await Usuario.findByPk(id);
-            if (!usuario || usuario.activo === 0) {
-                return res.status(404).json({ error: "Usuario no encontrado" });
-            }
-            await usuario.update({ activo: 0 });
+            const ok = await UsuariosService.eliminarUsuario(req.params.id);
+            if (!ok) return res.status(404).json({ error: "usuario no encontrado" });
             res.json({ message: "Usuario eliminado (soft delete)" });
         } catch (error) {
             console.error("Error al eliminar usuario:", error);
