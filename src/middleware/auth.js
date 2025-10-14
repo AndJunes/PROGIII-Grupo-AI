@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Usuario from '../models/Usuario.js';
+import pool from '../database/database.js';
 
 const auth = async (req, res, next) => {
     try {
@@ -10,16 +10,24 @@ const auth = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const usuario = await Usuario.findByPk(decoded.usuario_id);
 
+        //Buscarlo directamente en la db
+        const [rows] = await pool.query(
+            "SELECT * FROM usuarios WHERE usuario_id = ? AND activo = 1 LIMIT 1",
+            [decoded.usuario_id]
+        );
+
+        const usuario = rows[0];
         if (!usuario) {
-            return res.status(401).json({ error: 'Token inválido.' });
+            return res.status(401).json({ error: 'Token inválido o usuario no encontrado' });
         }
 
+        //guardamos el usuario en la request
         req.usuario = usuario;
         next();
     } catch (error) {
-        res.status(400).json({ error: 'Token inválido.' });
+        console.error('Error en middleware auth: ', error);
+        res.status(400).json({ error: 'Token inválido o expirado' });
     }
 };
 

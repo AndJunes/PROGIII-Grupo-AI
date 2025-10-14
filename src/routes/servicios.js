@@ -9,11 +9,10 @@ const router = express.Router();
 const cache = apicache.middleware;
 
 // Servicios
-router.get('/', cache('5 minutes'), auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), ServiciosController.getByUser.bind(ServiciosController));
-router.get('/all', cache('5 minutes'), auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ServiciosController.getAll.bind(ServiciosController));
+router.get('/', cache('5 minutes'), auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), ServiciosController.getAll.bind(ServiciosController));
 router.get('/:id', cache('5 minutes'), auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ServiciosController.getById.bind(ServiciosController));
 router.post('/', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ServiciosController.create.bind(ServiciosController));
 router.put('/:id', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ServiciosController.update.bind(ServiciosController));
-router.delete('/:id', auth, roleCheck([ADMINISTRADOR]), ServiciosController.delete.bind(ServiciosController));
+router.delete('/:id', auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ServiciosController.delete.bind(ServiciosController));
 
 export default router;

@@ -5,25 +5,24 @@ class ServiciosController {
 
     async getAll(req, res) {
         try {
-            const servicios = await ServiciosService.getAll();
-            res.json(servicios);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ mensaje: 'Error al listar servicios' });
-        }
-    }
+            //parametros de la consulta
+            const propios = req.query.propios === 'true';
+            const usuarioId = propios ? req.usuario.usuario_id : null;
 
-    async getByUser(req, res) {
-        try {
-            const usuarioId = req.usuario.usuario_id;
-            const servicios = await ServiciosService.getByUser(usuarioId);
+            let servicios;
+            if (propios) {
+                servicios = await ServiciosService.getByUser(usuarioId);
+            } else {
+                servicios = await ServiciosService.getAll();
+            }
+
             res.json(servicios);
         } catch (error) {
             if (error.message === "no_services") {
                 return res.json({ mensaje: "No tienes ningún servicio vinculado" });
             }
             console.error(error);
-            res.status(500).json({ mensaje: 'Error al listar servicios del usuario' });
+            res.status(500).json({ mensaje: 'Error al listar servicios' });
         }
     }
 

@@ -1,13 +1,5 @@
-import Reserva from "../models/Reserva.js";
-import Salon from "../models/Salon.js";
-import Servicio from "../models/Servicio.js";
-import Usuario from "../models/Usuario.js";
 import { enviarNotificacion } from "../notificacion/mailer.js";
-
-// Relaciones Sequelize (importantes si no están definidas globalmente)
-Reserva.belongsTo(Salon, { foreignKey: "salon_id" });
-Reserva.belongsTo(Servicio, { foreignKey: "turno_id" });
-Reserva.belongsTo(Usuario, { foreignKey: "usuario_id" });
+import pool from "../database/database.js"
 
 
 class ReservaService {
@@ -23,17 +15,22 @@ class ReservaService {
             importe_total,
         } = data;
 
-        const nuevaReserva = await Reserva.create({
-            fecha_reserva,
-            salon_id,
-            turno_id,
-            usuario_id: usuario.usuario_id,
-            foto_cumpleaniero,
-            tematica,
-            importe_salon,
-            importe_total,
-            activo: 1
-        });
+        const [result] = await pool.query(
+            `INSERT INTO reservas 
+            (fecha_reserva, salon_id, turno_id, usuario_id, foto_cumpleaniero, tematica, importe_salon, importe_total, activo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+            [fecha_reserva, salon_id, turno_id, usuario.usuario_id, foto_cumpleaniero, tematica, importe_salon, importe_total]
+        );
+
+        const nuevaReservaId = result.insertId;
+
+        //traemos la reserva que se creo para devolverla
+        const [rows] = await pool.query(
+            'SELECT * FROM reservas WHERE reserva_id = ?',
+            [nuevaReservaId]
+        );
+
+        const nuevaReserva = rows[0];
 
         //Enviar notificacion al administrador
         await enviarNotificacion(nuevaReserva, usuario);
@@ -42,56 +39,80 @@ class ReservaService {
     }
 
     async listar(usuarioId) {
-        const reservas = await Reserva.findAll({
-            where: { usuario_id: usuarioId },
-            include: [{ model: Salon }, {model: Servicio}],
-        });
+        const [rows] = await pool.query(
+            `SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta
+             FROM reservas r
+             LEFT JOIN salones s ON r.salon_id = s.salon_id
+             LEFT JOIN turnos t ON r.turno_id = t.turno_id
+             WHERE r.usuario_id = ? AND r.activo = 1`,
+            [usuarioId]
+        );
 
-        return reservas;
+        return rows;
     }
 
     async obtenerPorId(id){
-        const reserva = await Reserva.findByPk(id, {
-            include: [
-                { model: Salon },
-                { model: Servicio },
-                { model: Usuario, atributes: ["usuario_id", "nombre", "nomre_usuario"] },
-            ],
-        });
+        const [rows] = await pool.query(
+            `SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta, u.nombre, u.nombre_usuario
+             FROM reservas r
+             LEFT JOIN salones s ON r.salon_id = s.salon_id
+             LEFT JOIN turnos t ON r.turno_id = t.turno_id
+             LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
+             WHERE r.reserva_id = ? AND r.activo = 1`,
+            [id]
+        );
 
-        if (!reserva || reserva.activo === 0) throw new Error("not_found");
+        const reserva = rows[0];
+        if (!reserva) throw new Error("no se encontro");
+
         return reserva;
     }
 
     async actualizar(id, data) {
-        const reserva = await Reserva.findByPk(id);
-        if (!reserva || reserva.activo === 0) throw new Error("not_found");
-
         const { fecha_reserva, salon_id, turno_id, tematica, importe_total } = data;
-        await reserva.update({ fecha_reserva, salon_id, turno_id, tematica, importe_total });
 
-        return reserva;
+        //hay que verificar si existe
+        const [checkRows] = await pool.query(
+            'SELECT * FROM reservas WHERE reserva_id = ? AND activo = 1',
+            [id]
+        );
+        if (checkRows.length === 0) throw new Error('no se encontro');
+
+        await pool.query(
+            `UPDATE reservas SET fecha_reserva=?, salon_id=?, turno_id=?, tematica=?, importe_total=? WHERE reserva_id = ?`,
+            [fecha_reserva, salon_id, turno_id, tematica, importe_total, id]
+        );
+
+        return this.obtenerPorId(id);
+
     }
 
     async eliminar(id){
-        const reserva = await Reserva.findByPk(id);
-        if (!reserva || reserva.activo === 0) throw new Error("not_found");
+        const [checkRows] = await pool.query(
+            'SELECT * FROM reservas WHERE reserva_id = ? AND activo = 1',
+            [id]
+        );
+        if(checkRows.length === 0) throw new Error('no se encontro');
 
-        await reserva.update({ activo: 0 });
+        await pool.query(
+            'UPDATE reservas SET activo = 0 WHERE reserva_id = ?',
+            [id]
+        );
+
         return { mensaje: "Reserva eliminada correctamente (soft delete)" };
     }
 
     async listarTodas(){
-        const reservas = await Reserva.findAll({
-            where: { activo: 1 },
-            include: [
-                { model: Salon },
-                { model: Servicio },
-                { model: Usuario, attributes: ["usuario_id", "nombre", "nombre_usuario"] },
-            ],
-        });
+        const [rows] = await pool.query(
+            `SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta, u.usuario_id, u.nombre, u.nombre_usuario
+             FROM reservas r
+             LEFT JOIN salones s ON r.salon_id = s.salon_id
+             LEFT JOIN turnos t ON r.turno_id = t.turno_id
+             LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
+             WHERE r.activo = 1`
+        )
 
-        return reservas;
+        return rows;
     }
 }
 

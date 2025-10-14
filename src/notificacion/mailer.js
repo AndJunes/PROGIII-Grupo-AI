@@ -4,8 +4,7 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import Salon from '../models/Salon.js';
-import Turno from '../models/Turno.js';
+import pool from '../database/database.js'
 
 // __dirname equivalente en ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -16,8 +15,14 @@ export async function enviarNotificacion(reserva, usuario, res = null) {
         const plantillaPath = path.join(__dirname, '../utils/plantilla.hbs');
         const archivoHbs = await readFile(plantillaPath, 'utf-8');
         const template = handlebars.compile(archivoHbs);
-        const salon = await Salon.findByPk(reserva.salon_id);
-        const turno = await Turno.findByPk(reserva.turno_id);
+
+        //sacamos los datos del salon
+        const [salonRows] = await pool.query('SELECT titulo FROM salones WHERE salon_id = ?', [reserva.salon_id]);
+        const salon = salonRows[0];
+
+        //sacamos los datos del turno
+        const [turnoRows] = await pool.query('SELECT hora_desde, hora_hasta FROM turnos WHERE turno_id = ?', [reserva.turno_id]);
+        const turno = turnoRows[0];
 
         const html = template({
             fecha: reserva.fecha_reserva,
@@ -63,6 +68,7 @@ export async function enviarNotificacion(reserva, usuario, res = null) {
         console.log('Notificaciones enviadas correctamente');
     } catch (err) {
         console.error('Error al enviar notificación:', err);
+        if (res) res.status(500).json({ error: "error al enviar notificacion"});
 
     }
 }

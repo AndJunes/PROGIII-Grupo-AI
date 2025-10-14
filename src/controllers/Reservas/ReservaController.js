@@ -1,15 +1,4 @@
-import Reserva from '../../models/Reserva.js';
-import Salon from '../../models/Salon.js';
-import Servicio from '../../models/Servicio.js';
-import Usuario from '../../models/Usuario.js';
-
 import ReservaService from "../../services/ReservaService.js";
-import reservaService from "../../services/ReservaService.js";
-
-// Relaciones Sequelize
-Reserva.belongsTo(Salon, { foreignKey: 'salon_id' });
-Reserva.belongsTo(Servicio, { foreignKey: 'turno_id' });
-Reserva.belongsTo(Usuario, { foreignKey: 'usuario_id' });
 
 class ReservaController {
     // POST -> crea una reserva (cliente)
@@ -26,13 +15,23 @@ class ReservaController {
         }
     }
 
-    // GET -> listar reservas del cliente autenticado
+    // GET -> listar reservas
     static async listar(req, res) {
         try {
-            const reservas = await ReservaService.listar(req.usuario.usuario_id);
-            if (reservas.length === 0) {
-                return res.json({ mensaje: "No tienes ninguna reserva" });
+            const propios = req.query.propias === 'true';
+            const usuarioId = propios ? req.usuario.usuario_id : null;
+
+            let reservas;
+            if (propios) {
+                reservas = await ReservaService.listar(usuarioId);
+            } else {
+                reservas = await ReservaService.listarTodas();
             }
+
+            if (reservas.length === 0) {
+                return res.json({ mensaje: propios ? "No tienes ninguna reserva" : "No hay reservas disponibles" });
+            }
+
             res.json(reservas);
         } catch (error) {
             console.error('error al listar reservas:', error);
@@ -57,7 +56,7 @@ class ReservaController {
     // PUT -> actualizar reservas (solo admin)
     static async actualizar(req, res) {
         try {
-            const reserva = await reservaService.actualizar(req.params.id, req.body);
+            const reserva = await ReservaService.actualizar(req.params.id, req.body);
             res.json({ mensaje: 'reserva actualizada correctamente', reserva });
         } catch (error) {
             if (error.message === "not_found") {

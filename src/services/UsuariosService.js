@@ -1,109 +1,106 @@
-import Usuario from "../models/Usuario.js";
+import pool from "../database/database.js";
 import bcrypt from "bcryptjs";
-import { CLIENTE } from "../constants/roles.js";
 
 class UsuariosService {
-    static async crearUsuario(data) {
-        const { nombre, apellido, nombre_usuario, contrasenia, tipo_usuario, celular, foto } = data;
-
-        if (!contrasenia) throw new Error("contraseña requerida");
-
-        const usuario = await Usuario.create({
+    // Crear usuario
+    static async crearUsuario(datos) {
+        const {
             nombre,
             apellido,
             nombre_usuario,
-            //Se hashea directamente en el hook
-            contrasenia: contrasenia.trim(),
+            contrasenia,
             tipo_usuario,
             celular,
             foto,
-            activo: 1
-        });
+        } = datos;
 
-        // Convertir a objeto plano y eliminar la contraseña
-        const usuarioPlano = usuario.get({ plain: true });
-        delete usuarioPlano.contrasenia;
-        return usuarioPlano;
+        const hash = await bcrypt.hash(contrasenia.trim(), 10);
+
+        const [result] = await pool.query(
+            `INSERT INTO usuarios 
+       (nombre, apellido, nombre_usuario, contrasenia, tipo_usuario, celular, foto, activo, creado, modificado)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+            [nombre, apellido, nombre_usuario, hash, tipo_usuario, celular, foto]
+        );
+
+        const [rows] = await pool.query(
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+       FROM usuarios WHERE usuario_id = ?`,
+            [result.insertId]
+        );
+
+        return rows[0];
     }
 
-    //Listar usuarios activos
+    // Listar usuarios activos
     static async listarUsuarios() {
-        const usuarios = await Usuario.findAll({
-            where: { activo: 1 },
-            attributes: { exclude: ['contrasenia'] },
-            order: [['usuario_id', 'ASC']],
-        });
-        return usuarios;
+        const [rows] = await pool.query(
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+       FROM usuarios WHERE activo = 1 ORDER BY usuario_id ASC`
+        );
+        return rows;
     }
 
-    //Listar Clientes
+    // Listar clientes
     static async listarClientes() {
-        const clientes = await Usuario.findAll({
-            where: { activo: 1, tipo_usuario: CLIENTE},
-            attributes: { exclude: ['contrasenia'] },
-            order: [['usuario_id', 'ASC']],
-        });
+        const [rows] = await pool.query(
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+       FROM usuarios WHERE activo = 1 AND tipo_usuario = 3 ORDER BY usuario_id ASC`
+        );
+        return rows;
     }
 
-    //Listar usuario por ID
-    static async obtenerPorId(id){
-        const usuario = await Usuario.findByPk(id, {
-            attributes: { exclude: ['contrasenia'] },
-        });
-        if (!usuario || usuario.activo === 0) return null;
-        return usuario;
+    // Obtener usuario por ID
+    static async obtenerUsuarioPorId(id) {
+        const [rows] = await pool.query(
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+       FROM usuarios WHERE usuario_id = ? AND activo = 1`,
+            [id]
+        );
+        return rows[0];
     }
 
-    //Actualizar usuario
-    static async actualizarUsuario(id, datos){
-        const usuario = await Usuario.findByPk(id);
-        if (!usuario || usuario.activo === 0) return null;
+    // Actualizar usuario
+    static async actualizarUsuario(id, data) {
+        const campos = [];
+        const valores = [];
 
-        //Hasheamos la contraseña si existe
-        if (datos.contrasenia) {
-            datos.contrasenia = await bcrypt.hash(datos.contrasenia.trim(), 12);
+        for (const [key, value] of Object.entries(data)) {
+            // Solo agregar si no es undefined ni null
+            if (value !== undefined && value !== null) {
+                campos.push(`${key} = ?`);
+                valores.push(value);
+            }
         }
 
-        await usuario.update(datos);
+        if (campos.length === 0) throw new Error("No hay campos para actualizar");
 
-        const usuarioPlano = usuario.get({ plain: true });
-        delete usuarioPlano.contrasenia;
-        return usuarioPlano;
+        valores.push(id);
+
+        const [result] = await pool.query(
+            `UPDATE usuarios SET ${campos.join(", ")}, modificado = NOW() WHERE usuario_id = ? AND activo = 1`,
+            valores
+        );
+
+        if (result.affectedRows === 0) throw new Error("Usuario no encontrado o inactivo");
+
+        const [updatedUser] = await pool.query(
+            `SELECT * FROM usuarios WHERE usuario_id = ?`,
+            [id]
+        );
+
+        return updatedUser[0];
     }
 
-    //Eliminamos con soft delete
-    static async eliminarUsuario(id) {
-        const usuario = await Usuario.findByPk(id);
-        if (!usuario || usuario.activo === 0) return null;
 
-        await usuario.update({ activo: 0 });
-        return true;
+    // Eliminar usuario (soft delete)
+    static async eliminarUsuario(id) {
+        await pool.query(
+            `UPDATE usuarios SET activo=0, modificado=NOW() WHERE usuario_id=?`,
+            [id]
+        );
+        return { message: "Usuario eliminado (soft delete)" };
     }
 }
 
 export default UsuariosService;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

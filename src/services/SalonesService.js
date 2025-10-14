@@ -1,49 +1,59 @@
-import Salones from '../models/Salon.js';
-import ReservaServicio from "../models/ReservaServicio.js";
+import pool from "../database/database.js"
 
 
 class SalonesService {
     async getALL() {
-        return await Salones.findAll();
+        const [rows] = await pool.execute('SELECT * FROM Salones WHERE activo = 1');
+        return rows;
     }
 
     async getById(id) {
-        const salon = await Salones.findByPk(id);
-        if (!salon) throw new Error(`not_found`);
-        return salon;
+        const [rows] = await pool.execute('SELECT * FROM Salones WHERE salon_id = ? AND activo = 1', [id]);
+        if (rows.length === 0) throw new Error('no se encontro o esta eliminado');
+        return rows[0];
     }
 
     async create(data) {
         const { titulo, direccion, importe, capacidad, latitud, longitud } = data;
-        return await Salones.create({ titulo, direccion, importe, capacidad, latitud, longitud });
+        const [result] = await pool.execute(
+            'INSERT INTO salones (titulo, direccion, importe, capacidad, latitud, longitud) VALUES (?, ?, ?, ?, ?, ?)',
+            [titulo, direccion, importe, capacidad, latitud, longitud]
+        );
+        return { salon_id: result.insertId, ...data };
     }
 
     async update(id, data) {
-        const salon = await Salones.findByPk(id);
-        if (!salon) throw new Error(`not_found`);
-        await salon.update(data);
-        return salon;
-    }
+        const campos = [];
+        const valores = [];
 
-    async delete(id) {
-        const salon = await Salones.findByPk(id);
-        if (!salon) throw new Error(`not_found`);
-
-        //Obtener reservas asociadas al salon
-        const reservas = await Salones.findAll({ where: { salon_id: id } });
-
-        // Soft delete de reservas y reservas_servicios asociados
-        for (const reserva of reservas) {
-            await ReservaServicio.update(
-                { activo: 0 },
-                { where: { reserva_id: reserva.reserva_id } }
-            );
-
-            await reserva.update({ activo: 0 });
+        for (const [key, value] of Object.entries(data)) {
+            if (value !== undefined) {
+                campos.push(`${key} = ?`);
+                valores.push(value);
+            }
         }
 
-        // Finalmente eliminar el salón (soft delete)
-        await salon.update({ activo: 0 });
+        if (campos.length === 0) throw new Error("No hay campos para actualizar");
+
+        valores.push(id);
+
+        const [result] = await pool.execute(
+            `UPDATE salones SET ${campos.join(", ")} WHERE salon_id = ?`,
+            valores
+        );
+
+        if (result.affectedRows === 0) throw new Error("No se encontró el salón");
+        return { salon_id: id, ...data };
+    }
+
+
+
+    async delete(id) {
+        //soft delete
+        await pool.execute('UPDATE salones SET activo = 0 WHERE salon_id = ?', [id]);
+
+        //soft delete para reservas que esten asociadas
+        await pool.execute('UPDATE reservas SET activo = 0 WHERE salon_id = ?', [id]);
 
         return { message: "Salón y reservas asociadas eliminadas correctamente." };
     }

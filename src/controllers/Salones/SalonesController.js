@@ -1,4 +1,3 @@
-import Salones from "../../models/Salon.js";
 import SalonesService from '../../services/SalonesService.js';
 
 class SalonesController {
@@ -6,7 +5,7 @@ class SalonesController {
     // Listar todos los salones
     async getAll(req, res) {
         try {
-            const salones = await Salones.findAll();
+            const salones = await SalonesService.getALL();
             res.json(salones);
         } catch (error) {
             console.error(error);

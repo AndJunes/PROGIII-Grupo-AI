@@ -37,7 +37,7 @@ class UsuariosController {
     // Obtener usuario por ID
     static async getById(req, res) {
         try {
-            const usuario = await UsuariosService.obtenerPorId(req.params.id);
+            const usuario = await UsuariosService.obtenerUsuarioPorId(req.params.id);
             if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
             res.json(usuario);
         } catch (error) {
