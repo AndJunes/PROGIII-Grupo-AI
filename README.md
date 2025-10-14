@@ -11,7 +11,6 @@ Permite consultar salones disponibles desde un endpoint `/salones`, `/servicios`
 
 - Node.js v22
 - Express (framework para la API REST)
-- Sequelize (ORM para MySQL)
 - MySQL
 - dotenv (manejo de variables de entorno)
 - nodemon (reconstrucción automática del servidor en desarrollo)
@@ -19,6 +18,7 @@ Permite consultar salones disponibles desde un endpoint `/salones`, `/servicios`
 - jsonwebtoken (autenticacion por tokens JWT)
 - bcryptjs (encriptacion de contraseñas)
 - nodemailer (envio de notificaciones por correo electronico)
+- mysql2
 
 ---
 
@@ -31,14 +31,7 @@ PROGIII-Grupo-AI/
 │  ├─ app.js                  # Archivo principal del servidor
 │  ├─ database/
 │  │   └─ database.js         # Configuración de Sequelize y conexión a MySQL
-│  ├─ models/
-│  │   ├─ Salon.js            # Modelo Sequelize para la tabla 'salones'
-│  │   ├─ Usuario.js          
-│  │   ├─ Reserva.js          
-│  │   ├─ Servicio.js         
-│  │   ├─ Turno.js
-│  │   ├─ ReservaServicio.js
-│  │   └─ index.js                  
+│  │                 
 │  ├─ controllers/           # Controladores para diferentes entidades
 │  │   ├─ Salones/
 │  │   │   ├─ SalonesController.js
@@ -59,14 +52,20 @@ PROGIII-Grupo-AI/
 │  ├─ notificacion/
 │  │   ├─ mailer.js
 │  └─ routes/
-│      ├─ index.js
-│      ├─ salones.js
-│      ├─ usuarios.js
-│      ├─ reservas.js
-│      ├─ servicios.js
-│      ├─ turnos.js
-│      ├─ auth.js
-│
+│  │   ├─ index.js
+│  │   ├─ salones.js
+│  │   ├─ usuarios.js
+│  │   ├─ reservas.js
+│  │   ├─ servicios.js
+│  │   ├─ turnos.js
+│  │   ├─ auth.js
+│  ├─ services/
+│  │   ├─ AuthService.js
+│  │   ├─ ReservaService.js
+│  │   ├─ SalonesService.js
+│  │   ├─ ServiciosService.js
+│  │   ├─ TurnosService.js
+│  │   ├─ UsuariosService.js
 ├─ script_reservas.sql
 ├─ .env.example
 ├─ package.json
@@ -144,35 +143,37 @@ GET /salones 200 15.123 ms - 512
 ---
 ##  Endpoints disponibles
 
-| Método | Ruta                    | Descripción                                                    |
-|--------|-------------------------|----------------------------------------------------------------|
-| **GET** | `/salones`              | Devuelve todos los salones registrados en la base de datos     |
-| **GET** | `/salones/:id`          | Devuelve la información de un salón específico                 |
-| **POST** | `/salones`              | Crea un nuevo salón                                            |
-| **PUT** | `/salones/:id`          | Actualiza los datos de un salón existente                      |
-| **DELETE** | `/salones/:id`          | Elimina (o desactiva) un salón existente                       |
-| **GET** | `/usuarios`             | Devuelve todos los usuarios registrados                        |
-| **GET** | `/usuarios/:id`         | Devuelve los datos de un usuario específico                    |
-| **POST** | `/usuarios`             | Crea un nuevo usuario                                          |
-| **POST** | `/auth/login`           | Inicia sesión y devuelve token                                 |
-| **PUT** | `/usuarios/:id`         | Actualiza los datos de un usuario existente                    |
-| **DELETE** | `/usuarios/:id`         | Elimina (soft delete) un usuario existente                     |
-| **GET** | `/reservas`             | Devuelve todas las reservas (solo para admin o empleado)       |
-| **GET** | `/reservas/:id`         | Devuelve una reserva específica                                |
-| **GET** | `/reservas/usuario/:id` | Devuelve las reservas de un usuario específico (en desarrollo) |
-| **POST** | `/reservas`             | Crea una nueva reserva para un cliente                         |
-| **PUT** | `/reservas/:id`         | Actualiza una reserva existente (fecha, estado, etc.)          |
-| **DELETE** | `/reservas/:id`         | Elimina una reserva existente                                  |
-| **GET** | `/servicios`            | Devuelve todos los servicios disponibles                       |
-| **GET** | `/servicios/:id`        | Devuelve los detalles de un servicio específico                |
-| **POST** | `/servicios`            | Crea un nuevo servicio                                         |
-| **PUT** | `/servicios/:id`        | Actualiza los datos de un servicio existente                   |
-| **DELETE** | `/servicios/:id`        | Elimina un servicio                                            |
-| **GET** | `/turnos`               | Devuelve todos los turnos disponibles                          |
-| **GET** | `/turnos/:id`           | Devuelve un turno específico                                   |
-| **POST** | `/turnos`               | Crea un nuevo turno                                            |
-| **PUT** | `/turnos/:id`           | Actualiza un turno existente                                   |
-| **DELETE** | `/turnos/:id`           | Elimina un turno existente                                     |
+| Método     | Ruta                             | Descripción                                                        |
+|------------|----------------------------------|--------------------------------------------------------------------|
+| **GET**    | `/salones`                       | Devuelve todos los salones registrados en la base de datos         |
+| **GET**    | `/salones/:id`                   | Devuelve la información de un salón específico                     |
+| **POST**   | `/salones`                       | Crea un nuevo salón                                                |
+| **PUT**    | `/salones/:id`                   | Actualiza los datos de un salón existente                          |
+| **DELETE** | `/salones/:id`                   | Elimina (o desactiva) un salón existente                           |
+| **GET**    | `/usuarios`                      | Devuelve todos los usuarios registrados                            |
+| **GET**    | `/usuarios/:id`                  | Devuelve los datos de un usuario específico                        |
+| **GET**    | `/usuarios/clientes`             | Devuelve los datos de solo los CLIENTES                            |
+| **POST**   | `/usuarios`                      | Crea un nuevo usuario                                              |
+| **POST**   | `/auth/login`                    | Inicia sesión y devuelve token                                     |
+| **PUT**    | `/usuarios/:id`                  | Actualiza los datos de un usuario existente                        |
+| **DELETE** | `/usuarios/:id`                  | Elimina (soft delete) un usuario existente                         |
+| **GET**    | `/reservas`                      | Devuelve todas las reservas (solo para admin o empleado)           |
+| **GET**    | `/reservas/:id`                  | Devuelve una reserva específica                                    |
+| **GET**    | `/reservas/usuario?propias=true` | Devuelve las reservas de un usuario específico del usuario logeado |
+| **POST**   | `/reservas`                      | Crea una nueva reserva para un cliente                             |
+| **PUT**    | `/reservas/:id`                  | Actualiza una reserva existente (fecha, estado, etc.)              |
+| **DELETE** | `/reservas/:id`                  | Elimina una reserva existente                                      |
+| **GET**    | `/servicios`                     | Devuelve todos los servicios disponibles                           |
+| **GET**    | `/servicios/:id`                 | Devuelve los detalles de un servicio específico                    |
+| **GET**    | `/servicios?propios?true`        | Devuelve los detalles de los servicios del usuario logeado         |
+| **POST**   | `/servicios`                     | Crea un nuevo servicio                                             |
+| **PUT**    | `/servicios/:id`                 | Actualiza los datos de un servicio existente                       |
+| **DELETE** | `/servicios/:id`                 | Elimina un servicio                                                |
+| **GET**    | `/turnos`                        | Devuelve todos los turnos disponibles                              |
+| **GET**    | `/turnos/:id`                    | Devuelve un turno específico                                       |
+| **POST**   | `/turnos`                        | Crea un nuevo turno                                                |
+| **PUT**    | `/turnos/:id`                    | Actualiza un turno existente                                       |
+| **DELETE** | `/turnos/:id`                    | Elimina un turno existente                                         |
 
 
 
@@ -221,12 +222,6 @@ npm run dev
 npm install
 `
 
-- Sincronizar tablas desde Sequelize (opcional):
-
-`
-sequelize.sync({ force: true }); ⚠️ Borra datos existentes
-`
-
 ---
 
 ##  Licencia
@@ -239,4 +234,4 @@ Integrantes:
 * Damián Exequiel Cornejo
 * Facundo Alcides Diaz
 * Andrea Judith Junes
-* Lucas Nieto
+* Lucas Fermín Nieto
