@@ -87,8 +87,9 @@ DB_HOST=localhost
 DB_DIALECT=mysql
 PORT=3006
 JWT_SECRET=clave_secreta_super_segura
-MAIL_USER=tuemail@gmail.com
-MAIL_PASS=clave_app_google
+USER=notificacion.trabajofinal@gmail.com
+PASS=clave_app_google
+ADMIN_CORREO=micorreo@gmail.com
 ```
 
 > **Nota:** No subas tu `.env` real al repositorio. Solo `.env.example` con datos genéricos.
