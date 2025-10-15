@@ -166,7 +166,7 @@ GET /salones 200 15.123 ms - 512
 | **DELETE** | `/reservas/:id`                  | Elimina una reserva existente                                      |
 | **GET**    | `/servicios`                     | Devuelve todos los servicios disponibles                           |
 | **GET**    | `/servicios/:id`                 | Devuelve los detalles de un servicio específico                    |
-| **GET**    | `/servicios?propios?=true`        | Devuelve los detalles de los servicios del usuario logeado         |
+| **GET**    | `/servicios?propios=true`        | Devuelve los detalles de los servicios del usuario logeado         |
 | **POST**   | `/servicios`                     | Crea un nuevo servicio                                             |
 | **PUT**    | `/servicios/:id`                 | Actualiza los datos de un servicio existente                       |
 | **DELETE** | `/servicios/:id`                 | Elimina un servicio                                                |
