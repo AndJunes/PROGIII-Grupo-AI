@@ -143,37 +143,37 @@ GET /salones 200 15.123 ms - 512
 ---
 ##  Endpoints disponibles
 
-| Método     | Ruta                             | Descripción                                                        |
-|------------|----------------------------------|--------------------------------------------------------------------|
-| **GET**    | `/salones`                       | Devuelve todos los salones registrados en la base de datos         |
-| **GET**    | `/salones/:id`                   | Devuelve la información de un salón específico                     |
-| **POST**   | `/salones`                       | Crea un nuevo salón                                                |
-| **PUT**    | `/salones/:id`                   | Actualiza los datos de un salón existente                          |
-| **DELETE** | `/salones/:id`                   | Elimina (o desactiva) un salón existente                           |
-| **GET**    | `/usuarios`                      | Devuelve todos los usuarios registrados                            |
-| **GET**    | `/usuarios/:id`                  | Devuelve los datos de un usuario específico                        |
-| **GET**    | `/usuarios/clientes`             | Devuelve los datos de solo los CLIENTES                            |
-| **POST**   | `/usuarios`                      | Crea un nuevo usuario                                              |
-| **POST**   | `/auth/login`                    | Inicia sesión y devuelve token                                     |
-| **PUT**    | `/usuarios/:id`                  | Actualiza los datos de un usuario existente                        |
-| **DELETE** | `/usuarios/:id`                  | Elimina (soft delete) un usuario existente                         |
-| **GET**    | `/reservas`                      | Devuelve todas las reservas (solo para admin o empleado)           |
-| **GET**    | `/reservas/:id`                  | Devuelve una reserva específica                                    |
-| **GET**    | `/reservas/usuario?propias=true` | Devuelve las reservas de un usuario específico del usuario logeado |
-| **POST**   | `/reservas`                      | Crea una nueva reserva para un cliente                             |
-| **PUT**    | `/reservas/:id`                  | Actualiza una reserva existente (fecha, estado, etc.)              |
-| **DELETE** | `/reservas/:id`                  | Elimina una reserva existente                                      |
-| **GET**    | `/servicios`                     | Devuelve todos los servicios disponibles                           |
-| **GET**    | `/servicios/:id`                 | Devuelve los detalles de un servicio específico                    |
-| **GET**    | `/servicios?propios?true`        | Devuelve los detalles de los servicios del usuario logeado         |
-| **POST**   | `/servicios`                     | Crea un nuevo servicio                                             |
-| **PUT**    | `/servicios/:id`                 | Actualiza los datos de un servicio existente                       |
-| **DELETE** | `/servicios/:id`                 | Elimina un servicio                                                |
-| **GET**    | `/turnos`                        | Devuelve todos los turnos disponibles                              |
-| **GET**    | `/turnos/:id`                    | Devuelve un turno específico                                       |
-| **POST**   | `/turnos`                        | Crea un nuevo turno                                                |
-| **PUT**    | `/turnos/:id`                    | Actualiza un turno existente                                       |
-| **DELETE** | `/turnos/:id`                    | Elimina un turno existente                                         |
+| Método     | Ruta                      | Descripción                                                        |
+|------------|---------------------------|--------------------------------------------------------------------|
+| **GET**    | `/salones`                | Devuelve todos los salones registrados en la base de datos         |
+| **GET**    | `/salones/:id`            | Devuelve la información de un salón específico                     |
+| **POST**   | `/salones`                | Crea un nuevo salón                                                |
+| **PUT**    | `/salones/:id`            | Actualiza los datos de un salón existente                          |
+| **DELETE** | `/salones/:id`            | Elimina (o desactiva) un salón existente                           |
+| **GET**    | `/usuarios`               | Devuelve todos los usuarios registrados                            |
+| **GET**    | `/usuarios/:id`           | Devuelve los datos de un usuario específico                        |
+| **GET**    | `/usuarios/clientes`      | Devuelve los datos de solo los CLIENTES                            |
+| **POST**   | `/usuarios`               | Crea un nuevo usuario                                              |
+| **POST**   | `/auth/login`             | Inicia sesión y devuelve token                                     |
+| **PUT**    | `/usuarios/:id`           | Actualiza los datos de un usuario existente                        |
+| **DELETE** | `/usuarios/:id`           | Elimina (soft delete) un usuario existente                         |
+| **GET**    | `/reservas`               | Devuelve todas las reservas (solo para admin o empleado)           |
+| **GET**    | `/reservas/:id`           | Devuelve una reserva específica                                    |
+| **GET**    | `/reservas?propias=true`  | Devuelve las reservas de un usuario específico del usuario logeado |
+| **POST**   | `/reservas`               | Crea una nueva reserva para un cliente                             |
+| **PUT**    | `/reservas/:id`           | Actualiza una reserva existente (fecha, estado, etc.)              |
+| **DELETE** | `/reservas/:id`           | Elimina una reserva existente                                      |
+| **GET**    | `/servicios`              | Devuelve todos los servicios disponibles                           |
+| **GET**    | `/servicios/:id`          | Devuelve los detalles de un servicio específico                    |
+| **GET**    | `/servicios?propios=true` | Devuelve los detalles de los servicios del usuario logeado         |
+| **POST**   | `/servicios`              | Crea un nuevo servicio                                             |
+| **PUT**    | `/servicios/:id`          | Actualiza los datos de un servicio existente                       |
+| **DELETE** | `/servicios/:id`          | Elimina un servicio                                                |
+| **GET**    | `/turnos`                 | Devuelve todos los turnos disponibles                              |
+| **GET**    | `/turnos/:id`             | Devuelve un turno específico                                       |
+| **POST**   | `/turnos`                 | Crea un nuevo turno                                                |
+| **PUT**    | `/turnos/:id`             | Actualiza un turno existente                                       |
+| **DELETE** | `/turnos/:id`             | Elimina un turno existente                                         |
 
 
 
@@ -197,6 +197,31 @@ Ejemplo de respuesta (para salones):
 ]
 ```
 
+Usuarios de acceso rapido:
+```
+[
+  {
+    "nombre_usuario": "alblop@correo.com",
+    "contrasenia": "alblop"
+  }
+  
+  {
+    "nombre_usuario": "anaflo@correo.com",
+    "contrasenia": "anaflo"
+  }
+  
+  {
+    "nombre_usuario": "oscram@correo.com",
+    "contrasenia": "oscram"
+  }
+  
+]
+
+alblop@correo.com = CLIENTE
+anaflo@correo.com = EMPLEADO
+oscram@correo.com = ADMINISTRADOR
+```
+
 ---
 
 ##  Notas importantes
@@ -205,7 +230,10 @@ Ejemplo de respuesta (para salones):
 - Nodemon está configurado para **reiniciar el servidor automáticamente** cuando hay cambios en `src/`.
 - Morgan logea todos los requests HTTP en consola para facilitar el debugging. 
 - Documentar la API utilizando **Swagger**.
-
+- Los usuarios existentes en la base de datos tienen su contraseña hasheada en MD5, cuando cualquier usuario procede a
+iniciar sesion, su contraseña automaticamente se migra a 60 bytes.
+- La contraseña de cualquier usuario es **la palabra que esta detras del signo @ de su nombre de usuario**, por ejemplo:
+el usuario Pamela Gomez con su nombre de usuario pamgom@correo.com, su contraseña respectivamente es pamgom. 
 ---
 
 ##  Comandos útiles
