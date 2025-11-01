@@ -20,6 +20,12 @@ dotenv.config({ path: __dirname + '/../.env' });
 
 const app = express();
 
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
+
+// Agregar Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Seguridad
 app.use(helmet());
 

@@ -1,19 +1,212 @@
 import express from 'express';
 import apicache from 'apicache';
+import { body, param, check } from 'express-validator';
 import auth from '../middleware/auth.js';
 import roleCheck from '../middleware/roleCheck.js';
+import validar from '../middleware/validar.js';
 import { CLIENTE, EMPLEADO, ADMINISTRADOR } from '../constants/roles.js';
 import ReservaController from '../controllers/Reservas/ReservaController.js';
 
 const router = express.Router();
 const cache = apicache.middleware;
 
-// Reservas
-router.post('/', auth, roleCheck([ADMINISTRADOR, CLIENTE]), ReservaController.crear.bind(ReservaController));
-router.get('/', cache('5 minutes'), auth, roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]), ReservaController.listar.bind(ReservaController));
-router.get('/all', cache('5 minutes'), auth, roleCheck([ADMINISTRADOR, EMPLEADO]), ReservaController.listarTodas.bind(ReservaController));
-router.get('/:id', cache('5 minutes'), auth, roleCheck([EMPLEADO, ADMINISTRADOR]), ReservaController.obtenerPorId.bind(ReservaController));
-router.put('/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.actualizar.bind(ReservaController));
-router.delete('/:id', auth, roleCheck([ADMINISTRADOR]), ReservaController.eliminar.bind(ReservaController));
+/**
+ * @swagger
+ * /api/reservas:
+ *   post:
+ *     tags: [Reservas]
+ *     summary: Crear una nueva reserva
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fecha:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2025-11-01T10:00:00Z"
+ *               salon_id:
+ *                 type: integer
+ *                 example: 1
+ *               servicio_id:
+ *                 type: integer
+ *                 example: 2
+ *     responses:
+ *       201:
+ *         description: Reserva creada exitosamente
+ */
+router.post(
+  '/',
+  [
+    auth,
+    roleCheck([ADMINISTRADOR, CLIENTE]),
+
+    check('fecha_reserva')
+      .notEmpty().withMessage('La fecha es necesaria.')
+      .isISO8601().withMessage('Debe ser una fecha válida (YYYY-MM-DD).'),
+
+    check('salon_id')
+      .notEmpty().withMessage('El salón es necesario.')
+      .isInt().withMessage('El ID del salón debe ser numérico.'),
+
+    check('usuario_id')
+      .notEmpty().withMessage('El usuario es necesario.')
+      .isInt().withMessage('El ID del usuario debe ser numérico.'),
+
+    check('turno_id')
+      .notEmpty().withMessage('El turno es necesario.')
+      .isInt().withMessage('El ID del turno debe ser numérico.'),
+
+    check('servicios')
+      .notEmpty().withMessage('Faltan los servicios de la reserva.')
+      .isArray().withMessage('El campo servicios debe ser un arreglo.'),
+
+    check('servicios.*.importe')
+      .isFloat({ min: 0 }).withMessage('El importe debe ser un número mayor o igual a 0.'),
+  ],
+  validar,
+  ReservaController.crear.bind(ReservaController)
+);
+/**
+ * @swagger
+ * /api/reservas:
+ *   get:
+ *     tags: [Reservas]
+ *     summary: Obtener reservas del usuario logeado o según rol
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de reservas del usuario o rol correspondiente
+ */
+router.get(
+  '/',
+  cache('5 minutes'),
+  auth,
+  roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]),
+  ReservaController.listar.bind(ReservaController)
+);
+/**
+ * @swagger
+ * /api/reservas/all:
+ *   get:
+ *     tags: [Reservas]
+ *     summary: Obtener todas las reservas (solo admin y empleado)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de todas las reservas
+ */
+router.get(
+  '/all',
+  cache('5 minutes'),
+  auth,
+  roleCheck([ADMINISTRADOR, EMPLEADO]),
+  ReservaController.listarTodas.bind(ReservaController)
+);
+/**
+ * @swagger
+ * /api/reservas/{id}:
+ *   get:
+ *     tags: [Reservas]
+ *     summary: Obtener una reserva por ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Datos de la reserva
+ */
+router.get(
+  '/:id',
+  cache('5 minutes'),
+  auth,
+  roleCheck([EMPLEADO, ADMINISTRADOR]),
+  [param('id').isInt().withMessage('El id debe ser un número')],
+  validar,
+  ReservaController.obtenerPorId.bind(ReservaController)
+);
+/**
+ * @swagger
+ * /api/reservas/{id}:
+ *   put:
+ *     tags: [Reservas]
+ *     summary: Actualizar una reserva existente
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fecha:
+ *                 type: string
+ *                 format: date-time
+ *               estado:
+ *                 type: string
+ *                 example: "confirmada"
+ *     responses:
+ *       200:
+ *         description: Reserva actualizada
+ */
+router.put(
+  '/:id',
+  auth,
+  roleCheck([ADMINISTRADOR]),
+  [
+    param('id').isInt().withMessage('El id debe ser un número'),
+    body('usuario_id').optional().isInt().withMessage('Debe ser un número'),
+    body('salon_id').optional().isInt().withMessage('Debe ser un número'),
+    body('fecha').optional().isISO8601().withMessage('Debe ser una fecha válida'),
+    body('hora').optional(),
+    body('servicio_id').optional().isInt().withMessage('Debe ser un número'),
+  ],
+  validar,
+  ReservaController.actualizar.bind(ReservaController)
+);
+/**
+ * @swagger
+ * /api/reservas/{id}:
+ *   delete:
+ *     tags: [Reservas]
+ *     summary: Eliminar una reserva
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Reserva eliminada
+ */
+router.delete(
+  '/:id',
+  auth,
+  roleCheck([ADMINISTRADOR]),
+  [param('id').isInt().withMessage('El id debe ser un número')],
+  validar,
+  ReservaController.eliminar.bind(ReservaController)
+);
 
 export default router;

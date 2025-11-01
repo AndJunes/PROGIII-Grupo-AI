@@ -15,40 +15,34 @@ class ReservaController {
         }
     }
 
-    // GET -> listar reservas
-    static async listar(req, res) {
-        try {
-            const { tipo_usuario, usuario_id } = req.usuario;
-            const propios = req.query.propias === 'true';
+    // GET -> listar reservas del usuario logueado
+static async listar(req, res) {
+    try {
+        const { tipo_usuario, usuario_id } = req.usuario;
 
-            let reservas;
+        // Convertimos a number por seguridad
+        const usuarioIdNum = Number(usuario_id);
+        
+        let reservas;
 
-            // CLIENTE
-            if (tipo_usuario === 3) {
-                if (!propios) {
-                    return res.status(403).json({ mensaje: "Los clientes solo pueden ver sus propias reservas" });
-                }
-                reservas = await ReservaService.listar(usuario_id);
-            } else {
-                if (propios) {
-                    // Devuelve solo las reservas del usuario logueado
-                    reservas = await ReservaService.listar(usuario_id);
-                } else {
-                    // Devuelve todas las reservas
-                    reservas = await ReservaService.listarTodas();
-                }
-            }
-
-            if (reservas.length === 0) {
-                return res.json({ mensaje: propios ? "No hay reservas para este usuario" : "No hay reservas disponibles" });
-            }
-
-            res.json(reservas);
-        } catch (error) {
-            console.error('error al listar reservas:', error);
-            res.status(500).json({ mensaje: 'error al listar reservas', error });
+        if (tipo_usuario === 3) {
+            // CLIENTE → siempre solo sus reservas
+            reservas = await ReservaService.listar(usuarioIdNum);
+        } else {
+            // EMPLEADO / ADMIN → por defecto solo sus reservas
+            reservas = await ReservaService.listar(usuarioIdNum);
         }
+
+        if (!reservas || reservas.length === 0) {
+            return res.json({ mensaje: "No hay reservas disponibles para este usuario" });
+        }
+
+        res.json(reservas);
+    } catch (error) {
+        console.error('Error al listar reservas:', error);
+        res.status(500).json({ mensaje: 'Error al listar reservas', error });
     }
+}
 
 
 

@@ -39,17 +39,26 @@ class ReservaService {
     }
 
     async listar(usuarioId) {
+    try {
+        // Asegurarse que sea número
+        const usuarioIdNum = Number(usuarioId);
+
         const [rows] = await pool.query(
             `SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta
              FROM reservas r
              LEFT JOIN salones s ON r.salon_id = s.salon_id
              LEFT JOIN turnos t ON r.turno_id = t.turno_id
              WHERE r.usuario_id = ? AND r.activo = 1`,
-            [usuarioId]
+            [usuarioIdNum]
         );
 
         return rows;
+    } catch (error) {
+        console.error('Error en ReservaService.listar:', error);
+        throw error;
     }
+}
+
 
     async obtenerPorId(id){
         const [rows] = await pool.query(
