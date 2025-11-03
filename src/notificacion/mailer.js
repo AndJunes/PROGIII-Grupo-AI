@@ -38,7 +38,7 @@ export async function enviarNotificacion(reserva, usuario, res = null) {
             }
         });
 
-        const correoCliente = usuario.email; // email del usuario que hizo la reserva
+        const correoCliente = usuario.email;
         const correoAdmin = process.env.ADMIN_CORREO;
 
         // Opciones del correo cliente
