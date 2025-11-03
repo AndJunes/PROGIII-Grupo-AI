@@ -147,7 +147,7 @@ router.get(
     '/informe',
     [
         auth,
-        roleCheck([ADMINISTRADOR]) // ¡¡CLAVE!! Solo el Admin puede hacer esto
+        roleCheck([ADMINISTRADOR])
     ],
     ReservaController.informe 
 );

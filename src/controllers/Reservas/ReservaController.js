@@ -117,7 +117,8 @@ static async listar(req, res) {
             res.set(headers);
             //formato pdf
             if (formato === 'pdf') {
-                res.status(200).end(buffer);
+                res.setHeader('Content-Disposition', 'attachment; filename="reporte_reservas.pdf"');
+                res.status(200).send(buffer);
             //formato csv
             } else if (formato === 'csv') {
                 res.status(200).download(path, (err) => {
