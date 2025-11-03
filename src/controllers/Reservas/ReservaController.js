@@ -1,4 +1,7 @@
 import ReservaService from "../../services/ReservaService.js";
+import fs from 'fs';
+
+const formatosPermitidos = ['pdf', 'csv'];
 
 class ReservaController {
     // POST -> crea una reserva (cliente)
@@ -43,7 +46,6 @@ static async listar(req, res) {
         res.status(500).json({ mensaje: 'Error al listar reservas', error });
     }
 }
-
 
 
     // GET -> obtener una reserva específica por ID
@@ -96,6 +98,46 @@ static async listar(req, res) {
         } catch (error) {
             console.error('error al listar todas las reservas:', error);
             res.status(500).json({ mensaje: 'error al listar todas las reservas', error });
+        }
+    }
+
+    static async informe(req, res) {
+        try {
+            // Lee el formato de la URL
+            const formato = req.query.formato;
+
+            if (!formato || !formatosPermitidos.includes(formato)) {
+                return res.status(400).json({
+                    mensaje: "Formato inválido. Debe ser 'pdf' o 'csv'."
+                });
+            }
+
+            const { buffer, path, headers } = await ReservaService.generarInforme(formato);
+            
+            res.set(headers);
+            //formato pdf
+            if (formato === 'pdf') {
+                res.status(200).end(buffer);
+            //formato csv
+            } else if (formato === 'csv') {
+                res.status(200).download(path, (err) => {
+                    if (err) {
+                        console.error('Error al enviar el archivo CSV:', err);
+                        res.status(500).json({
+                            mensaje: "No se pudo descargar el informe."
+                        });
+                    }
+                    try {
+                        fs.unlinkSync(path);
+                    } catch (unlinkErr) {
+                        console.error("Error al borrar el archivo temporal CSV:", unlinkErr);
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('Error en ReservaController.informe:', error);
+            res.status(500).json({ mensaje: 'Error interno al generar el informe', error });
         }
     }
 }
