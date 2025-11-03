@@ -111,6 +111,48 @@ router.get(
 );
 /**
  * @swagger
+ * /api/reservas/informe:
+ *  get:
+ *    tags: [Reservas]
+ *    summary: Generar un informe de reservas en PDF o CSV (Solo Admin)
+ *    security:
+ *    - bearerAuth: []
+ *    parameters:
+ *    - in: query
+ *      name: formato
+ *      required: true
+ *      description: El formato deseado para el informe ('pdf' o 'csv')
+ *      schema:
+ *        type: string
+ *    enum: [pdf, csv]
+ *    responses:
+ *      '200':
+ *        description: El archivo del informe (PDF o CSV)
+ *        content:
+ *          application/pdf:
+ *            schema:
+ *              type: string
+ *              format: binary
+ *          text/csv:
+ *            schema:
+ *              type: string
+ *      '400':
+ *        description: Formato inválido
+ *      '401':
+ *        description: No autorizado
+ *      '403':
+ *        description: Prohibido (No es Admin)
+ */
+router.get(
+    '/informe',
+    [
+        auth,
+        roleCheck([ADMINISTRADOR]) // ¡¡CLAVE!! Solo el Admin puede hacer esto
+    ],
+    ReservaController.informe 
+);
+/**
+ * @swagger
  * /api/reservas/{id}:
  *   get:
  *     tags: [Reservas]

@@ -1,5 +1,6 @@
 import { enviarNotificacion } from "../notificacion/mailer.js";
 import pool from "../database/database.js"
+import InformeService from "./InformeService.js";
 
 
 class ReservaService {
@@ -58,7 +59,6 @@ class ReservaService {
         throw error;
     }
 }
-
 
     async obtenerPorId(id){
         const [rows] = await pool.query(
@@ -122,6 +122,81 @@ class ReservaService {
         )
 
         return rows;
+    }
+
+    async generarReporteDetalle() {
+        try {
+            const sql = `CALL reporte_detalle_reservas();`;
+            const [rows] = await pool.query(sql);
+            return rows[0]; 
+        } catch (error) {
+            console.error('Error en ReservaService.generarReporteDetalle:', error);
+            throw error;
+        }
+    }
+//salones
+    async generarReporteEstadisticoSalones() {
+        try {
+            const sql = `CALL reporte_estadistico_salones();`;
+            const [rows] = await pool.query(sql);
+            return rows[0];
+        } catch (error) {
+            console.error('Error en ReservaService.generarReporteEstadisticoSalones:', error);
+            throw error;
+        }
+    }
+//servicios
+    async generarReporteEstadisticoServicios() {
+        try {
+            const sql = `CALL reporte_estadistico_servicios();`;
+            const [rows] = await pool.query(sql);
+            return rows[0]; 
+        } catch (error) {
+            console.error('Error en ReservaService.generarReporteEstadisticoServicios:', error);
+            throw error;
+        }
+    }
+//turnos
+    async generarReporteEstadisticoTurnos() {
+        try {
+            const sql = `CALL reporte_estadistico_turnos();`;
+            const [rows] = await pool.query(sql);
+            return rows[0]; 
+        } catch (error) {
+            console.error('Error en ReservaService.generarReporteEstadisticoTurnos:', error);
+            throw error;
+        }
+    }
+
+    async generarInforme(formato) {
+
+        // Busca los datos (llama a la función de acá arriba)
+        const datos = await this.generarReporteDetalle();
+
+        if (!datos || datos.length === 0) {
+            throw new Error("No hay datos para generar el informe");
+        }
+        if (formato === 'pdf') {
+            const pdfBuffer = await InformeService.informeReservasPdf(datos);
+            return {
+                buffer: pdfBuffer,
+                headers: {
+                    'Content-Type': 'application/pdf',
+                    'Content-Disposition': 'inline; filename="reporte_reservas.pdf"' 
+                }
+            };
+
+        } else if (formato === 'csv') {
+
+            const csvPath = await InformeService.informeReservasCsv(datos);
+            return {
+                path: csvPath,
+                headers: {
+                    'Content-Type': 'text/csv',
+                    'Content-Disposition': 'attachment; filename="reporte_reservas.csv"' 
+                }
+            };
+        }
     }
 }
 
