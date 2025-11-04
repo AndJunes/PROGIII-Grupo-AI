@@ -109,6 +109,7 @@ FLUSH PRIVILEGES;
 GRANT EXECUTE ON PROCEDURE reservas.reporte_detalle_reservas TO 'api_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
+> **Nota:** `api_user` y `localhost` deberia ser cambiado por tu usuario e ip especial correspondientemente para asignar dichos permisos.
 
 4. Configurar tu API para usar el usuario dedicado. Crea un archivo `.env` como este.
 ```js
