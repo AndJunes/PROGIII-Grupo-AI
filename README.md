@@ -1,6 +1,6 @@
 # Pogramacion 3 - Grupo-AI
 
-Este proyecto es un **backend de gestion de reservas de salones** desarrollado con **Node.js**, **Express**, **Sequelize** y **MySQL**.  
+Este proyecto es un **backend de gestion de reservas de salones** desarrollado con **Node.js**, **Express** y **MySQL**.  
 Incluye manejo de usuarios, roles, autenticación, notificaciones y reservas.
 
 Permite consultar salones disponibles desde un endpoint `/salones`, `/servicios`,`/turnos`,`/usuarios`, `/reservas`.
@@ -30,8 +30,12 @@ PROGIII-Grupo-AI/
 ├─ src/
 │  ├─ app.js                  # Archivo principal del servidor
 │  ├─ database/
-│  │   └─ database.js         # Configuración de Sequelize y conexión a MySQL
-│  │                 
+│  │   ├─ database.js         # Conexion a la base de datos
+│  │   ├─ ReservasDAO.js      # y Capa de Acceso a Datos
+│  │   ├─ SalonesDAO.js
+│  │   ├─ ServiciosDAO.js
+│  │   ├─ TurnosDAO.js
+│  │   └─ UsuariosDAO.js
 │  ├─ controllers/           # Controladores para diferentes entidades
 │  │   ├─ Salones/
 │  │   │   ├─ SalonesController.js
@@ -67,32 +71,60 @@ PROGIII-Grupo-AI/
 │  │   ├─ TurnosService.js
 │  │   ├─ UsuariosService.js
 ├─ script_reservas.sql
-├─ .env.example
 ├─ package.json
 └─ README.md
-
 ```
 
 ---
 
-##  Variables de entorno
+##  Configuracion de la Base de Datos
 
-Crea un archivo `.env` en la raíz del proyecto (igual que `.env.example`) con tus credenciales de MySQL:
+1.  Crea la base de datos (con usuario adminsitrador). Se recomienda
+usar un usuario con permisos de administrador (como root) para crear
+la base de datos y las tablas iniciales.
 
+```sql
+-- Conéctate como root en MySQL
+DROP DATABASE IF EXISTS reservas;
+CREATE DATABASE reservas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE reservas;
+
+-- Luego ejecuta la creación de tablas e inserción de datos
+-- (Podes usar el script completo "script_reservas.sql")
 ```
-DB_NAME=reservas
-DB_USER=root
-DB_PASS=12345678
+> **Nota:** Esto solo se hace una vez. No es recomendable que tu API cree o elimine la base de datos.
+
+2. Crea un usuario dedicado para la API (Un usuario que tu api
+usara para leer y escribir datos). Por ejemplo:
+```sql
+CREATE USER 'api_user'@'localhost' IDENTIFIED BY 'tu_contraseña_segura';
+GRANT SELECT, INSERT, UPDATE, DELETE ON reservas.* TO 'api_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+* Este usuario solo puede operar sobre la base reservas.
+* No tiene permisos de crear o eliminar bases de datos, ni modificar otras bases.
+
+3. Dar permiso para ejecutar el procedimiento almacenado (manual, después de crear el usuario y crear la base de datos con el script):
+```sql
+GRANT EXECUTE ON PROCEDURE reservas.reporte_detalle_reservas TO 'api_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+4. Configurar tu API para usar el usuario dedicado. Crea un archivo `.env` como este.
+```js
+DB_NAME=nombre_de_la_base_de_datos
+DB_USER=tu_usuario
+DB_PASS=tu_contrasenia
 DB_HOST=localhost
-DB_DIALECT=mysql
 PORT=3006
-JWT_SECRET=clave_secreta_super_segura
-USER=tuemail@gmail.com
-PASS=clave_app_google
-ADMIN_CORREO=tucorreo@gmail.com
-```
+JWT_SECRET=tu_palabra_secreta
 
-> **Nota:** No subas tu `.env` real al repositorio. Solo `.env.example` con datos genéricos.
+#correo desde donde se mandan las notificaciones via e-mail
+USER=tu_correo_electronico
+#esta es la clave de apliacion de google
+PASS=tu_clave_de_aplicacion
+```
+> **Nota:** No subas tu `.env` real al repositorio.
 
 ---
 
@@ -111,21 +143,24 @@ cd PROGIII-Grupo-AI
 npm install
 `
 
-3. Crear tu archivo `.env` a partir de `.env.example` y completar con tus datos de MySQL.
+3. Configurar variables de entorno. 
+- Crear tu archivo `.env` a partir del ejemplo proporcionado en la seccion **Configuracion de la Base de Datos**.
+- Completa los datos de **MySQL**, **Correo electronico** y **JWT** segun corresponda.
 
-4. Importar la base de datos en MySQL con el script `script_reservas.sql`:
+4. Importar la base de datos
+- Abri MySQL Workbench (o tu cliente MySQL de preferencia)
+- Conectate como root (solo para crear la base de datos).
+- Ejectua el script `script_reservas.sql` ubicado en la raiz del proyecto.
+- Dar permiso para ejecutar el procedimiento almacenado.
 
-`
-Ejecutar en MySQL Workbench o tu cliente favorito: C:/PROGIII-Grupo-AI/script_reservas.sql;
-`
-
+- > **Nota:** El API **no debe usar root**, sino el usuario `api_user` que creaste.
 ---
 
 ##  Ejecución en desarrollo
-
-``
+Para iniciar el servidor:
+```
 npm run dev
-``
+```
 
 - El servidor correrá en `https://localhost:3006`.
 - Se imprimirá en consola:
@@ -137,92 +172,17 @@ conexion exitosa
 
 - Cada request se verá en consola gracias a **morgan**:
 
-`
+```
 GET /salones 200 15.123 ms - 512
-`
-
+```
 ---
+
+
 ##  Endpoints disponibles
+Una vez clonado el repositorio, instalado las dependencias y levantado el servidor. Podes probar los endpoints desde la propia documentacion de **Swagger**.
 
-| Método     | Ruta                      | Descripción                                                        |
-|------------|---------------------------|--------------------------------------------------------------------|
-| **GET**    | `/salones`                | Devuelve todos los salones registrados en la base de datos         |
-| **GET**    | `/salones/:id`            | Devuelve la información de un salón específico                     |
-| **POST**   | `/salones`                | Crea un nuevo salón                                                |
-| **PUT**    | `/salones/:id`            | Actualiza los datos de un salón existente                          |
-| **DELETE** | `/salones/:id`            | Elimina (o desactiva) un salón existente                           |
-| **GET**    | `/usuarios`               | Devuelve todos los usuarios registrados                            |
-| **GET**    | `/usuarios/:id`           | Devuelve los datos de un usuario específico                        |
-| **GET**    | `/usuarios/clientes`      | Devuelve los datos de solo los CLIENTES                            |
-| **POST**   | `/usuarios`               | Crea un nuevo usuario                                              |
-| **POST**   | `/auth/login`             | Inicia sesión y devuelve token                                     |
-| **PUT**    | `/usuarios/:id`           | Actualiza los datos de un usuario existente                        |
-| **DELETE** | `/usuarios/:id`           | Elimina (soft delete) un usuario existente                         |
-| **GET**    | `/reservas`               | Devuelve todas las reservas (solo para admin o empleado)           |
-| **GET**    | `/reservas/:id`           | Devuelve una reserva específica                                    |
-| **GET**    | `/reservas?propias=true`  | Devuelve las reservas de un usuario específico del usuario logeado |
-| **POST**   | `/reservas`               | Crea una nueva reserva para un cliente                             |
-| **PUT**    | `/reservas/:id`           | Actualiza una reserva existente (fecha, estado, etc.)              |
-| **DELETE** | `/reservas/:id`           | Elimina una reserva existente                                      |
-| **GET**    | `/servicios`              | Devuelve todos los servicios disponibles                           |
-| **GET**    | `/servicios/:id`          | Devuelve los detalles de un servicio específico                    |
-| **GET**    | `/servicios?propios=true` | Devuelve los detalles de los servicios del usuario logeado         |
-| **POST**   | `/servicios`              | Crea un nuevo servicio                                             |
-| **PUT**    | `/servicios/:id`          | Actualiza los datos de un servicio existente                       |
-| **DELETE** | `/servicios/:id`          | Elimina un servicio                                                |
-| **GET**    | `/turnos`                 | Devuelve todos los turnos disponibles                              |
-| **GET**    | `/turnos/:id`             | Devuelve un turno específico                                       |
-| **POST**   | `/turnos`                 | Crea un nuevo turno                                                |
-| **PUT**    | `/turnos/:id`             | Actualiza un turno existente                                       |
-| **DELETE** | `/turnos/:id`             | Elimina un turno existente                                         |
-
-
-
-Ejemplo de respuesta (para salones):
-
-```
-[
-  {
-    "salon_id": 1,
-    "titulo": "Principal",
-    "direccion": "San Lorenzo 1000",
-    "latitud": null,
-    "longitud": null,
-    "capacidad": 200,
-    "importe": 95000.00,
-    "activo": 1,
-    "creado": "2025-08-19T21:51:22.000Z",
-    "modificado": "2025-08-19T21:51:22.000Z"
-  },
-  ...
-]
-```
-
-Usuarios de acceso rapido:
-```
-[
-  {
-    "nombre_usuario": "alblop@correo.com",
-    "contrasenia": "alblop"
-  }
-  
-  {
-    "nombre_usuario": "anaflo@correo.com",
-    "contrasenia": "anaflo"
-  }
-  
-  {
-    "nombre_usuario": "oscram@correo.com",
-    "contrasenia": "oscram"
-  }
-  
-]
-
-alblop@correo.com = CLIENTE
-anaflo@correo.com = EMPLEADO
-oscram@correo.com = ADMINISTRADOR
-```
-
+1. Entra a https://localhost:3006/api-docs
+- Explora los endpoints y probalos desde la interfaz propia de **Swagger UI**.
 ---
 
 ##  Notas importantes
@@ -230,27 +190,12 @@ oscram@correo.com = ADMINISTRADOR
 - El proyecto **contiene BREAD** para salones, reservas, servicios, turnos y usuarios.
 - Nodemon está configurado para **reiniciar el servidor automáticamente** cuando hay cambios en `src/`.
 - Morgan logea todos los requests HTTP en consola para facilitar el debugging. 
-- Documentar la API utilizando **Swagger**.
+- Esta API esta documentada con **Swagger**.
 - Los usuarios existentes en la base de datos tienen su contraseña hasheada en MD5, cuando cualquier usuario procede a
 iniciar sesion, su contraseña automaticamente se migra a 60 bytes.
 - La contraseña de cualquier usuario es **la palabra que esta detras del signo @ de su nombre de usuario**, por ejemplo:
 el usuario Pamela Gomez con su nombre de usuario pamgom@correo.com, su contraseña respectivamente es pamgom. 
----
-
-##  Comandos útiles
-
-- Iniciar servidor en desarrollo:
-
-`
-npm run dev
-`
-
-- Instalar dependencias nuevas:
-
-`
-npm install
-`
-
+- Pueden logearse como Administrador y crear su propio tipo de Usuario, a traves de los endpoints correspondientes.
 ---
 
 ##  Licencia

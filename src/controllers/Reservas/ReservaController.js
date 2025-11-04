@@ -6,17 +6,18 @@ const formatosPermitidos = ['pdf', 'csv'];
 class ReservaController {
     // POST -> crea una reserva (cliente)
     static async crear(req, res) {
-        try {
-            const nuevaReserva = await ReservaService.crear(req.body, req.usuario);
-            res.status(201).json({
-                mensaje: 'Reserva creada correctamente',
-                reserva: nuevaReserva
-            });
-        } catch (error) {
-            console.error('error al crear reserva:', error);
-            res.status(500).json({ mensaje: 'error al crear reserva', error });
-        }
+    try {
+        const nuevaReserva = await ReservaService.crear(req.body, req.usuario.usuario_id);
+        res.status(201).json({
+            mensaje: 'Reserva creada correctamente',
+            reserva: nuevaReserva
+        });
+    } catch (error) {
+        console.error('error al crear reserva:', error);
+        res.status(500).json({ mensaje: 'error al crear reserva', error });
     }
+}
+
 
     // GET -> listar reservas del usuario logueado
 static async listar(req, res) {

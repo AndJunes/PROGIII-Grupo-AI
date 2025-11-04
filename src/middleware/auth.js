@@ -23,7 +23,12 @@ const auth = async (req, res, next) => {
         }
 
         //guardamos el usuario en la request
-        req.usuario = usuario;
+        req.usuario = {
+            usuario_id: usuario.usuario_id,
+            tipo_usuario: usuario.tipo_usuario
+        };
+
+        
         next();
     } catch (error) {
         console.error('Error en middleware auth: ', error);

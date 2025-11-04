@@ -4,9 +4,8 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import pool from '../database/database.js'
+import pool from '../database/database.js';
 
-// __dirname equivalente en ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -16,12 +15,18 @@ export async function enviarNotificacion(reserva, usuario, res = null) {
         const archivoHbs = await readFile(plantillaPath, 'utf-8');
         const template = handlebars.compile(archivoHbs);
 
-        //sacamos los datos del salon
-        const [salonRows] = await pool.query('SELECT titulo FROM salones WHERE salon_id = ?', [reserva.salon_id]);
+        // Datos del salón
+        const [salonRows] = await pool.query(
+            'SELECT titulo FROM salones WHERE salon_id = ?',
+            [reserva.salon_id]
+        );
         const salon = salonRows[0];
 
-        //sacamos los datos del turno
-        const [turnoRows] = await pool.query('SELECT hora_desde, hora_hasta FROM turnos WHERE turno_id = ?', [reserva.turno_id]);
+        // Datos del turno
+        const [turnoRows] = await pool.query(
+            'SELECT hora_desde, hora_hasta FROM turnos WHERE turno_id = ?',
+            [reserva.turno_id]
+        );
         const turno = turnoRows[0];
 
         const html = template({
@@ -38,8 +43,17 @@ export async function enviarNotificacion(reserva, usuario, res = null) {
             }
         });
 
-        const correoCliente = usuario.email;
-        const correoAdmin = process.env.ADMIN_CORREO;
+        // Correo del cliente (aquí asumimos que nombre_usuario contiene el email)
+        const correoCliente = usuario.nombre_usuario?.trim();
+        if (!correoCliente) {
+            console.log('El cliente no tiene un correo válido.');
+        }
+
+        // Correos de los administradores activos
+        const [admins] = await pool.query(
+            'SELECT nombre_usuario FROM usuarios WHERE tipo_usuario = 1 AND activo = 1'
+        );
+        const correosAdmins = admins.map(a => a.nombre_usuario);
 
         // Opciones del correo cliente
         const mailCliente = {
@@ -52,23 +66,30 @@ export async function enviarNotificacion(reserva, usuario, res = null) {
         // Opciones del correo admin
         const mailAdmin = {
             from: process.env.USER,
-            to: correoAdmin,
+            to: correosAdmins.join(','),
             subject: 'Nueva reserva realizada',
             html
         };
 
-        // Enviar al cliente solo si no es el admin
-        if (correoCliente && correoCliente !== correoAdmin) {
+        // Enviar al cliente solo si tiene correo y no es admin
+        if (correoCliente && !correosAdmins.includes(correoCliente)) {
+            console.log("Enviando correo al cliente:", correoCliente);
             await transporter.sendMail(mailCliente);
+        } else {
+            console.log("El cliente no tiene un correo válido o es admin, no se envía correo.");
         }
 
-        // Enviar siempre al admin
-        await transporter.sendMail(mailAdmin);
+        // Enviar siempre a todos los administradores
+        if (correosAdmins.length > 0) {
+            console.log("Enviando correo a administradores:", correosAdmins.join(', '));
+            await transporter.sendMail(mailAdmin);
+        } else {
+            console.warn('No hay administradores activos para notificación.');
+        }
 
         console.log('Notificaciones enviadas correctamente');
     } catch (err) {
         console.error('Error al enviar notificación:', err);
-        if (res) res.status(500).json({ error: "error al enviar notificacion"});
-
+        if (res) res.status(500).json({ error: "error al enviar notificacion" });
     }
 }
