@@ -53,19 +53,20 @@ router.post(
       .notEmpty().withMessage('El salón es necesario.')
       .isInt().withMessage('El ID del salón debe ser numérico.'),
 
-    check('usuario_id')
-      .notEmpty().withMessage('El usuario es necesario.')
-      .isInt().withMessage('El ID del usuario debe ser numérico.'),
-
     check('turno_id')
       .notEmpty().withMessage('El turno es necesario.')
       .isInt().withMessage('El ID del turno debe ser numérico.'),
 
     check('servicios')
-      .notEmpty().withMessage('Faltan los servicios de la reserva.')
-      .isArray().withMessage('El campo servicios debe ser un arreglo.'),
+      .optional()
+      .isArray().withMessage('El campo servicios debe ser un texto.'),
 
+    check('servicios.*.servicio_id')
+       .optional()
+       .isInt().withMessage('Cada servicio debe tener un ID numerico.'),
+      
     check('servicios.*.importe')
+      .optional()
       .isFloat({ min: 0 }).withMessage('El importe debe ser un número mayor o igual a 0.'),
   ],
   validar,

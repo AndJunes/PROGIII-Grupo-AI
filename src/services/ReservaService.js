@@ -25,6 +25,23 @@ class ReservaService {
 
         const nuevaReservaId = result.insertId;
 
+        //Asociar los servicios
+        if (data.servicios && data.servicios.length > 0) {
+            const serviciosInsert = data.servicios.map(s => [
+                nuevaReservaId,
+                s.servicio_id,
+                s.importe || 0,
+                new Date(),
+                new Date()
+            ]);
+
+            await pool.query(
+                `INSERT INTO reservas_servicios (reserva_id, servicio_id, importe, creado, modificado)
+                 VALUES ?`,
+                 [serviciosInsert]
+            );
+        }
+
         //traemos la reserva que se creo para devolverla
         const [rows] = await pool.query(
             'SELECT * FROM reservas WHERE reserva_id = ?',
