@@ -64,6 +64,7 @@ router.get(
  *   post:
  *     tags: [Turnos]
  *     summary: Crear un nuevo turno
+ *     description: Crea un turno nuevo especificando el orden y el rango horario.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -73,45 +74,46 @@ router.get(
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
+ *               orden:
+ *                 type: integer
+ *                 example: 1
+ *               hora_desde:
  *                 type: string
- *                 example: "Turno Mañana"
- *               hora_inicio:
+ *                 example: "10:00:00"
+ *               hora_hasta:
  *                 type: string
- *                 format: date-time
- *                 example: "2025-11-01T08:00:00Z"
- *               hora_fin:
- *                 type: string
- *                 format: date-time
- *                 example: "2025-11-01T12:00:00Z"
+ *                 example: "15:00:00"
  *     responses:
  *       201:
  *         description: Turno creado exitosamente
+ *       400:
+ *         description: Datos inválidos
  */
 router.post(
   '/',
   auth,
   roleCheck([EMPLEADO, ADMINISTRADOR]),
   [
-    body('nombre')
+    body('orden')
       .notEmpty()
-      .withMessage('El nombre es obligatorio')
-      .isString()
-      .withMessage('El nombre debe ser texto'),
-    body('hora_inicio')
+      .withMessage('El orden es obligatorio')
+      .isInt()
+      .withMessage('El orden debe ser un número entero'),
+    body('hora_desde')
       .notEmpty()
       .withMessage('La hora de inicio es obligatoria')
-      .isISO8601()
-      .withMessage('Debe ser una fecha válida'),
-    body('hora_fin')
+      .matches(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)
+      .withMessage('Debe tener formato HH:MM:SS'),
+    body('hora_hasta')
       .notEmpty()
       .withMessage('La hora de fin es obligatoria')
-      .isISO8601()
-      .withMessage('Debe ser una fecha válida'),
+      .matches(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)
+      .withMessage('Debe tener formato HH:MM:SS'),
   ],
   validar,
   TurnosController.create.bind(TurnosController)
 );
+
 
 /**
  * @swagger
@@ -119,6 +121,7 @@ router.post(
  *   put:
  *     tags: [Turnos]
  *     summary: Actualizar un turno existente
+ *     description: Permite modificar los datos de un turno existente como el orden, horario o estado.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -127,6 +130,7 @@ router.post(
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID del turno a actualizar
  *     requestBody:
  *       required: true
  *       content:
@@ -134,17 +138,26 @@ router.post(
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
+ *               orden:
+ *                 type: integer
+ *                 example: 2
+ *               hora_desde:
  *                 type: string
- *               hora_inicio:
+ *                 example: "16:00:00"
+ *               hora_hasta:
  *                 type: string
- *                 format: date-time
- *               hora_fin:
- *                 type: string
- *                 format: date-time
+ *                 example: "20:00:00"
+ *               activo:
+ *                 type: integer
+ *                 description: 1 = activo, 0 = inactivo
+ *                 example: 1
  *     responses:
  *       200:
- *         description: Turno actualizado
+ *         description: Turno actualizado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Turno no encontrado
  */
 router.put(
   '/:id',
@@ -152,13 +165,24 @@ router.put(
   roleCheck([EMPLEADO, ADMINISTRADOR]),
   [
     param('id').isInt().withMessage('El id debe ser un número entero'),
-    body('nombre').optional().isString().withMessage('Debe ser texto'),
-    body('hora_inicio').optional().isISO8601().withMessage('Debe ser una fecha válida'),
-    body('hora_fin').optional().isISO8601().withMessage('Debe ser una fecha válida'),
+    body('orden').optional().isInt().withMessage('El orden debe ser un número entero'),
+    body('hora_desde')
+      .optional()
+      .matches(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)
+      .withMessage('La hora de inicio debe tener formato HH:MM:SS'),
+    body('hora_hasta')
+      .optional()
+      .matches(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)
+      .withMessage('La hora de fin debe tener formato HH:MM:SS'),
+    body('activo')
+      .optional()
+      .isIn([0, 1])
+      .withMessage('El campo activo debe ser 0 o 1'),
   ],
   validar,
   TurnosController.update.bind(TurnosController)
 );
+
 
 /**
  * @swagger

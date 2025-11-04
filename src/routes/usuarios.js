@@ -84,6 +84,7 @@ router.get(
  *   post:
  *     tags: [Usuarios]
  *     summary: Crear un nuevo usuario (solo ADMIN)
+ *     description: Permite a un administrador registrar un nuevo usuario en el sistema.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -92,40 +93,78 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - nombre
+ *               - apellido
+ *               - nombre_usuario
+ *               - contrasenia
+ *               - tipo_usuario
  *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: "Juan"
+ *               apellido:
+ *                 type: string
+ *                 example: "Pérez"
  *               nombre_usuario:
  *                 type: string
+ *                 description: Email del usuario, usado como nombre de usuario
  *                 example: "juanperez@correo.com"
  *               contrasenia:
  *                 type: string
- *                 example: "juanperez"
- *               rol:
- *                 type: string
- *                 example: "CLIENTE"
+ *                 description: Contraseña del usuario (mínimo 6 caracteres)
+ *                 example: "juanperez123"
+ *               tipo_usuario:
+ *                 type: integer
+ *                 description: |
+ *                   Rol numérico del usuario:
+ *                   - 1 → ADMINISTRADOR  
+ *                   - 2 → EMPLEADO  
+ *                   - 3 → CLIENTE
+ *                 example: 2
  *     responses:
  *       201:
  *         description: Usuario creado exitosamente
+ *       400:
+ *         description: Datos inválidos o faltantes
+ *       401:
+ *         description: No autorizado
  */
 router.post(
   '/',
   auth,
   roleCheck([ADMINISTRADOR]),
   [
+    body('nombre')
+      .notEmpty()
+      .withMessage('El nombre es obligatorio'),
+
+    body('apellido')
+      .notEmpty()
+      .withMessage('El apellido es obligatorio'),
+
     body('nombre_usuario')
       .notEmpty()
       .withMessage('El nombre de usuario es obligatorio')
       .isEmail()
       .withMessage('Debe ser un email válido'),
+
     body('contrasenia')
       .notEmpty()
       .withMessage('La contraseña es obligatoria')
       .isLength({ min: 6 })
       .withMessage('La contraseña debe tener al menos 6 caracteres'),
-    body('rol')
+
+    body('tipo_usuario')
       .notEmpty()
-      .withMessage('El rol es obligatorio')
-      .isIn(['CLIENTE', 'EMPLEADO', 'ADMINISTRADOR'])
-      .withMessage('El rol debe ser CLIENTE, EMPLEADO o ADMINISTRADOR'),
+      .withMessage('El tipo de usuario es obligatorio')
+      .custom(value => {
+        const num = parseInt(value, 10);
+        if (![1, 2, 3].includes(num)) {
+          throw new Error('El tipo de usuario debe ser 3 (CLIENTE), 2 (EMPLEADO) o 1 (ADMINISTRADOR)');
+        }
+        return true;
+      }),
   ],
   validar,
   UsuariosController.create.bind(UsuariosController)
@@ -137,14 +176,17 @@ router.post(
  *   put:
  *     tags: [Usuarios]
  *     summary: Actualizar un usuario existente (solo ADMIN)
+ *     description: Permite al **administrador** actualizar los datos de un usuario existente. Todos los campos del cuerpo son opcionales, pero deben cumplir con las validaciones correspondientes.
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         description: ID del usuario a actualizar
  *         required: true
  *         schema:
  *           type: integer
+ *           example: 7
  *     requestBody:
  *       required: true
  *       content:
@@ -154,14 +196,62 @@ router.post(
  *             properties:
  *               nombre_usuario:
  *                 type: string
+ *                 format: email
+ *                 description: Nuevo email del usuario (opcional)
+ *                 example: "nuevo.usuario@example.com"
  *               contrasenia:
  *                 type: string
- *               rol:
- *                 type: string
+ *                 minLength: 6
+ *                 description: Nueva contraseña (opcional, mínimo 6 caracteres)
+ *                 example: "claveSegura123"
+ *               tipo_usuario:
+ *                 type: integer
+ *                 description: Tipo de usuario (opcional)
+ *                 enum: [1, 2, 3]
+ *                 example: 2
+ *                 oneOf:
+ *                   - description: "1 = ADMINISTRADOR"
+ *                   - description: "2 = EMPLEADO"
+ *                   - description: "3 = CLIENTE"
  *     responses:
  *       200:
- *         description: Usuario actualizado
+ *         description: Usuario actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 mensaje:
+ *                   type: string
+ *                   example: "Usuario actualizado correctamente."
+ *       400:
+ *         description: Error de validación en los datos enviados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errores:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       campo:
+ *                         type: string
+ *                         example: "contrasenia"
+ *                       mensaje:
+ *                         type: string
+ *                         example: "La contraseña debe tener al menos 6 caracteres"
+ *       401:
+ *         description: Token inválido o ausente
+ *       403:
+ *         description: Acceso denegado — solo los administradores pueden realizar esta acción
+ *       404:
+ *         description: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor
  */
+
 router.put(
   '/:id',
   auth,
@@ -176,10 +266,15 @@ router.put(
       .optional()
       .isLength({ min: 6 })
       .withMessage('La contraseña debe tener al menos 6 caracteres'),
-    body('rol')
+    body('tipo_usuario')
       .optional()
-      .isIn(['CLIENTE', 'EMPLEADO', 'ADMINISTRADOR'])
-      .withMessage('El rol debe ser CLIENTE, EMPLEADO o ADMINISTRADOR'),
+      .custom(value => {
+        const num = parseInt(value, 10);
+        if (![1, 2, 3].includes(num)) {
+          throw new Error('El tipo de usuario debe ser 3 (CLIENTE), 2 (EMPLEADO) o 1 (ADMINISTRADOR)');
+        }
+        return true;
+      }),
   ],
   validar,
   UsuariosController.update.bind(UsuariosController)
@@ -211,6 +306,5 @@ router.delete(
   validar,
   UsuariosController.delete.bind(UsuariosController)
 );
-
 
 export default router;

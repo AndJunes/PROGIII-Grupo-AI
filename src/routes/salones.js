@@ -73,17 +73,25 @@ router.get(
  *             properties:
  *               titulo:
  *                 type: string
- *                 example: "Principal"
+ *                 example: "Prueba 2"
  *               direccion:
  *                 type: string
- *                 example: "San Lorenzo 1000"
- *               capacidad:
- *                 type: integer
- *                 example: 200
+ *                 example: "Calle"
  *               importe:
  *                 type: number
  *                 format: float
- *                 example: 95000.00
+ *                 example: 5000
+ *               capacidad:
+ *                 type: integer
+ *                 example: 100
+ *               latitud:
+ *                 type: number
+ *                 format: float
+ *                 example: -20.6037
+ *               longitud:
+ *                 type: number
+ *                 format: float
+ *                 example: -10.3816
  *     responses:
  *       201:
  *         description: Salón creado exitosamente
@@ -115,6 +123,7 @@ router.post(
  *         required: true
  *         schema:
  *           type: integer
+ *           example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -124,16 +133,28 @@ router.post(
  *             properties:
  *               titulo:
  *                 type: string
+ *                 example: "Salón Principal Actualizado"
  *               direccion:
  *                 type: string
- *               capacidad:
- *                 type: integer
+ *                 example: "Ejemplo 742"
  *               importe:
  *                 type: number
  *                 format: float
+ *                 example: 6000
+ *               capacidad:
+ *                 type: integer
+ *                 example: 120
+ *               latitud:
+ *                 type: number
+ *                 format: float
+ *                 example: -20.6037
+ *               longitud:
+ *                 type: number
+ *                 format: float
+ *                 example: -10.3816
  *     responses:
  *       200:
- *         description: Salón actualizado
+ *         description: Salón actualizado exitosamente
  */
 router.put(
   '/:id',

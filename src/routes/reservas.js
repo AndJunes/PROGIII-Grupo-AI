@@ -16,6 +16,7 @@ const cache = apicache.middleware;
  *   post:
  *     tags: [Reservas]
  *     summary: Crear una nueva reserva
+ *     description: Crea una nueva reserva con los datos del salón, turno, tematica y servicios adicionales.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -25,19 +26,48 @@ const cache = apicache.middleware;
  *           schema:
  *             type: object
  *             properties:
- *               fecha:
+ *               fecha_reserva:
  *                 type: string
- *                 format: date-time
- *                 example: "2025-11-01T10:00:00Z"
+ *                 format: date
+ *                 example: "2025-11-20"
  *               salon_id:
  *                 type: integer
  *                 example: 1
- *               servicio_id:
+ *               turno_id:
  *                 type: integer
  *                 example: 2
+ *               foto_cumpleaniero:
+ *                 type: string
+ *                 example: "foto.png"
+ *               tematica:
+ *                 type: string
+ *                 example: "Cars"
+ *               importe_salon:
+ *                 type: number
+ *                 example: 80000
+ *               importe_total:
+ *                 type: number
+ *                 example: 95000
+ *               servicios:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     servicio_id:
+ *                       type: integer
+ *                       example: 1
+ *                     importe:
+ *                       type: number
+ *                       example: 10000
  *     responses:
  *       201:
  *         description: Reserva creada exitosamente
+ *       400:
+ *         description: Error de validación o datos inválidos
+ *       401:
+ *         description: No autorizado, token inválido o ausente
+ *       500:
+ *         description: Error interno del servidor
  */
 router.post(
   '/',
@@ -155,9 +185,9 @@ router.get(
 /**
  * @swagger
  * /api/reservas/{id}:
- *   get:
+ *   put:
  *     tags: [Reservas]
- *     summary: Obtener una reserva por ID
+ *     summary: Actualizar una reserva existente
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -166,10 +196,57 @@ router.get(
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID de la reserva a actualizar
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fecha_reserva:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-11-25"
+ *               salon_id:
+ *                 type: integer
+ *                 example: 2
+ *               turno_id:
+ *                 type: integer
+ *                 example: 1
+ *               foto_cumpleaniero:
+ *                 type: string
+ *                 example: "nueva_foto.png"
+ *               tematica:
+ *                 type: string
+ *                 example: "Toy Story"
+ *               importe_salon:
+ *                 type: number
+ *                 example: 85000
+ *               importe_total:
+ *                 type: number
+ *                 example: 98000
+ *               activo:
+ *                 type: boolean
+ *                 example: true
+ *               servicios:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     servicio_id:
+ *                       type: integer
+ *                       example: 1
+ *                     importe:
+ *                       type: number
+ *                       example: 10000
  *     responses:
  *       200:
- *         description: Datos de la reserva
+ *         description: Reserva actualizada exitosamente
+ *       404:
+ *         description: Reserva no encontrada
  */
+
 router.get(
   '/:id',
   cache('5 minutes'),
@@ -193,6 +270,7 @@ router.get(
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID de la reserva a actualizar
  *     requestBody:
  *       required: true
  *       content:
@@ -200,15 +278,41 @@ router.get(
  *           schema:
  *             type: object
  *             properties:
- *               fecha:
+ *               fecha_reserva:
  *                 type: string
- *                 format: date-time
- *               estado:
+ *                 format: date
+ *                 example: "2025-11-25"
+ *               salon_id:
+ *                 type: integer
+ *                 example: 2
+ *               usuario_id:
+ *                 type: integer
+ *                 example: 5
+ *               turno_id:
+ *                 type: integer
+ *                 example: 1
+ *               foto_cumpleaniero:
  *                 type: string
- *                 example: "confirmada"
+ *                 example: "nuevo_cumple.png"
+ *               tematica:
+ *                 type: string
+ *                 example: "Toy Story"
+ *               importe_salon:
+ *                 type: number
+ *                 example: 85000
+ *               importe_total:
+ *                 type: number
+ *                 example: 95000
+ *               activo:
+ *                 type: integer
+ *                 enum: [0, 1]
+ *                 example: 1
+ *                 description: "1 = activa, 0 = eliminada"
  *     responses:
  *       200:
- *         description: Reserva actualizada
+ *         description: Reserva actualizada exitosamente
+ *       404:
+ *         description: Reserva no encontrada
  */
 router.put(
   '/:id',

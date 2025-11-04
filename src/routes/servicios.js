@@ -73,16 +73,16 @@ router.get(
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
- *                 type: string
- *                 example: "Catering"
  *               descripcion:
  *                 type: string
- *                 example: "Servicio de catering completo"
- *               precio:
+ *                 example: "Decoración temática infantil"
+ *               importe:
  *                 type: number
  *                 format: float
- *                 example: 5000.00
+ *                 example: 12000.50
+ *               activo:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       201:
  *         description: Servicio creado exitosamente
@@ -92,13 +92,14 @@ router.post(
   auth,
   roleCheck([EMPLEADO, ADMINISTRADOR]),
   [
-    body('nombre').notEmpty().withMessage('El nombre es obligatorio'),
     body('descripcion').notEmpty().withMessage('La descripción es obligatoria'),
-    body('precio').notEmpty().withMessage('El precio es obligatorio').isFloat().withMessage('Debe ser un número'),
+    body('importe').notEmpty().withMessage('El importe es obligatorio').isFloat().withMessage('Debe ser un número'),
+    body('activo').optional().isIn([0, 1]).withMessage('Debe ser 0 o 1')
   ],
   validar,
   ServiciosController.create.bind(ServiciosController)
 );
+
 
 /**
  * @swagger
@@ -114,6 +115,7 @@ router.post(
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID del servicio a actualizar
  *     requestBody:
  *       required: true
  *       content:
@@ -121,16 +123,19 @@ router.post(
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
- *                 type: string
  *               descripcion:
  *                 type: string
- *               precio:
+ *                 example: "Decoración premium con luces LED"
+ *               importe:
  *                 type: number
  *                 format: float
+ *                 example: 18000.75
+ *               activo:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
- *         description: Servicio actualizado
+ *         description: Servicio actualizado correctamente
  */
 router.put(
   '/:id',
@@ -138,13 +143,14 @@ router.put(
   roleCheck([EMPLEADO, ADMINISTRADOR]),
   [
     param('id').isInt().withMessage('El id debe ser un número'),
-    body('nombre').optional().isString(),
-    body('descripcion').optional().isString(),
-    body('precio').optional().isFloat().withMessage('Debe ser un número'),
+    body('descripcion').optional().isString().withMessage('La descripción debe ser texto'),
+    body('importe').optional().isFloat().withMessage('El importe debe ser numérico'),
+    body('activo').optional().isIn([0, 1]).withMessage('Debe ser 0 o 1'),
   ],
   validar,
   ServiciosController.update.bind(ServiciosController)
 );
+
 
 /**
  * @swagger

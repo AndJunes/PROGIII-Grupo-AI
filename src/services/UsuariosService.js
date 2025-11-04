@@ -62,35 +62,45 @@ class UsuariosService {
 
     // Actualizar usuario
     static async actualizarUsuario(id, data) {
-        const campos = [];
-        const valores = [];
+    const campos = [];
+    const valores = [];
 
-        for (const [key, value] of Object.entries(data)) {
-            // Solo agregar si no es undefined ni null
-            if (value !== undefined && value !== null) {
-                campos.push(`${key} = ?`);
-                valores.push(value);
-            }
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && value !== null) {
+        // 🔒 Si el campo es contrasenia, se hashea antes de guardar
+        if (key === "contrasenia") {
+          const hashedPassword = await bcrypt.hash(value, 10);
+          campos.push(`${key} = ?`);
+          valores.push(hashedPassword);
+        } else {
+          campos.push(`${key} = ?`);
+          valores.push(value);
         }
-
-        if (campos.length === 0) throw new Error("No hay campos para actualizar");
-
-        valores.push(id);
-
-        const [result] = await pool.query(
-            `UPDATE usuarios SET ${campos.join(", ")}, modificado = NOW() WHERE usuario_id = ? AND activo = 1`,
-            valores
-        );
-
-        if (result.affectedRows === 0) throw new Error("Usuario no encontrado o inactivo");
-
-        const [updatedUser] = await pool.query(
-            `SELECT * FROM usuarios WHERE usuario_id = ?`,
-            [id]
-        );
-
-        return updatedUser[0];
+      }
     }
+
+    if (campos.length === 0) throw new Error("No hay campos para actualizar");
+
+    valores.push(id);
+
+    const [result] = await pool.query(
+      `UPDATE usuarios 
+       SET ${campos.join(", ")}, modificado = NOW() 
+       WHERE usuario_id = ? AND activo = 1`,
+      valores
+    );
+
+    if (result.affectedRows === 0)
+      throw new Error("Usuario no encontrado o inactivo");
+
+    const [updatedUser] = await pool.query(
+      `SELECT usuario_id, nombre_usuario, tipo_usuario, activo, creado, modificado 
+       FROM usuarios WHERE usuario_id = ?`,
+      [id]
+    );
+
+    return updatedUser[0];
+  }
 
 
     // Eliminar usuario (soft delete)
