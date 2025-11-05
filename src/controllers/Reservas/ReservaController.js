@@ -19,33 +19,31 @@ class ReservaController {
 
 
     // GET -> listar reservas del usuario logueado
-static async listar(req, res) {
-    try {
-        const { tipo_usuario, usuario_id } = req.usuario;
+    static async listar(req, res) {
+        try {
+            const { tipo_usuario, usuario_id } = req.usuario;
+            const { pagina, limite, orden, direccion } = req.query;
+            const usuarioIdNum = Number(usuario_id);
 
-        // Convertimos a number por seguridad
-        const usuarioIdNum = Number(usuario_id);
-        
-        let reservas;
+            let reservas;
 
-        if (tipo_usuario === 3) {
-            // CLIENTE → siempre solo sus reservas
-            reservas = await ReservaService.listar(usuarioIdNum);
-        } else {
-            // EMPLEADO / ADMIN → por defecto solo sus reservas
-            reservas = await ReservaService.listar(usuarioIdNum);
+            if (tipo_usuario === 3) {
+                reservas = await ReservaService.listar(usuarioIdNum, { pagina, limite, orden, direccion });
+            } else {
+                reservas = await ReservaService.listar(usuarioIdNum, { pagina, limite, orden, direccion });
+            }
+
+            if (!reservas || reservas.length === 0) {
+                return res.json({ mensaje: "No hay reservas disponibles para este usuario" });
+            }
+
+            res.json(reservas);
+        } catch (error) {
+            console.error('Error al listar reservas:', error);
+            res.status(500).json({ mensaje: 'Error al listar reservas', error });
         }
-
-        if (!reservas || reservas.length === 0) {
-            return res.json({ mensaje: "No hay reservas disponibles para este usuario" });
-        }
-
-        res.json(reservas);
-    } catch (error) {
-        console.error('Error al listar reservas:', error);
-        res.status(500).json({ mensaje: 'Error al listar reservas', error });
     }
-}
+
 
 
     // GET -> obtener una reserva específica por ID
@@ -93,13 +91,24 @@ static async listar(req, res) {
     // GET -> listar todas las reservas (solo admin o empleado)
     static async listarTodas(req, res) {
         try {
-            const reservas = await ReservaService.listarTodas();
+            const { pagina, limite, orden, direccion, filtro_salon, filtro_usuario } = req.query;
+
+            const reservas = await ReservaService.listarTodas({
+                pagina: parseInt(pagina) || 1,
+                limite: parseInt(limite) || 10,
+                orden,
+                direccion,
+                filtro_salon,
+                filtro_usuario
+            });
+
             res.json(reservas);
         } catch (error) {
             console.error('error al listar todas las reservas:', error);
             res.status(500).json({ mensaje: 'error al listar todas las reservas', error });
         }
     }
+
 
     static async informe(req, res) {
         try {

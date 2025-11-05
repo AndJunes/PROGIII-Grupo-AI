@@ -1,6 +1,8 @@
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_detalle_reservas
 -- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
 DELIMITER $$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE reporte_detalle_reservas()
@@ -30,6 +32,8 @@ DELIMITER ;
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_estadistico_salones
 -- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
 DELIMITER $$
 
 CREATE DEFINER=root@localhost PROCEDURE reporte_estadistico_salones()
@@ -58,6 +62,8 @@ DELIMITER ;
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_estadistico_servicios
 -- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
 DELIMITER $$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `reporte_estadistico_servicios`()
@@ -87,6 +93,8 @@ DELIMITER ;
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_estadistico_turnos
 -- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
 DELIMITER $$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `reporte_estadistico_turnos`()

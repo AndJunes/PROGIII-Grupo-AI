@@ -14,8 +14,8 @@ class ReservaService {
     }
 
 
-    async listar(usuarioId) {
-        return ReservaDAO.listarPorUsuario(usuarioId);
+    async listar(usuarioId, opciones = {}) {
+        return ReservaDAO.listarPorUsuario(usuarioId, opciones);
     }
 
     async obtenerPorId(id) {
@@ -38,8 +38,8 @@ class ReservaService {
         return { mensaje: "Reserva eliminada correctamente (soft delete)" };
     }
 
-    async listarTodas() {
-        return ReservaDAO.listarTodas();
+    async listarTodas(opciones = {}) {
+        return ReservaDAO.listarTodas(opciones);
     }
 
     async generarReporteDetalle() {
