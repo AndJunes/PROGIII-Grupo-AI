@@ -20,6 +20,9 @@ class Auth {
         return window.location.pathname.includes('dashboard');
     }
 
+    isLoggedIn() {
+        return this.token && this.userData && this.userData.usuario_id;
+    }
 
     validateAuth() {
         console.log('Validando autenticación...');
