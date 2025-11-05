@@ -75,6 +75,65 @@ class InformeService {
             throw new Error("Error al generar el PDF");
         }
     }
+
+    async informeEstadisticoSalonesCsv(datos) {
+        // path para el reporte de salones
+        const filePath = path.join(__dirname, '..', 'utils', 'reporte_estadistico_salones.csv');
+        
+        // configura las columnas (los 'id' deben coincidir con el procedure)
+        const csvWriter = createObjectCsvWriter({
+            path: filePath,
+            header: [
+                { id: 'salon', title: 'Salón' },
+                { id: 'cantidad_reservas', title: 'Cantidad de Reservas' },
+                { id: 'total_facturado', title: 'Total Facturado' }
+            ]
+        });
+
+        // escribe los datos y lo guarda
+        await csvWriter.writeRecords(datos);
+        // devuelve el path para el controller
+        return filePath;
+    }
+
+    async informeEstadisticoServiciosCsv(datos) {
+        // path para el reporte de servicios
+        const filePath = path.join(__dirname, '..', 'utils', 'reporte_estadistico_servicios.csv');
+        
+        // configura las columnas (los 'id' deben coincidir con el procedure)
+        const csvWriter = createObjectCsvWriter({
+            path: filePath,
+            header: [
+                { id: 'servicio', title: 'Servicio' },
+                { id: 'cantidad_contratada', title: 'Cantidad Contratada' },
+                { id: 'total_facturado_servicio', title: 'Total Facturado' }
+            ]
+        });
+
+        // escribe los datos y lo guarda
+        await csvWriter.writeRecords(datos);
+        // devuelve el path para el controller
+        return filePath;
+    }
+
+    async informeEstadisticoTurnosCsv(datos) {
+        // path para el reporte de turnos
+        const filePath = path.join(__dirname, '..', 'utils', 'reporte_estadistico_turnos.csv');
+        
+        // configura las columnas (los 'id' deben coincidir con el procedure)
+        const csvWriter = createObjectCsvWriter({
+            path: filePath,
+            header: [
+                { id: 'turno', title: 'Turno' },
+                { id: 'cantidad_reservas', title: 'Cantidad de Reservas' }
+            ]
+        });
+
+        // escribe los datos y lo guarda
+        await csvWriter.writeRecords(datos);
+        // devuelve el path para el controller
+        return filePath;
+    }
 }
 
 export default new InformeService();

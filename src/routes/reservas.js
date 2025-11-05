@@ -1,6 +1,6 @@
 import express from 'express';
 import apicache from 'apicache';
-import { body, param, check } from 'express-validator';
+import { body, param, check, query } from 'express-validator';
 import auth from '../middleware/auth.js';
 import roleCheck from '../middleware/roleCheck.js';
 import validar from '../middleware/validar.js';
@@ -144,8 +144,8 @@ router.get(
  * @swagger
  * /api/reservas/informe:
  *  get:
- *    tags: [Reservas]
- *    summary: Generar un informe de reservas en PDF o CSV (Solo Admin)
+ *    tags: [Reporte de reservas]
+ *    summary: Reporte detallado de reservas PDF o CSV (Solo Admin)
  *    security:
  *    - bearerAuth: []
  *    parameters:
@@ -155,7 +155,7 @@ router.get(
  *      description: El formato deseado para el informe ('pdf' o 'csv')
  *      schema:
  *        type: string
- *    enum: [pdf, csv]
+ *        enum: [pdf, csv]
  *    responses:
  *      '200':
  *        description: El archivo del informe (PDF o CSV)
@@ -178,10 +178,175 @@ router.get(
     '/informe',
     [
         auth,
-        roleCheck([ADMINISTRADOR])
+        roleCheck([ADMINISTRADOR]),
+        query('formato')
+            .notEmpty().withMessage('El formato es requerido.')
+            .isIn(['pdf', 'csv']).withMessage("Formato inválido. Debe ser 'pdf' o 'csv'."),
+        validar
     ],
     ReservaController.informe 
 );
+
+/**
+ * @swagger
+ * /api/reservas/estadisticas/salones:
+ *   get:
+ *     tags: [Informes estadísticos]
+ *     summary: (ADMIN) Obtiene reporte estadístico de Salones (JSON o CSV)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: formato
+ *         required: false
+ *         description: "El formato deseado ('csv'). Si se omite, devuelve JSON."
+ *         schema:
+ *           type: string
+ *           enum: [csv]
+ *     responses:
+ *       '200':
+ *         description: "Respuesta exitosa: Devuelve JSON, PDF o CSV según el formato."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   salon:
+ *                     type: string
+ *                   cantidad_reservas:
+ *                     type: integer
+ *                   total_facturado:
+ *                     type: number
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *       '403':
+ *         description: Prohibido (No es Admin)
+ *       '404':
+ *         description: No se encontraron datos
+ */
+
+router.get(
+    '/estadisticas/salones',
+    [
+        auth,
+        roleCheck([ADMINISTRADOR]),
+        query('formato')
+            .optional()
+            .isIn(['csv']).withMessage("Formato inválido. Solo se permite 'csv'."),
+        validar
+    ],
+    ReservaController.estadisticaSalones
+);
+
+/**
+ * @swagger
+ * /api/reservas/estadisticas/servicios:
+ *   get:
+ *     tags: [Informes estadísticos]
+ *     summary: (ADMIN) Obtiene reporte estadístico de Servicios (JSON o CSV)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: formato
+ *         required: false
+ *         description: "El formato deseado ('csv'). Si se omite, devuelve JSON."
+ *         schema:
+ *           type: string
+ *           enum: [csv]
+ *     responses:
+ *       '200':
+ *         description: "Respuesta exitosa: Devuelve JSON, PDF o CSV según el formato."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   servicio:
+ *                     type: string
+ *                   cantidad_contratada:
+ *                     type: integer
+ *                   total_facturado_servicio:
+ *                     type: number
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *       '403':
+ *         description: Prohibido (No es Admin)
+ *       '404':
+ *         description: No se encontraron datos
+ */
+
+router.get(
+    '/estadisticas/servicios',
+    [
+        auth,
+        roleCheck([ADMINISTRADOR]),
+        query('formato')
+            .optional()
+            .isIn(['csv']).withMessage("Formato inválido. Solo se permite 'csv'."),
+        validar
+    ],
+    ReservaController.estadisticaServicios
+);
+
+/**
+ * @swagger
+ * /api/reservas/estadisticas/turnos:
+ *   get:
+ *     tags: [Informes estadísticos]
+ *     summary: (ADMIN) Obtiene reporte estadístico de Turnos (JSON o CSV)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: formato
+ *         required: false
+ *         description: "El formato deseado ('csv'). Si se omite, devuelve JSON."
+ *         schema:
+ *           type: string
+ *           enum: [csv]
+ *     responses:
+ *       '200':
+ *         description: "Respuesta exitosa: Devuelve JSON o CSV según el formato."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   turno:
+ *                     type: string
+ *                   cantidad_reservas:
+ *                     type: integer
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *       '403':
+ *         description: Prohibido (No es Admin)
+ *       '404':
+ *         description: No se encontraron datos
+ */
+
+router.get(
+    '/estadisticas/turnos',
+    [
+        auth,
+        roleCheck([ADMINISTRADOR]),
+        query('formato')
+            .optional()
+            .isIn(['csv']).withMessage("Formato inválido. Solo se permite 'csv'."),
+        validar
+    ],
+    ReservaController.estadisticaTurnos
+);
+
 /**
  * @swagger
  * /api/reservas/{id}:
