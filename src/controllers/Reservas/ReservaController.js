@@ -1,55 +1,51 @@
 import ReservaService from "../../services/ReservaService.js";
+import InformeService from '../../services/InformeService.js';
+import fs from 'fs';
 
 class ReservaController {
     // POST -> crea una reserva (cliente)
     static async crear(req, res) {
-        try {
-            const nuevaReserva = await ReservaService.crear(req.body, req.usuario);
-            res.status(201).json({
-                mensaje: 'Reserva creada correctamente',
-                reserva: nuevaReserva
-            });
-        } catch (error) {
-            console.error('error al crear reserva:', error);
-            res.status(500).json({ mensaje: 'error al crear reserva', error });
-        }
+    try {
+        const nuevaReserva = await ReservaService.crear(req.body, req.usuario.usuario_id);
+        res.status(201).json({
+            mensaje: 'Reserva creada correctamente',
+            reserva: nuevaReserva
+        });
+    } catch (error) {
+        console.error('error al crear reserva:', error);
+        res.status(500).json({ mensaje: 'error al crear reserva', error });
     }
+}
 
-    // GET -> listar reservas
-    static async listar(req, res) {
-        try {
-            const { tipo_usuario, usuario_id } = req.usuario;
-            const propios = req.query.propias === 'true';
 
-            let reservas;
+    // GET -> listar reservas del usuario logueado
+static async listar(req, res) {
+    try {
+        const { tipo_usuario, usuario_id } = req.usuario;
 
-            // CLIENTE
-            if (tipo_usuario === 3) {
-                if (!propios) {
-                    return res.status(403).json({ mensaje: "Los clientes solo pueden ver sus propias reservas" });
-                }
-                reservas = await ReservaService.listar(usuario_id);
-            } else {
-                if (propios) {
-                    // Devuelve solo las reservas del usuario logueado
-                    reservas = await ReservaService.listar(usuario_id);
-                } else {
-                    // Devuelve todas las reservas
-                    reservas = await ReservaService.listarTodas();
-                }
-            }
+        // Convertimos a number por seguridad
+        const usuarioIdNum = Number(usuario_id);
+        
+        let reservas;
 
-            if (reservas.length === 0) {
-                return res.json({ mensaje: propios ? "No hay reservas para este usuario" : "No hay reservas disponibles" });
-            }
-
-            res.json(reservas);
-        } catch (error) {
-            console.error('error al listar reservas:', error);
-            res.status(500).json({ mensaje: 'error al listar reservas', error });
+        if (tipo_usuario === 3) {
+            // CLIENTE → siempre solo sus reservas
+            reservas = await ReservaService.listar(usuarioIdNum);
+        } else {
+            // EMPLEADO / ADMIN → por defecto solo sus reservas
+            reservas = await ReservaService.listar(usuarioIdNum);
         }
-    }
 
+        if (!reservas || reservas.length === 0) {
+            return res.json({ mensaje: "No hay reservas disponibles para este usuario" });
+        }
+
+        res.json(reservas);
+    } catch (error) {
+        console.error('Error al listar reservas:', error);
+        res.status(500).json({ mensaje: 'Error al listar reservas', error });
+    }
+}
 
 
     // GET -> obtener una reserva específica por ID
@@ -102,6 +98,142 @@ class ReservaController {
         } catch (error) {
             console.error('error al listar todas las reservas:', error);
             res.status(500).json({ mensaje: 'error al listar todas las reservas', error });
+        }
+    }
+
+    static async informe(req, res) {
+        try {
+            // Lee el formato de la URL
+            const formato = req.query.formato;
+            const { buffer, path, headers } = await ReservaService.generarInforme(formato);
+            res.set(headers);
+            //formato pdf
+            if (formato === 'pdf') {
+                res.setHeader('Content-Disposition', 'attachment; filename="reporte_reservas.pdf"');
+                res.status(200).send(buffer);
+            //formato csv
+            } else if (formato === 'csv') {
+                res.status(200).download(path, (err) => {
+                    if (err) {
+                        console.error('Error al enviar el archivo CSV:', err);
+                        res.status(500).json({
+                            mensaje: "No se pudo descargar el informe."
+                        });
+                    }
+                    try {
+                        fs.unlinkSync(path);
+                    } catch (unlinkErr) {
+                        console.error("Error al borrar el archivo temporal CSV:", unlinkErr);
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('Error en ReservaController.informe:', error);
+            res.status(500).json({ mensaje: 'Error interno al generar el informe', error });
+        }
+    }
+
+    static async estadisticaSalones(req, res) {
+        try {
+            const formato = req.query.formato;
+            // sacamos los datos del procedure
+            const datos = await ReservaService.generarReporteEstadisticoSalones();
+            if (!datos || datos.length === 0) {
+                return res.status(404).json({ mensaje: "No hay datos para el informe de salones" });
+            }
+            if (formato === 'csv') { // Ahora es 'if' en lugar de 'else if'
+                const csvPath = await InformeService.informeEstadisticoSalonesCsv(datos);
+                res.status(200).download(csvPath, "reporte_salones.csv", (err) => {
+                    if (err) {
+                        console.error('Error al enviar el CSV de salones:', err);
+                    }
+                    // se borra el archivo temporal
+                    try {
+                        fs.unlinkSync(csvPath);
+                    } catch (unlinkErr) {
+                        console.error("Error al borrar el CSV temporal:", unlinkErr);
+                    }
+                });
+            
+            } else {
+                // si no pide formate, se devuelve el JSON
+                res.json(datos);
+            }
+            // --- FIN DEL CAMBIO ---
+
+        } catch (error) {
+            console.error('Error en ReservaController.estadisticaSalones:', error);
+            res.status(500).json({ mensaje: 'Error interno al generar la estadística', error: error.message });
+        }
+    }
+
+    // GET -> Devuelve la estadística de Servicios (JSON o CSV)
+    static async estadisticaServicios(req, res) {
+        try {
+            const formato = req.query.formato;
+            const datos = await ReservaService.generarReporteEstadisticoServicios();
+            
+            if (!datos || datos.length === 0) {
+                return res.json({ mensaje: "No hay datos para la estadística de servicios" });
+            }
+            // logica para csv
+            if (formato === 'csv') {
+                const csvPath = await InformeService.informeEstadisticoServiciosCsv(datos);
+                res.status(200).download(csvPath, "reporte_servicios.csv", (err) => {
+                    if (err) {
+                        console.error('Error al enviar el CSV de servicios:', err);
+                    }
+                    // se borra el archivo temporal
+                    try {
+                        fs.unlinkSync(csvPath);
+                    } catch (unlinkErr) {
+                        console.error("Error al borrar el CSV temporal:", unlinkErr);
+                    }
+                });
+            } else {
+                // si no, devuelve json
+                res.json(datos);
+            }
+
+        } catch (error) {
+            console.error('Error en ReservaController.estadisticaServicios:', error);
+            res.status(500).json({ mensaje: 'Error interno al generar la estadística', error: error.message });
+        }
+    }
+
+    // GET -> Devuelve la estadística de Turnos (JSON o CSV)
+    static async estadisticaTurnos(req, res) {
+        try {
+            const formato = req.query.formato;
+            const datos = await ReservaService.generarReporteEstadisticoTurnos();
+            
+            if (!datos || datos.length === 0) {
+                return res.json({ mensaje: "No hay datos para la estadística de turnos" });
+            }
+
+            // logica para csv
+            if (formato === 'csv') {
+                const csvPath = await InformeService.informeEstadisticoTurnosCsv(datos);
+                res.status(200).download(csvPath, "reporte_turnos.csv", (err) => {
+                    if (err) {
+                        console.error('Error al enviar el CSV de turnos:', err);
+                    }
+                    // se borra el archivo temporal
+                    try {
+                        fs.unlinkSync(csvPath);
+                    } catch (unlinkErr) {
+                        console.error("Error al borrar el CSV temporal:", unlinkErr);
+                    }
+                });
+            } else {
+                // si no, devuelve json
+                res.json(datos);
+            }
+
+        } catch (error) {
+            console.error('Error en ReservaController.estadisticaTurnos:', error);
+            res.status(500).json({ mensaje: 'Error interno al generar la estadística', error: error.message });
         }
     }
 }

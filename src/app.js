@@ -29,6 +29,12 @@ app.use(cors({
 }));
 
 
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
+
+// Agregar Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Seguridad
 app.use(helmet());
 

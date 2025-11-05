@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Reservas</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { text-align: center; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>Reporte Detallado de Reservas</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Temática</th>
+                <th>Horario</th>
+                <th>Salón</th>
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Importe Serv.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each reservas}}
+            <tr>
+                <td>{{this.fecha_reserva}}</td>
+                <td>{{this.tematica}}</td>
+                <td>{{this.hora_desde}} - {{this.hora_hasta}}</td>
+                <td>{{this.salon_titulo}}</td>
+                <td>{{this.cliente_nombre}} {{this.cliente_apellido}}</td>
+                <td>{{this.servicio_descripcion}}</td>
+                <td>{{this.servicio_importe}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</body>
+</html>

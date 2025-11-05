@@ -11,12 +11,7 @@ class AuthController {
                 token,
                 usuario: {
                     usuario_id: usuario.usuario_id,
-                    nombre: usuario.nombre,
-                    apellido: usuario.apellido,
-                    nombre_usuario: usuario.nombre_usuario,
-                    tipo_usuario: usuario.tipo_usuario,
-                    celular: usuario.celular,
-                    foto: usuario.foto,
+                    tipo_usuario: usuario.tipo_usuario
                 },
             });
         } catch (error) {
