@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Empleado</title>
+    <link rel="stylesheet" href="./css/style.min.css" />
+    <script defer src="./js/auth.js"></script>
+    <script defer src="./js/api.js"></script>
+    <script defer src="./js/init.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Panel de Empleado</h1>
+        <div class="user-info"></div>
+        <p><a href="#" class="logout">Cerrar Sesión</a></p>
+      </header>
+
+      <nav class="empleado-only">
+        <ul>
+          <li><a href="#clientes">Gestión de Clientes</a></li>
+          <li><a href="#ventas">Ventas</a></li>
+        </ul>
+      </nav>
+
+      <main>
+        <section id="clientes" class="empleado-only">
+          <h2>Clientes</h2>
+          <div id="clientes-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async function () {
+        try {
+          const clientes = await apiClient.getClientes();
+          displayClientes(clientes);
+        } catch (error) {
+          console.error("Error cargando clientes:", error);
+          document.getElementById("clientes-list").innerHTML =
+            '<p class="error">Error cargando clientes: ' +
+            error.message +
+            "</p>";
+        }
+      });
+
+      function displayClientes(clientes) {
+        const container = document.getElementById("clientes-list");
+        if (clientes && clientes.length > 0) {
+          container.innerHTML = clientes
+            .map(
+              (cliente) => `
+                <div class="cliente-card">
+                  <h3>${cliente.nombre} ${cliente.apellido}</h3>
+                  <p>Usuario: ${cliente.nombre_usuario}</p>
+                  <p>Teléfono: ${cliente.celular || "No especificado"}</p>
+                </div>
+              `
+            )
+            .join("");
+        } else {
+          container.innerHTML = "<p>No hay clientes registrados</p>";
+        }
+      }
+    </script>
+  </body>
+</html>

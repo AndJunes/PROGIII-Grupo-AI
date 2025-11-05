@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Administrador</title>
+    <link rel="stylesheet" href="./css/style.min.css" />
+    <script defer src="./js/auth.js"></script>
+    <script defer src="./js/api.js"></script>
+    <script defer src="./js/init.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Panel de Administración</h1>
+        <div class="user-info"></div>
+        <p><a href="#" class="logout">Cerrar Sesión</a></p>
+      </header>
+
+      <nav class="admin-only">
+        <ul>
+          <li><a href="#usuarios">Gestión de Usuarios</a></li>
+          <li><a href="#reportes">Reportes</a></li>
+          <li><a href="#configuracion">Configuración</a></li>
+        </ul>
+      </nav>
+
+      <main>
+        <section id="usuarios" class="admin-only">
+          <h2>Gestión de Usuarios</h2>
+          <div id="usuarios-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      // Cargar datos de usuarios cuando la página esté lista
+      document.addEventListener("DOMContentLoaded", async function () {
+        try {
+          const usuarios = await apiClient.getUsuarios();
+          displayUsuarios(usuarios);
+        } catch (error) {
+          console.error("Error cargando usuarios:", error);
+          document.getElementById("usuarios-list").innerHTML =
+            '<p class="error">Error cargando usuarios: ' +
+            error.message +
+            "</p>";
+        }
+      });
+
+      function displayUsuarios(usuarios) {
+        const container = document.getElementById("usuarios-list");
+        if (usuarios && usuarios.length > 0) {
+          container.innerHTML = usuarios
+            .map(
+              (usuario) => `
+                <div class="usuario-card">
+                  <h3>${usuario.nombre} ${usuario.apellido}</h3>
+                  <p>Usuario: ${usuario.nombre_usuario}</p>
+                  <p>Tipo: ${getTipoUsuario(usuario.tipo_usuario)}</p>
+                  <p>Teléfono: ${usuario.celular || "No especificado"}</p>
+                </div>
+              `
+            )
+            .join("");
+        } else {
+          container.innerHTML = "<p>No hay usuarios registrados</p>";
+        }
+      }
+
+      function getTipoUsuario(tipo) {
+        const tipos = {
+          1: "Administrador",
+          2: "Empleado",
+          3: "Cliente",
+        };
+        return tipos[tipo] || "Desconocido";
+      }
+    </script>
+  </body>
+</html>
