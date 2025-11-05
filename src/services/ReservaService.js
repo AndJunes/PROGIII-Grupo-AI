@@ -1,6 +1,8 @@
 import ReservaDAO from "../database/ReservasDAO.js";
-import { enviarNotificacion } from "../notificacion/mailer.js";
+import NotificacionesService from './NotificacionesService.js';
 import InformeService from "./InformeService.js";
+
+const notificacionesService = new NotificacionesService();
 
 class ReservaService {
 
@@ -9,7 +11,8 @@ class ReservaService {
         await ReservaDAO.asociarServicios(nuevaReservaId, data.servicios);
         const nuevaReserva = await ReservaDAO.obtenerPorId(nuevaReservaId);
         const usuario = await ReservaDAO.obtenerUsuarioPorId(usuarioId);
-        await enviarNotificacion(nuevaReserva, usuario);
+        //notificaciones
+        notificacionesService.enviarNotificacion(nuevaReserva, usuario);
         return nuevaReserva;
     }
 
