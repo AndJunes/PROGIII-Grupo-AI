@@ -80,19 +80,7 @@
     background: linear-gradient(135deg, #5b5fe0, #7c4df0);
 }
 
-/* Botón de inicio moderno */
-.button-text {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-    border: 2px solid transparent;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-}
 
-.button-text:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
-    background: linear-gradient(135deg, #0da271, #047852);
-}
 
 /* Tamaños modernos */
 .btn-sm {

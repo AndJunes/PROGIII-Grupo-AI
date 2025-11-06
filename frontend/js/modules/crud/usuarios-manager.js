@@ -10,27 +10,36 @@ export class UsuariosManager extends BaseCRUDManager {
 
     async loadUsuarios() {
         try {
-            console.log('🔍 Cargando usuarios...');
-            const response = await this.api.getUsuarios();
-            console.log('📦 Respuesta completa de API:', response);
-            console.log('📊 Tipo de respuesta:', typeof response);
-            console.log('🔢 Es array?', Array.isArray(response));
-            
-            // Si response es un objeto, extraer el array
-            let usuarios;
-            if (Array.isArray(response)) {
-                usuarios = response;
-            } else if (response && response.data && Array.isArray(response.data)) {
-                usuarios = response.data;
-            } else if (response && response.usuarios && Array.isArray(response.usuarios)) {
-                usuarios = response.usuarios;
-            } else {
-                console.warn('⚠️ Formato inesperado, usando array vacío');
-                usuarios = [];
+            const loadToken = (this._lastLoadToken = Date.now());
+            // Enganchar toggle de inactivos
+            const toggle = document.getElementById('toggleInactivosUsuarios');
+            if (toggle && !toggle._usuariosListenerAttached) {
+                toggle.addEventListener('change', () => this.loadUsuarios());
+                toggle._usuariosListenerAttached = true;
             }
-            
-            console.log('👥 Usuarios procesados:', usuarios);
-            this.renderUsuarios(usuarios);
+
+            const includeInactive = document.getElementById('toggleInactivosUsuarios')?.checked || false;
+            const response = await this.api.getUsuarios({ includeInactive, pagina: 1, limite: 1000 });
+
+            // Si llegó otra respuesta más nueva, ignorar esta
+            if (loadToken !== this._lastLoadToken) return;
+
+            // Extraer array y normalizar tipos
+            const raw = Array.isArray(response) ? response
+                : (response?.usuarios && Array.isArray(response.usuarios) ? response.usuarios : []);
+
+            this.usuarios = raw.map(u => ({
+                usuario_id: Number(u.usuario_id),
+                nombre: u.nombre ?? '',
+                apellido: u.apellido ?? '',
+                nombre_usuario: u.nombre_usuario ?? '',
+                tipo_usuario: Number(u.tipo_usuario) || 3,
+                celular: u.celular ?? '',
+                foto: u.foto ?? '',
+                activo: Number(u.activo ?? 1) === 1
+            }));
+
+            this.renderUsuarios(this.usuarios);
         } catch (error) {
             console.error('❌ Error loading usuarios:', error);
             this.showTableError('usuariosTableBody', 'Error cargando usuarios');
@@ -49,6 +58,7 @@ export class UsuariosManager extends BaseCRUDManager {
                 formatter: (value) => Helpers.getTipoUsuario(value)
             },
             { key: 'celular', title: 'Teléfono' },
+            { key: 'foto', title: 'Foto', formatter: (v) => v ? `<img src="${v}" alt="foto" style="width:36px;height:36px;object-fit:cover;border-radius:4px;"/>` : '—' },
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
 
@@ -173,15 +183,6 @@ export class UsuariosManager extends BaseCRUDManager {
         `;
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
-        
-        // Agregar validación en tiempo real
-        this.setupRealTimeValidation('usuarioForm', {
-            nombre: ['required', 'minLength:2'],
-            apellido: ['required', 'minLength:2'],
-            nombre_usuario: ['required', 'minLength:3'],
-            tipo_usuario: ['required'],
-            ...(usuario ? {} : { contrasenia: ['required', 'minLength:4'] })
-        });
     }
 
     async saveUsuario() {
@@ -246,22 +247,48 @@ export class UsuariosManager extends BaseCRUDManager {
             if (this.currentEditingId) {
                 console.log('Actualizando usuario ID:', this.currentEditingId);
                 result = await this.api.updateUsuario(this.currentEditingId, payload);
+                const u = result?.usuario || result;
+                // actualizar estado local
+                const idx = this.usuarios?.findIndex(x => x.usuario_id === this.currentEditingId) ?? -1;
+                if (idx !== -1) {
+                    this.usuarios[idx] = {
+                        usuario_id: Number(u?.usuario_id ?? this.currentEditingId),
+                        nombre: u?.nombre ?? payload.nombre,
+                        apellido: u?.apellido ?? payload.apellido,
+                        nombre_usuario: u?.nombre_usuario ?? payload.nombre_usuario,
+                        tipo_usuario: Number(u?.tipo_usuario ?? payload.tipo_usuario) || 3,
+                        celular: u?.celular ?? payload.celular ?? '',
+                        foto: u?.foto ?? this.usuarios[idx]?.foto ?? '',
+                        activo: Number(u?.activo ?? (payload.activo ?? 1)) === 1
+                    };
+                }
                 this.showNotification('Usuario actualizado exitosamente', 'success');
             } else {
                 console.log('Creando nuevo usuario');
                 result = await this.api.createUsuario(payload);
+                const u = result?.usuario || result;
+                this.usuarios = this.usuarios || [];
+                this.usuarios.push({
+                    usuario_id: Number(u?.usuario_id),
+                    nombre: u?.nombre ?? payload.nombre,
+                    apellido: u?.apellido ?? payload.apellido,
+                    nombre_usuario: u?.nombre_usuario ?? payload.nombre_usuario,
+                    tipo_usuario: Number(u?.tipo_usuario ?? payload.tipo_usuario) || 3,
+                    celular: u?.celular ?? payload.celular ?? '',
+                    foto: u?.foto ?? '',
+                    activo: Number(u?.activo ?? 1) === 1
+                });
                 this.showNotification('Usuario creado exitosamente', 'success');
             }
 
             console.log('Respuesta del servidor:', result);
 
             this.closeModal();
-            await this.loadUsuarios();
+            this.renderUsuarios(this.usuarios);
             
             document.dispatchEvent(new CustomEvent('dataUpdated', { 
                 detail: { entity: 'usuarios' } 
             }));
-            
         } catch (error) {
             console.error('Error completo saving usuario:', error);
             
@@ -284,7 +311,8 @@ export class UsuariosManager extends BaseCRUDManager {
                 throw new Error('ID de usuario inválido');
             }
             
-            const usuario = await this.api.getUsuario(id);
+            const includeInactive = document.getElementById('toggleInactivosUsuarios')?.checked || false;
+            const usuario = await this.api.getUsuario(id, { includeInactive });
             this.showUsuarioModal(usuario);
         } catch (error) {
             console.error('Error loading usuario:', error);
@@ -304,12 +332,17 @@ export class UsuariosManager extends BaseCRUDManager {
             
             await this.api.deleteUsuario(id);
             this.showNotification('Usuario eliminado exitosamente', 'success');
-            await this.loadUsuarios();
+            const includeInactive = document.getElementById('toggleInactivosUsuarios')?.checked || false;
+            if (includeInactive) {
+                this.usuarios = (this.usuarios || []).map(u => u.usuario_id === Number(id) ? { ...u, activo: false } : u);
+            } else {
+                this.usuarios = (this.usuarios || []).filter(u => u.usuario_id !== Number(id));
+            }
+            this.renderUsuarios(this.usuarios);
             
             document.dispatchEvent(new CustomEvent('dataUpdated', { 
                 detail: { entity: 'usuarios' } 
             }));
-            
         } catch (error) {
             console.error('Error deleting usuario:', error);
             this.showNotification(error.message || 'Error al eliminar el usuario', 'error');

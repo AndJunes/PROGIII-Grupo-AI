@@ -1,3 +1,6 @@
+import { CONSTANTS } from './utils/constants.js';
+import { Auth } from './auth.js';
+
 class Login {
     constructor(form, fields) {
         this.form = form;
@@ -7,7 +10,7 @@ class Login {
     }
 
     initRememberMe() {
-        const rememberedUser = localStorage.getItem("rememberedUser");
+        const rememberedUser = localStorage.getItem(CONSTANTS.LOCAL_STORAGE_KEYS.REMEMBERED_USER);
         if (rememberedUser) {
             document.getElementById("username").value = rememberedUser;
             document.getElementById("remember").checked = true;
@@ -34,29 +37,23 @@ class Login {
                     const password = document.querySelector('#password').value;
                     const remember = document.querySelector('#remember').checked;
 
-                    const data = await this.loginToBackend(username, password);
+                    const data = await Auth.login(username, password);
 
                     if (data.token) {
-                        localStorage.setItem("authToken", data.token);
-
+                        // Decodificar el token para obtener userData
                         const decoded = this.decodeToken(data.token);
                         if (!decoded) throw new Error('Token inválido recibido del servidor');
 
-                        localStorage.setItem("userData", JSON.stringify(decoded));
+                        // Guardar sesión usando el método estático
+                        Auth.saveSession(data.token, decoded, remember, username);
 
-                        if (remember) {
-                            localStorage.setItem("rememberedUser", username);
-                        } else {
-                            localStorage.removeItem("rememberedUser");
-                        }
-
-                        console.log('Login exitoso, redirigiendo...', decoded);
+                        console.log('✅ Login exitoso, redirigiendo...', decoded);
                         this.redirectToDashboard(decoded.tipo_usuario);
                     } else {
                         throw new Error('Respuesta del servidor inválida');
                     }
                 } catch (error) {
-                    console.error('Login error:', error);
+                    console.error('❌ Login error:', error);
                     this.showSystemMessage(error.message || 'Error de conexión con el servidor', 'error');
                 } finally {
                     this.showLoading(false);
@@ -68,9 +65,10 @@ class Login {
     decodeToken(token) {
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
+            console.log('🔐 Token decodificado:', payload);
             return payload;
         } catch (err) {
-            console.error('Error al decodificar token:', err);
+            console.error('❌ Error al decodificar token:', err);
             return null;
         }
     }
@@ -91,44 +89,20 @@ class Login {
         }
     }
 
-    async loginToBackend(username, password) {
-        const API_URL = 'https://localhost:3006/auth/login';
-        console.log('Enviando login a:', API_URL);
-
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nombre_usuario: username,
-                contrasenia: password
-            })
-        });
-
-        const data = await response.json();
-        console.log('Respuesta del backend:', data);
-
-        if (!response.ok) {
-            throw new Error(data.message || data.error || `Error ${response.status}: ${response.statusText}`);
-        }
-
-        return data;
-    }
-
     redirectToDashboard(userType) {
-        console.log('Redirigiendo usuario tipo:', userType);
-        switch(parseInt(userType)) {
-            case 1:
-                window.location.replace('./dashboard-admin.html');
-                break;
-            case 2:
-                window.location.replace('./dashboard-empleado.html');
-                break;
-            case 3:
-                window.location.replace('./dashboard-cliente.html');
-                break;
-            default:
-                console.error('Tipo de usuario desconocido:', userType);
-                this.showSystemMessage('Tipo de usuario no reconocido', 'error');
+        console.log('🔄 Redirigiendo usuario tipo:', userType);
+        const dashboards = {
+            1: 'dashboard-admin.html',
+            2: 'dashboard-empleado.html', 
+            3: 'dashboard-cliente.html'
+        };
+        
+        const dashboard = dashboards[userType];
+        if (dashboard) {
+            window.location.replace(`./${dashboard}`);
+        } else {
+            console.error('❌ Tipo de usuario desconocido:', userType);
+            this.showSystemMessage('Tipo de usuario no reconocido', 'error');
         }
     }
 

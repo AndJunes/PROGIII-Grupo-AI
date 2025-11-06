@@ -1,11 +1,13 @@
 import UsuariosService from '../../services/UsuariosService.js';
+import apicache from 'apicache';
 
 class UsuariosController {
     // Crear usuario
-    static async create(req, res) {
+    async create(req, res) {
         try {
             const usuario = await UsuariosService.crearUsuario(req.body);
             res.status(201).json({ mensaje: "usuario creado exitosamente", usuario });
+            apicache.clear('usuarios');
         } catch (error) {
             console.error("Error al crear usuario:", error);
             res.status(400).json({ error: error.message });
@@ -13,15 +15,16 @@ class UsuariosController {
     }
 
     // Listar todos los usuarios activos
-    static async getAll(req, res) {
+    async getAll(req, res) {
         try {
             const { pagina = 1, limite = 10, orden, direccion } = req.query;
+            const includeInactive = req.query.include_inactive === 'true';
             const resultado = await UsuariosService.listarUsuariosConFiltros({
                 pagina: Number(pagina),
                 limite: Number(limite),
                 orden,
                 direccion
-            });
+            }, includeInactive);
             res.json(resultado);
         } catch (error) {
             console.error("Error al obtener usuarios:", error);
@@ -30,7 +33,7 @@ class UsuariosController {
     }
 
     // Listar solo clientes (tipo_usuario = 1)
-    static async getClientes(req, res) {
+    async getClientes(req, res) {
         try {
             const clientes = await UsuariosService.listarClientes();
             res.json(clientes);
@@ -41,9 +44,10 @@ class UsuariosController {
     }
 
     // Obtener usuario por ID
-    static async getById(req, res) {
+    async getById(req, res) {
         try {
-            const usuario = await UsuariosService.obtenerUsuarioPorId(req.params.id);
+            const includeInactive = req.query.include_inactive === 'true';
+            const usuario = await UsuariosService.obtenerUsuarioPorId(req.params.id, includeInactive);
             if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
             res.json(usuario);
         } catch (error) {
@@ -53,11 +57,12 @@ class UsuariosController {
     }
 
     // Actualizar usuario
-    static async update(req, res) {
+    async update(req, res) {
         try {
             const usuario = await UsuariosService.actualizarUsuario(req.params.id, req.body);
             if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
             res.json(usuario);
+            apicache.clear('usuarios');
         } catch (error) {
             console.error("Error al actualizar usuario:", error);
             res.status(500).json({ error: "Error al actualizar el usuario" });
@@ -65,16 +70,16 @@ class UsuariosController {
     }
 
     // Eliminar usuario (soft delete)
-    static async delete(req, res) {
+    async delete(req, res) {
         try {
             const ok = await UsuariosService.eliminarUsuario(req.params.id);
             if (!ok) return res.status(404).json({ error: "usuario no encontrado" });
             res.json({ message: "Usuario eliminado (soft delete)" });
+            apicache.clear('usuarios');
         } catch (error) {
             console.error("Error al eliminar usuario:", error);
             res.status(500).json({ error: "Error al eliminar el usuario" });
         }
     }
 }
-
-export default UsuariosController;
+export default new UsuariosController();

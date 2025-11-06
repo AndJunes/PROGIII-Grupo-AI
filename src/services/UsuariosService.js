@@ -11,14 +11,14 @@ class UsuariosService {
         return UsuariosDAO.listar();
     }
 
-    static async listarUsuariosConFiltros({ pagina = 1, limite = 10, orden, direccion }) {
+    static async listarUsuariosConFiltros({ pagina = 1, limite = 10, orden, direccion }, includeInactive = false) {
         const offset = (pagina - 1) * limite;
         const { total, usuarios } = await UsuariosDAO.listarConFiltros({
             limite,
             offset,
             orden,
             direccion
-        });
+        }, includeInactive);
 
         return {
             pagina_actual: Number(pagina),
@@ -32,8 +32,8 @@ class UsuariosService {
         return UsuariosDAO.listarClientes();
     }
 
-    static async obtenerUsuarioPorId(id) {
-        return UsuariosDAO.obtenerPorId(id);
+    static async obtenerUsuarioPorId(id, includeInactive = false) {
+        return UsuariosDAO.obtenerPorId(id, includeInactive);
     }
 
     static async actualizarUsuario(id, data) {

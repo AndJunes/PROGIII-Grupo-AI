@@ -24,6 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 80px;
 }
 
 .sidebar-logo {
@@ -128,6 +129,10 @@
   padding: var(--space-lg);
   border-top: 1px solid var(--border-color);
   background-color: var(--bg-tertiary);
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .user-info {
@@ -185,6 +190,7 @@
   white-space: nowrap;
   overflow: hidden;
   font-size: 0.875rem;
+  min-height: 44px;
 }
 
 .logout-btn:hover {
@@ -207,15 +213,18 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 999;
   display: none;
+  backdrop-filter: blur(4px);
 }
 
-/* Responsive */
+
+/* MEJORA: Responsive completo */
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
+    width: 280px;
   }
   
   .sidebar.mobile-open {
@@ -233,5 +242,53 @@
   
   .sidebar.collapsed.mobile-open {
     transform: translateX(0);
+  }
+  
+  /* En móvil, el sidebar siempre muestra texto */
+  .sidebar.collapsed.mobile-open .nav-text,
+  .sidebar.collapsed.mobile-open .user-details,
+  .sidebar.collapsed.mobile-open .logout-text,
+  .sidebar.collapsed.mobile-open .sidebar-logo,
+  .sidebar.collapsed.mobile-open .nav-section-title {
+    display: block;
+  }
+  
+  .sidebar.collapsed.mobile-open .nav-icon {
+    margin-right: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .sidebar-footer {
+    padding: var(--space-md);
+  }
+  
+  .user-info {
+    margin-bottom: var(--space-sm);
+  }
+  
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+  
+  .user-name {
+    font-size: 0.85rem;
+  }
+  
+  .user-role {
+    font-size: 0.75rem;
+  }
+  
+  .logout-btn {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.8rem;
+    min-height: 40px;
   }
 }
