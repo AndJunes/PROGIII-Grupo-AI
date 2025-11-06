@@ -4,47 +4,47 @@ import { Validators } from '../../utils/validators.js';
 export class ServiciosManager extends BaseCRUDManager {
     constructor() {
         super();
-        this.entityName = 'Servicio';
+        this.currentEntity = 'Servicio';
         this.servicios = [];
     }
 
     async loadServicios() {
         try {
             const response = await this.api.getServicios();
-            const servicios = response.servicios.map(s => ({
-                servicio_id: s.servicio_id,      
-                id: s.servicio_id,                
+
+            this.servicios = response.servicios.map(s => ({
+                servicio_id: s.servicio_id,
+                id: s.servicio_id,      // importante para BaseCRUDManager
                 descripcion: s.descripcion || 'N/A',
                 importe: parseFloat(s.importe) || 0,
                 activo: Boolean(s.activo)
             }));
 
-            this.renderServicios(servicios);
+            this.renderServicios();
+
         } catch (error) {
             console.error('Error loading servicios:', error);
             this.showTableError('serviciosTableBody', 'Error cargando servicios');
         }
     }
 
-
-    renderServicios(servicios) {
-        this.entityName = 'Servicio'; 
+    renderServicios(servicios = null) {
         const columns = [
             { key: 'servicio_id', title: 'ID' },
             { key: 'descripcion', title: 'Descripción' },
             { key: 'importe', title: 'Precio', type: 'currency' },
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
-        
-        console.log('Servicios a renderizar:', servicios);
-        this.renderTable('serviciosTableBody', servicios, columns, 'No hay servicios registrados');
-    }
 
+        // Usar el array pasado o el interno
+        const dataToRender = servicios ?? this.servicios;
+
+        this.renderTable('serviciosTableBody', dataToRender, columns, 'No hay servicios registrados');
+    }
 
 
     async showServicioModal(servicio = null) {
         this.currentEditingId = servicio?.servicio_id || null;
-        this.currentEntity = 'servicio';
 
         const modalHTML = `
             <div class="modal-overlay active" id="servicioModal">
@@ -89,17 +89,14 @@ export class ServiciosManager extends BaseCRUDManager {
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
 
-        // Vincular botón para crear/actualizar
         document.getElementById('saveServicioBtn').addEventListener('click', () => this.saveServicio());
     }
-
-
-
 
     async saveServicio() {
         try {
             const formData = this.getFormData('servicioForm');
 
+            // Validación
             const validation = Validators.validateForm(formData, {
                 descripcion: ['required', 'minLength:3'],
                 importe: ['required', 'number', 'minValue:0'],
@@ -111,31 +108,48 @@ export class ServiciosManager extends BaseCRUDManager {
                 return;
             }
 
+            // Convertir campos numéricos
             formData.importe = parseFloat(formData.importe);
             formData.activo = parseInt(formData.activo);
 
             let savedServicio;
 
             if (this.currentEditingId) {
+                // Actualizar servicio existente
                 savedServicio = await this.api.updateServicio(this.currentEditingId, formData);
 
-                // Actualizar servicio en el array local
+                // Actualizar el array local
                 const index = this.servicios.findIndex(s => s.servicio_id === this.currentEditingId);
-                if (index !== -1) this.servicios[index] = savedServicio;
+                if (index !== -1) {
+                    this.servicios[index] = {
+                        servicio_id: savedServicio.servicio_id ?? this.currentEditingId,
+                        id: savedServicio.servicio_id ?? this.currentEditingId,
+                        descripcion: savedServicio.descripcion ?? formData.descripcion,
+                        importe: parseFloat(savedServicio.importe ?? formData.importe),
+                        activo: savedServicio.activo != null ? Boolean(savedServicio.activo) : Boolean(formData.activo)
+                    };
+                }
 
                 this.showNotification('Servicio actualizado exitosamente', 'success');
             } else {
+                // Crear nuevo servicio
                 savedServicio = await this.api.createServicio(formData);
 
                 // Agregar al array local
-                this.servicios.push(savedServicio);
+                this.servicios.push({
+                    servicio_id: savedServicio.servicio_id,
+                    id: savedServicio.servicio_id,
+                    descripcion: savedServicio.descripcion ?? formData.descripcion,
+                    importe: parseFloat(savedServicio.importe ?? formData.importe),
+                    activo: savedServicio.activo != null ? Boolean(savedServicio.activo) : Boolean(formData.activo)
+                });
 
                 this.showNotification('Servicio creado exitosamente', 'success');
             }
 
             this.closeModal();
 
-            // Renderizar tabla con la lista local actualizada
+            // Renderizar la tabla con los datos locales actualizados
             this.renderServicios(this.servicios);
 
         } catch (error) {
@@ -143,7 +157,6 @@ export class ServiciosManager extends BaseCRUDManager {
             this.showNotification(error.message || 'Error al guardar el servicio', 'error');
         }
     }
-
 
 
     async editServicio(id) {
@@ -162,11 +175,9 @@ export class ServiciosManager extends BaseCRUDManager {
         try {
             await this.api.deleteServicio(id);
 
-            // Remover del array local
             this.servicios = this.servicios.filter(s => s.servicio_id !== id);
-
-            // Renderizar tabla actualizada
-            this.renderServicios(this.servicios);
+            
+            this.renderServicios();
 
             this.showNotification('Servicio eliminado exitosamente', 'success');
         } catch (error) {
@@ -174,5 +185,4 @@ export class ServiciosManager extends BaseCRUDManager {
             this.showNotification(error.message, 'error');
         }
     }
-
 }
