@@ -20,6 +20,12 @@ const tagSalones = (req, res, next) => { res.apicacheGroup = 'salones'; next(); 
  *     summary: Obtener todos los salones
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Incluir salones inactivos (activo = 0)
  *     responses:
  *       200:
  *         description: Lista de todos los salones
@@ -41,6 +47,11 @@ router.get(
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Permite obtener un salón inactivo
  *       - in: path
  *         name: id
  *         required: true

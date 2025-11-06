@@ -1,8 +1,8 @@
 import pool from "../database/database.js";
 
 class SalonesDAO {
-    async findAllWithFilters({ pagina = 1, limite = 10, orden = 'salon_id', direccion = 'ASC', filtro_titulo = '' }) {
-        let sql = `SELECT * FROM salones WHERE activo = 1`;
+    async findAllWithFilters({ pagina = 1, limite = 10, orden = 'salon_id', direccion = 'ASC', filtro_titulo = '' }, includeInactive = false) {
+        let sql = `SELECT * FROM salones WHERE ${includeInactive ? '1=1' : 'activo = 1'}`;
         const params = [];
 
         if (filtro_titulo) {
@@ -26,9 +26,10 @@ class SalonesDAO {
         return rows;
     }
 
-    async findById(id) {
+    async findById(id, includeInactive = false) {
+        const where = includeInactive ? 'salon_id = ?' : 'salon_id = ? AND activo = 1';
         const [rows] = await pool.execute(
-            'SELECT * FROM salones WHERE salon_id = ? AND activo = 1',
+            `SELECT * FROM salones WHERE ${where}`,
             [id]
         );
         return rows[0] || null;

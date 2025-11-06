@@ -11,9 +11,26 @@ export class SalonesManager extends BaseCRUDManager {
 
     async loadSalones() {
         try {
-            const response = await this.api.getSalones();
+            // Enganchar toggle de inactivos para recargar cuando cambie
+            const toggle = document.getElementById('toggleInactivosSalones');
+            if (toggle && !toggle._salonesListenerAttached) {
+                toggle.addEventListener('change', () => this.loadSalones());
+                toggle._salonesListenerAttached = true;
+            }
+
+            const includeInactive = document.getElementById('toggleInactivosSalones')?.checked || false;
+            const response = await this.api.getSalones({ includeInactive, pagina: 1, limite: 1000 });
             // El backend puede devolver array directo o envuelto
-            this.salones = Array.isArray(response) ? response : (response.salones || []);
+            const raw = Array.isArray(response) ? response : (response.salones || []);
+            // Normalizar tipos para evitar problemas (e.g., '0' como string debe ser false)
+            this.salones = raw.map(s => ({
+                salon_id: Number(s.salon_id),
+                titulo: s.titulo ?? 'N/A',
+                capacidad: Number(s.capacidad) || 0,
+                importe: parseFloat(s.importe) || 0,
+                direccion: s.direccion ?? '',
+                activo: Number(s.activo) === 1
+            }));
             this.renderSalones();
         } catch (error) {
             console.error('Error loading salones:', error);
@@ -147,13 +164,6 @@ export class SalonesManager extends BaseCRUDManager {
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
         
-        // Agregar validación en tiempo real
-        this.setupRealTimeValidation('salonForm', {
-            titulo: ['required', 'minLength:2'],
-            capacidad: ['required', 'number', 'minValue:1'],
-            importe: ['required', 'number', 'minValue:0'],
-            activo: ['required']
-        });
     }
 
     async saveSalon() {
@@ -214,18 +224,42 @@ export class SalonesManager extends BaseCRUDManager {
                     activo: parseInt(document.getElementById('activo').value)
                 };
                 result = await this.api.updateSalon(this.currentEditingId, updatePayload);
+                // Actualizar estado local
+                const idx = this.salones.findIndex(s => s.salon_id === this.currentEditingId);
+                const s = result?.salon || result;
+                if (idx !== -1) {
+                    this.salones[idx] = {
+                        salon_id: Number(s?.salon_id ?? this.currentEditingId),
+                        titulo: s?.titulo ?? payload.titulo,
+                        capacidad: Number(s?.capacidad ?? payload.capacidad) || 0,
+                        importe: parseFloat(s?.importe ?? payload.importe) || 0,
+                        direccion: s?.direccion ?? payload.direccion ?? '',
+                        activo: Number(s?.activo ?? updatePayload.activo) === 1
+                    };
+                }
                 this.showNotification('Salón actualizado exitosamente', 'success');
             } else {
                 console.log('Creando nuevo salón');
                 // Para CREATE, usar solo el payload sin activo
                 result = await this.api.createSalon(payload);
+                const s = result?.salon || result;
+                // Agregar al estado local
+                this.salones.push({
+                    salon_id: Number(s?.salon_id),
+                    titulo: s?.titulo ?? payload.titulo,
+                    capacidad: Number(s?.capacidad ?? payload.capacidad) || 0,
+                    importe: parseFloat(s?.importe ?? payload.importe) || 0,
+                    direccion: s?.direccion ?? payload.direccion ?? '',
+                    activo: Number(s?.activo ?? 1) === 1
+                });
                 this.showNotification('Salón creado exitosamente', 'success');
             }
 
             console.log('Respuesta del servidor:', result);
 
             this.closeModal();
-            await this.loadSalones();
+            // Render desde estado local actualizado
+            this.renderSalones(this.salones);
             
             document.dispatchEvent(new CustomEvent('dataUpdated', { 
                 detail: { entity: 'salones' } 
@@ -255,7 +289,9 @@ export class SalonesManager extends BaseCRUDManager {
             // Intentar desde estado local primero para evitar valores viejos por caché
             let salon = this.salones.find(s => s.salon_id === id);
             if (!salon) {
-                salon = await this.api.getSalon(id);
+                // Permitir traer inactivos por ID si el toggle está activo
+                const includeInactive = document.getElementById('toggleInactivosSalones')?.checked || false;
+                salon = await this.api.getSalon(id, { includeInactive });
             }
             this.showSalonModal(salon);
         } catch (error) {
@@ -276,7 +312,17 @@ export class SalonesManager extends BaseCRUDManager {
             
             await this.api.deleteSalon(id);
             this.showNotification('Salón eliminado exitosamente', 'success');
-            await this.loadSalones();
+
+            // Actualización optimista del estado local
+            const includeInactive = document.getElementById('toggleInactivosSalones')?.checked || false;
+            if (includeInactive) {
+                // Marcar como inactivo y mantener en la lista si se muestran inactivos
+                this.salones = this.salones.map(s => s.salon_id === Number(id) ? { ...s, activo: false } : s);
+            } else {
+                // Ocultar de la lista si no se muestran inactivos
+                this.salones = this.salones.filter(s => s.salon_id !== Number(id));
+            }
+            this.renderSalones(this.salones);
             
             // Disparar evento para actualizar dashboard si es necesario
             document.dispatchEvent(new CustomEvent('dataUpdated', { 

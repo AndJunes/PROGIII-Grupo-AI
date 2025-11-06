@@ -123,12 +123,21 @@ export class API {
     }
 
     // ===== SALONES =====
-    async getSalones() {
-        return this.request(CONSTANTS.API_ENDPOINTS.SALONES);
+    async getSalones({ includeInactive = false, pagina = 1, limite = 1000 } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        // Evitar respuestas viejas en cambios rápidos del toggle
+        params.set('ts', String(Date.now()));
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.SALONES}?${qs}` : CONSTANTS.API_ENDPOINTS.SALONES;
+        return this.request(url);
     }
 
-    async getSalon(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.SALONES}/${id}`);
+    async getSalon(id, { includeInactive = false } = {}) {
+        const qs = includeInactive ? '?include_inactive=true' : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.SALONES}/${id}${qs}`);
     }
 
     async createSalon(data) {

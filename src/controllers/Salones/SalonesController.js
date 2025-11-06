@@ -7,6 +7,7 @@ class SalonesController {
     async getAll(req, res) {
         try {
             const { pagina = 1, limite = 10, orden, direccion, filtro_titulo } = req.query;
+            const includeInactive = req.query.include_inactive === 'true';
 
             const salones = await SalonesService.getAllWithFilters({
                 pagina: Number(pagina) || 1,
@@ -14,7 +15,7 @@ class SalonesController {
                 orden,
                 direccion,
                 filtro_titulo
-            });
+            }, includeInactive);
 
             res.json(salones);
         } catch (error) {
@@ -26,7 +27,8 @@ class SalonesController {
     // Consultar salones específicos por id
     async getById(req, res) {
         try {
-            const salon = await SalonesService.getById(req.params.id);
+            const includeInactive = req.query.include_inactive === 'true';
+            const salon = await SalonesService.getById(req.params.id, includeInactive);
             res.json(salon);
         } catch (error) {
             res.status(404).json({ error: "Salón no encontrado" });

@@ -1,12 +1,12 @@
 import SalonesDAO from '../database/SalonesDAO.js';
 
 class SalonesService {
-    async getAllWithFilters(params) {
-        return await SalonesDAO.findAllWithFilters(params);
+    async getAllWithFilters(params, includeInactive = false) {
+        return await SalonesDAO.findAllWithFilters(params, includeInactive);
     }
 
-    async getById(id) {
-        const salon = await SalonesDAO.findById(id);
+    async getById(id, includeInactive = false) {
+        const salon = await SalonesDAO.findById(id, includeInactive);
         if (!salon) throw new Error('Salon no encontrado');
         return salon;
     }
