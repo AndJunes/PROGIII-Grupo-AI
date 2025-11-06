@@ -1,0 +1,131 @@
+/* ===== NOTIFICATIONS STYLES ===== */
+.notifications {
+  position: relative;
+}
+
+.notification-btn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-sm);
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-fast);
+  color: var(--text-primary);
+}
+
+.notification-btn:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--error);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 350px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  display: none;
+}
+
+.notification-dropdown.show {
+  display: block;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-header {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.mark-all-read {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: color var(--transition-fast);
+}
+
+.mark-all-read:hover {
+  color: var(--accent-tertiary);
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.notification-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.notification-item.unread {
+  background-color: rgba(0, 217, 255, 0.05);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+  color: var(--text-primary);
+}
+
+.notification-message {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
