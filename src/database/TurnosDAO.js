@@ -5,17 +5,26 @@ class TurnosDAO {
     async create(turno) {
         const { orden, hora_desde, hora_hasta } = turno;
         const [result] = await pool.execute(
-            `INSERT INTO turnos (orden, hora_desde, hora_hasta, activo) VALUES (?, ?, ?, 1)`,
+            `INSERT INTO turnos (orden, hora_desde, hora_hasta, activo)
+             VALUES (?, ?, ?, 1)`,
             [orden, hora_desde, hora_hasta]
         );
         return { turno_id: result.insertId, orden, hora_desde, hora_hasta, activo: 1 };
     }
 
-    async getAll() {
-        const [rows] = await pool.execute(
-            `SELECT * FROM turnos WHERE activo = 1 ORDER BY turno_id ASC`
+    async findAllWithPagination(limit, offset) {
+        // Obtener turnos activos con límite y desplazamiento
+        const [rows] = await pool.query(
+            `SELECT * FROM turnos WHERE activo = 1 ORDER BY turno_id ASC LIMIT ? OFFSET ?`,
+            [Number(limit), Number(offset)]
         );
-        return rows;
+
+        // Contar total de turnos activos
+        const [[{ total }]] = await pool.query(
+            `SELECT COUNT(*) AS total FROM turnos WHERE activo = 1`
+        );
+
+        return { rows, total };
     }
 
     async getById(id) {
@@ -43,7 +52,7 @@ class TurnosDAO {
             [id]
         );
         if (result.affectedRows === 0) throw new Error("not_found");
-        return { message: "turno eliminado (soft delete)" };
+        return { message: "Turno eliminado correctamente (soft delete)" };
     }
 }
 
