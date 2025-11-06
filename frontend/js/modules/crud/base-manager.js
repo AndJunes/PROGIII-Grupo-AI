@@ -22,7 +22,6 @@ export class BaseCRUDManager {
     showFormErrors(errors) {
         document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
         document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-
         for (const [field, message] of Object.entries(errors)) {
             const input = document.getElementById(field);
             const errorElement = input?.parentElement?.querySelector('.error-message');
@@ -52,7 +51,6 @@ export class BaseCRUDManager {
     createTableRow(data, columns, actions = true) {
         const cells = columns.map(col => {
             let value = data[col.key];
-
             if (col.formatter) value = col.formatter(value);
             else if (col.type === 'currency') value = Helpers.formatCurrency(value);
             else if (col.type === 'date') value = Helpers.formatDate(value);
@@ -64,10 +62,9 @@ export class BaseCRUDManager {
 
             return `<td>${value != null ? value : 'N/A'}</td>`;
         }).join('');
-
-        const entityId = data.id;
-        const entitySlug = (this.currentEntity || '').toLowerCase();
-
+        const entitySlug = (this.entityName || '').toLowerCase();
+        const entityIdKey = `${entitySlug}_id`; 
+        const entityId = data[entityIdKey] || data.id;
         const actionButtons = actions ? `
             <td>
                 <div class="action-buttons">

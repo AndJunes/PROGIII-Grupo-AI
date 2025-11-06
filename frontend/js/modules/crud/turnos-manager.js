@@ -6,13 +6,24 @@ export class TurnosManager extends BaseCRUDManager {
     constructor() {
         super();
         this.entityName = 'Turno';
+        this.setupInactivosToggle();
+    }
+
+    setupInactivosToggle() {
+        const checkbox = document.getElementById('toggleInactivosTurnos');
+        if (checkbox) {
+            checkbox.addEventListener('change', () => {
+                this.loadTurnos();
+            });
+        }
     }
 
     async loadTurnos() {
         try {
-            const response = await this.api.getTurnos();
+            const checkbox = document.getElementById('toggleInactivosTurnos');
+            const includeInactive = checkbox ? checkbox.checked : false;
+            const response = await this.api.getTurnos({ page: 1, limit: 100, includeInactive: includeInactive });
             console.log('📦 Respuesta completa de API turnos:', response);
-            
             // Extraer el array de turnos de la respuesta
             const turnos = response.turnos || [];
             console.log('👥 Turnos extraídos:', turnos);
@@ -35,59 +46,17 @@ export class TurnosManager extends BaseCRUDManager {
             { 
                 key: 'hora_desde', 
                 title: 'Hora Inicio',
-                formatter: (value) => this.formatTime(value)
+                formatter: (value) => Helpers.formatTime(value)
             },
             { 
                 key: 'hora_hasta', 
                 title: 'Hora Fin',
-                formatter: (value) => this.formatTime(value)
+                formatter: (value) => Helpers.formatTime(value)
             },
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
 
         this.renderTable('turnosTableBody', turnos, columns, 'No hay turnos registrados');
-    }
-
-    // Sobrescribir createTableRow para usar turno_id correctamente
-    createTableRow(data, columns, actions = true) {
-        const cells = columns.map(col => {
-            let value = data[col.key];
-            
-            if (col.formatter) {
-                value = col.formatter(value);
-            } else if (col.type === 'currency') {
-                value = Helpers.formatCurrency(value);
-            } else if (col.type === 'date') {
-                value = Helpers.formatDate(value);
-            } else if (col.type === 'status') {
-                const statusClass = value ? 'active' : 'inactive';
-                const statusText = value ? 'Activo' : 'Inactivo';
-                value = `<span class="status-badge ${statusClass}">${statusText}</span>`;
-            }
-            
-            return `<td>${value || 'N/A'}</td>`;
-        }).join('');
-
-        const actionButtons = actions ? `
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-sm btn-outline edit-btn" 
-                            data-id="${data.turno_id}" 
-                            data-entity="turno">
-                        <span class="btn-icon material-icons">edit</span>
-                        Editar
-                    </button>
-                    <button class="btn btn-sm btn-danger delete-btn" 
-                            data-id="${data.turno_id}" 
-                            data-entity="turno">
-                        <span class="btn-icon material-icons">delete</span>
-                        Eliminar
-                    </button>
-                </div>
-            </td>
-        ` : '';
-
-        return `<tr data-id="${data.turno_id}">${cells}${actionButtons}</tr>`;
     }
 
     async showTurnoModal(turno = null) {
@@ -144,12 +113,14 @@ export class TurnosManager extends BaseCRUDManager {
         document.getElementById('modalContainer').innerHTML = modalHTML;
         
         // Agregar validación en tiempo real
-        this.setupRealTimeValidation('turnoForm', {
-            orden: ['required', 'number', 'minValue:1'],
-            hora_desde: ['required'],
-            hora_hasta: ['required'],
-            activo: ['required']
-        });
+        /* --- COMENTADO PORQUE NO EXISTE EN BASE-MANAGER ---
+        this.setupRealTimeValidation('turnoForm', {
+            orden: ['required', 'number', 'minValue:1'],
+s            hora_desde: ['required'],
+            hora_hasta: ['required'],
+            activo: ['required']
+        });
+        */
     }
 
     async saveTurno() {

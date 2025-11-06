@@ -6,8 +6,8 @@ class TurnosService {
         return await TurnosDAO.create(data);
     }
 
-    async getAllWithPagination(limit, offset) {
-        const { rows, total } = await TurnosDAO.findAllWithPagination(limit, offset);
+    async getAllWithPagination(limit, offset, includeInactive) {
+        const { rows, total } = await TurnosDAO.findAllWithPagination(limit, offset, includeInactive);
         return { turnos: rows, total };
     }
 

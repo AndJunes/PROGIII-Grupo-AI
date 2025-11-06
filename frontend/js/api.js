@@ -197,8 +197,16 @@ export class API {
     }
 
     // ===== TURNOS =====
-    async getTurnos() {
-        return this.request(CONSTANTS.API_ENDPOINTS.TURNOS);
+    async getTurnos({ page = 1, limit = 100, includeInactive=false} = {}) {
+        const params = new URLSearchParams();
+        if (page != null) params.set('page', String(page));
+        if (limit != null) params.set('limit', String(limit));
+        if(includeInactive) params.set('include_inactive', 'true');
+        // Evitar respuestas viejas en cache
+        params.set('ts', String(Date.now())); 
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.TURNOS}?${qs}` : CONSTANTS.API_ENDPOINTS.TURNOS;
+        return this.request(url);
     }
 
     async getTurno(id) {
