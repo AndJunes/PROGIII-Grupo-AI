@@ -1,5 +1,4 @@
 import { SidebarManager } from '../modules/sidebar.js';
-import { NotificationsManager } from '../modules/notifications.js';
 import { CRUDManager } from '../modules/crud/index.js';
 import { ReportsManager } from '../modules/reports.js';
 import { DashboardManager } from '../modules/dashboard.js';
