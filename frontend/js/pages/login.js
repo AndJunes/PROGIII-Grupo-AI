@@ -45,9 +45,16 @@ class LoginManager {
                     // Llamar al backend
                     const data = await Auth.login(username, password);
                     
+                    // En tu LoginManager, modifica la parte del login exitoso:
                     if (data.token && data.usuario) {
                         // Guardar token y datos de usuario
                         Auth.saveSession(data.token, data.usuario, remember, username);
+                        
+                        console.log('👤 Datos completos del usuario recibidos:', data.usuario);
+                        console.log('📋 Campos disponibles:', Object.keys(data.usuario));
+                        
+                        // Actualizar sidebar inmediatamente con los datos recibidos
+                        this.updateSidebarWithUserData(data.usuario);
                         
                         console.log('Login exitoso, redirigiendo...', data.usuario);
                         // Redirigir al dashboard correspondiente

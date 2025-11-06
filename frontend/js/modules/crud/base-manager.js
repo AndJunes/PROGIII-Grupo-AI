@@ -52,6 +52,23 @@ export class BaseCRUDManager {
         }
     }
 
+    // NUEVO MÉTODO: Mostrar estado de carga
+    showLoadingState(tableBodyId) {
+        const tbody = document.getElementById(tableBodyId);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="100%" class="text-center loading-state">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <span>Cargando...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
     showNotification(message, type = 'info') {
         if (window.notificationsManager) {
             window.notificationsManager.addNotification({
@@ -133,5 +150,68 @@ export class BaseCRUDManager {
     // Método para confirmación de eliminación
     confirmDelete(entityName) {
         return confirm(`¿Estás seguro de que deseas eliminar este ${entityName}?`);
+    }
+
+    // NUEVO MÉTODO: Configurar validación en tiempo real
+    setupRealTimeValidation(formId, validationRules) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const inputs = form.querySelectorAll('input, select, textarea');
+        
+        inputs.forEach(input => {
+            input.addEventListener('blur', () => {
+                this.validateField(input, validationRules);
+            });
+            
+            input.addEventListener('input', () => {
+                // Limpiar error cuando el usuario empiece a escribir
+                if (input.classList.contains('input-error')) {
+                    const errorElement = input.parentElement.querySelector('.error-message');
+                    if (errorElement) {
+                        errorElement.textContent = '';
+                    }
+                    input.classList.remove('input-error');
+                }
+            });
+        });
+    }
+
+    // NUEVO MÉTODO: Validar campo individual
+    validateField(field, validationRules) {
+        const fieldName = field.id;
+        const fieldValue = field.value;
+        
+        if (validationRules[fieldName]) {
+            const validation = Validators.validateField(fieldValue, validationRules[fieldName]);
+            
+            if (!validation.isValid) {
+                this.setFieldError(field, validation.errors[0]);
+                return false;
+            } else {
+                this.clearFieldError(field);
+                return true;
+            }
+        }
+        
+        return true;
+    }
+
+    // NUEVO MÉTODO: Establecer error en campo individual
+    setFieldError(field, message) {
+        field.classList.add('input-error');
+        const errorElement = field.parentElement.querySelector('.error-message');
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+    }
+
+    // NUEVO MÉTODO: Limpiar error de campo individual
+    clearFieldError(field) {
+        field.classList.remove('input-error');
+        const errorElement = field.parentElement.querySelector('.error-message');
+        if (errorElement) {
+            errorElement.textContent = '';
+        }
     }
 }
