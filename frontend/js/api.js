@@ -104,16 +104,39 @@ export class API {
     }
 
     // ===== RESERVAS =====
-    async getReservas() {
-        return this.request(CONSTANTS.API_ENDPOINTS.RESERVAS);
+    async getReservas({ includeInactive = false, pagina = 1, limite = 1000, orden, direccion } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        if (orden) params.set('orden', String(orden));
+        if (direccion) params.set('direccion', String(direccion));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.RESERVAS}?${qs}` : CONSTANTS.API_ENDPOINTS.RESERVAS;
+        return this.request(url);
     }
 
-    async getAllReservas() {
-        return this.request(CONSTANTS.API_ENDPOINTS.RESERVAS_ALL);
+    async getAllReservas({ includeInactive = false, pagina = 1, limite = 1000, orden, direccion } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        if (orden) params.set('orden', String(orden));
+        if (direccion) params.set('direccion', String(direccion));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.RESERVAS_ALL}?${qs}` : CONSTANTS.API_ENDPOINTS.RESERVAS_ALL;
+        return this.request(url);
     }
 
-    async getReserva(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.RESERVAS}/${id}`);
+    async getReserva(id, { includeInactive = false } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const sep = qs ? `?${qs}` : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.RESERVAS}/${id}${sep}`);
     }
 
     async createReserva(data) {

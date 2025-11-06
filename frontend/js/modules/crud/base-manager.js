@@ -39,6 +39,13 @@ export class BaseCRUDManager {
         }
     }
 
+    showLoadingState(tableBodyId) {
+        const tbody = document.getElementById(tableBodyId);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center">Cargando...</td></tr>`;
+        }
+    }
+
     showNotification(message, type = 'info') {
         Helpers.showToast(message, type);
     }

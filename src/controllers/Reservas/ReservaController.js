@@ -1,6 +1,7 @@
 import ReservaService from "../../services/ReservaService.js";
 import InformeService from '../../services/InformeService.js';
 import fs from 'fs';
+import apicache from 'apicache';
 
 class ReservaController {
     // POST -> crea una reserva (cliente)
@@ -11,6 +12,7 @@ class ReservaController {
             mensaje: 'Reserva creada correctamente',
             reserva: nuevaReserva
         });
+        apicache.clear('reservas');
     } catch (error) {
         console.error('error al crear reserva:', error);
         res.status(500).json({ mensaje: 'error al crear reserva', error });
@@ -23,14 +25,21 @@ class ReservaController {
         try {
             const { tipo_usuario, usuario_id } = req.usuario;
             const { pagina, limite, orden, direccion } = req.query;
+            const includeInactive = req.query.include_inactive === 'true';
             const usuarioIdNum = Number(usuario_id);
 
             let reservas;
-
             if (tipo_usuario === 3) {
-                reservas = await ReservaService.listar(usuarioIdNum, { pagina, limite, orden, direccion });
+                // Cliente: solo sus reservas
+                reservas = await ReservaService.listar(usuarioIdNum, { pagina, limite, orden, direccion }, includeInactive);
             } else {
-                reservas = await ReservaService.listar(usuarioIdNum, { pagina, limite, orden, direccion });
+                // Admin/Empleado: todas las reservas
+                reservas = await ReservaService.listarTodas({
+                    pagina: parseInt(pagina) || 1,
+                    limite: parseInt(limite) || 10,
+                    orden,
+                    direccion
+                }, includeInactive);
             }
 
             if (!reservas || reservas.length === 0) {
@@ -49,7 +58,8 @@ class ReservaController {
     // GET -> obtener una reserva específica por ID
     async obtenerPorId(req, res) {
         try {
-            const reserva = await ReservaService.obtenerPorId(req.params.id);
+            const includeInactive = req.query.include_inactive === 'true';
+            const reserva = await ReservaService.obtenerPorId(req.params.id, includeInactive);
             res.json(reserva);
         } catch (error) {
             if (error.message === "not_found") {
@@ -65,6 +75,7 @@ class ReservaController {
         try {
             const reserva = await ReservaService.actualizar(req.params.id, req.body);
             res.json({ mensaje: 'reserva actualizada correctamente', reserva });
+            apicache.clear('reservas');
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'reserva no encontrada'});
@@ -79,6 +90,7 @@ class ReservaController {
         try {
             const resultado = await ReservaService.eliminar(req.params.id);
             res.json(resultado);
+            apicache.clear('reservas');
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'reserva no encontrada o ya eliminada'});
@@ -92,6 +104,7 @@ class ReservaController {
     async listarTodas(req, res) {
         try {
             const { pagina, limite, orden, direccion, filtro_salon, filtro_usuario } = req.query;
+            const includeInactive = req.query.include_inactive === 'true';
 
             const reservas = await ReservaService.listarTodas({
                 pagina: parseInt(pagina) || 1,
@@ -100,7 +113,7 @@ class ReservaController {
                 direccion,
                 filtro_salon,
                 filtro_usuario
-            });
+            }, includeInactive);
 
             res.json(reservas);
         } catch (error) {

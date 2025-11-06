@@ -107,18 +107,45 @@ router.post(
  * /api/reservas:
  *   get:
  *     tags: [Reservas]
- *     summary: Obtener reservas del usuario logeado o según rol
+ *     summary: Listar reservas del usuario logueado
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: pagina
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limite
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: orden
+ *         schema:
+ *           type: string
+ *           enum: [fecha_reserva, importe_total, salon_id]
+ *       - in: query
+ *         name: direccion
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Incluir reservas inactivas (activo = 0)
  *     responses:
  *       200:
- *         description: Lista de reservas del usuario o rol correspondiente
+ *         description: Lista de reservas del usuario
  */
 router.get(
   '/',
-  cache('5 minutes'),
+  cache('5 minutes', null, { group: 'reservas' }),
   auth,
-  roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]),
+  roleCheck([ADMINISTRADOR, EMPLEADO, CLIENTE]),
   ReservaController.listar.bind(ReservaController)
 );
 /**
@@ -129,13 +156,40 @@ router.get(
  *     summary: Obtener todas las reservas (solo admin y empleado)
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: pagina
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limite
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: orden
+ *         schema:
+ *           type: string
+ *           enum: [fecha_reserva, importe_total, salon_id, usuario_id]
+ *       - in: query
+ *         name: direccion
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Incluir reservas inactivas (activo = 0)
  *     responses:
  *       200:
  *         description: Lista de todas las reservas
  */
 router.get(
   '/all',
-  cache('5 minutes'),
+  cache('5 minutes', null, { group: 'reservas' }),
   auth,
   roleCheck([ADMINISTRADOR, EMPLEADO]),
   ReservaController.listarTodas.bind(ReservaController)
@@ -350,73 +404,31 @@ router.get(
 /**
  * @swagger
  * /api/reservas/{id}:
- *   put:
+ *   get:
  *     tags: [Reservas]
- *     summary: Actualizar una reserva existente
+ *     summary: Obtener una reserva por ID
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Permite obtener una reserva inactiva
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID de la reserva a actualizar
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               fecha_reserva:
- *                 type: string
- *                 format: date
- *                 example: "2025-11-25"
- *               salon_id:
- *                 type: integer
- *                 example: 2
- *               turno_id:
- *                 type: integer
- *                 example: 1
- *               foto_cumpleaniero:
- *                 type: string
- *                 example: "nueva_foto.png"
- *               tematica:
- *                 type: string
- *                 example: "Toy Story"
- *               importe_salon:
- *                 type: number
- *                 example: 85000
- *               importe_total:
- *                 type: number
- *                 example: 98000
- *               activo:
- *                 type: boolean
- *                 example: true
- *               servicios:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     servicio_id:
- *                       type: integer
- *                       example: 1
- *                     importe:
- *                       type: number
- *                       example: 10000
  *     responses:
  *       200:
- *         description: Reserva actualizada exitosamente
- *       404:
- *         description: Reserva no encontrada
+ *         description: Reserva
  */
-
 router.get(
   '/:id',
-  cache('5 minutes'),
+  cache('5 minutes', null, { group: 'reservas' }),
   auth,
-  roleCheck([EMPLEADO, ADMINISTRADOR]),
+  roleCheck([ADMINISTRADOR, EMPLEADO, CLIENTE]),
   [param('id').isInt().withMessage('El id debe ser un número')],
   validar,
   ReservaController.obtenerPorId.bind(ReservaController)
