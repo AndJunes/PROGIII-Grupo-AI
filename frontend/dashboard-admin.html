@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Administrador</title>
 
-    <!-- Material Icons -->
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
@@ -13,12 +12,8 @@
 
     <link rel="stylesheet" href="./css/style.css" />
 
-    <!-- Librerías para reportes -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  </head>
+    </head>
   <body class="dashboard-admin">
-    <!-- Panel lateral -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h2 class="sidebar-logo">SistemaGestión</h2>
@@ -120,10 +115,8 @@
       </div>
     </aside>
 
-    <!-- Overlay para móvil -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Contenido principal -->
     <main class="main-content" id="mainContent">
       <header class="content-header">
         <div class="header-left">
@@ -148,17 +141,13 @@
                 </button>
               </div>
               <div class="notification-list" id="notificationList">
-                <!-- Notificaciones se cargarán aquí -->
-              </div>
+                </div>
             </div>
           </div>
         </div>
       </header>
 
       <div class="content-wrapper">
-        <!-- Secciones de contenido -->
-
-        <!-- Dashboard -->
         <section id="dashboard-section" class="content-section active">
           <div class="dashboard-stats">
             <div class="stat-card">
@@ -190,31 +179,25 @@
               </div>
             </div>
           </div>
-
           <div class="dashboard-charts">
             <div class="chart-container">
               <h3>Reservas por Mes</h3>
               <div class="chart-placeholder" id="reservasChart">
-                <!-- Gráfico se cargará aquí -->
-              </div>
+                </div>
             </div>
             <div class="chart-container">
               <h3>Tipos de Usuario</h3>
               <div class="chart-placeholder" id="usuariosChart">
-                <!-- Gráfico se cargará aquí -->
-              </div>
+                </div>
             </div>
           </div>
-
           <div class="recent-activity">
             <h3>Actividad Reciente</h3>
             <div class="activity-list" id="activityList">
-              <!-- Actividad reciente se cargará aquí -->
-            </div>
+              </div>
           </div>
         </section>
 
-        <!-- Gestión de Reservas -->
         <section id="reservas-section" class="content-section">
           <div class="section-header">
             <h2>Gestión de Reservas</h2>
@@ -223,7 +206,6 @@
               Nueva Reserva
             </button>
           </div>
-
           <div class="table-container">
             <table class="data-table" id="reservasTable">
               <thead>
@@ -239,13 +221,11 @@
                 </tr>
               </thead>
               <tbody id="reservasTableBody">
-                <!-- Datos de reservas se cargarán aquí -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </section>
 
-        <!-- Gestión de Salones -->
         <section id="salones-section" class="content-section">
           <div class="section-header">
             <h2>Gestión de Salones</h2>
@@ -254,7 +234,6 @@
               Nuevo Salón
             </button>
           </div>
-
           <div class="table-container">
             <table class="data-table" id="salonesTable">
               <thead>
@@ -268,13 +247,11 @@
                 </tr>
               </thead>
               <tbody id="salonesTableBody">
-                <!-- Datos de salones se cargarán aquí -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </section>
 
-        <!-- Gestión de Servicios -->
         <section id="servicios-section" class="content-section">
           <div class="section-header">
             <h2>Gestión de Servicios</h2>
@@ -283,7 +260,6 @@
               Nuevo Servicio
             </button>
           </div>
-
           <div class="table-container">
             <table class="data-table" id="serviciosTable">
               <thead>
@@ -297,13 +273,11 @@
                 </tr>
               </thead>
               <tbody id="serviciosTableBody">
-                <!-- Datos de servicios se cargarán aquí -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </section>
 
-        <!-- Gestión de Turnos -->
         <section id="turnos-section" class="content-section">
           <div class="section-header">
             <h2>Gestión de Turnos</h2>
@@ -312,7 +286,6 @@
               Nuevo Turno
             </button>
           </div>
-
           <div class="table-container">
             <table class="data-table" id="turnosTable">
               <thead>
@@ -326,13 +299,11 @@
                 </tr>
               </thead>
               <tbody id="turnosTableBody">
-                <!-- Datos de turnos se cargarán aquí -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </section>
 
-        <!-- Gestión de Usuarios -->
         <section id="usuarios-section" class="content-section">
           <div class="section-header">
             <h2>Gestión de Usuarios</h2>
@@ -341,7 +312,6 @@
               Nuevo Usuario
             </button>
           </div>
-
           <div class="table-container">
             <table class="data-table" id="usuariosTable">
               <thead>
@@ -357,19 +327,18 @@
                 </tr>
               </thead>
               <tbody id="usuariosTableBody">
-                <!-- Datos de usuarios se cargarán aquí -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </section>
 
-        <!-- Reportes -->
         <section id="reportes-section" class="content-section">
           <div class="section-header">
             <h2>Generación de Reportes</h2>
           </div>
 
           <div class="reports-grid">
+            
             <div class="report-card">
               <h3>Reporte de Reservas</h3>
               <p>Genera reportes completos de todas las reservas</p>
@@ -394,76 +363,53 @@
             </div>
 
             <div class="report-card">
-              <h3>Reporte Financiero</h3>
-              <p>Informes de ingresos y gastos del sistema</p>
+              <h3>Estadística de Salones</h3>
+              <p>Descarga la estadística de salones más reservados (CSV).</p>
               <div class="report-actions">
                 <button
                   class="btn btn-outline"
-                  data-report="financiero"
-                  data-format="pdf"
-                >
-                  <span class="btn-icon material-icons">picture_as_pdf</span>
-                  PDF
-                </button>
-                <button
-                  class="btn btn-outline"
-                  data-report="financiero"
+                  data-report="salones"
                   data-format="csv"
                 >
                   <span class="btn-icon material-icons">table_chart</span>
-                  CSV
+                  Descargar CSV
                 </button>
               </div>
             </div>
 
             <div class="report-card">
-              <h3>Reporte de Usuarios</h3>
-              <p>Listado completo de usuarios registrados</p>
+              <h3>Estadística de Servicios</h3>
+              <p>Descarga la estadística de servicios más contratados (CSV).</p>
               <div class="report-actions">
                 <button
                   class="btn btn-outline"
-                  data-report="usuarios"
-                  data-format="pdf"
-                >
-                  <span class="btn-icon material-icons">picture_as_pdf</span>
-                  PDF
-                </button>
-                <button
-                  class="btn btn-outline"
-                  data-report="usuarios"
+                  data-report="servicios"
                   data-format="csv"
                 >
                   <span class="btn-icon material-icons">table_chart</span>
-                  CSV
+                  Descargar CSV
+                </button>
+              </div>
+            </div>
+
+            <div class="report-card">
+              <h3>Estadística de Turnos</h3>
+              <p>Descarga la estadística de turnos más solicitados (CSV).</p>
+              <div class="report-actions">
+                <button
+                  class="btn btn-outline"
+                  data-report="turnos"
+                  data-format="csv"
+                >
+                  <span class="btn-icon material-icons">table_chart</span>
+                  Descargar CSV
                 </button>
               </div>
             </div>
           </div>
 
-          <div class="report-filters">
-            <h3>Filtros de Reporte</h3>
-            <div class="filter-form">
-              <div class="form-group">
-                <label for="fechaInicio">Fecha Inicio</label>
-                <input type="date" id="fechaInicio" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label for="fechaFin">Fecha Fin</label>
-                <input type="date" id="fechaFin" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label for="tipoReporte">Tipo de Reporte</label>
-                <select id="tipoReporte" class="form-control">
-                  <option value="completo">Completo</option>
-                  <option value="resumen">Resumen</option>
-                  <option value="detallado">Detallado</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Estadísticas -->
         <section id="estadisticas-section" class="content-section">
           <div class="section-header">
             <h2>Estadísticas del Sistema</h2>
@@ -473,39 +419,33 @@
             <div class="stat-chart-card">
               <h3>Reservas por Mes</h3>
               <div class="chart-container-large" id="statsReservasChart">
-                <!-- Gráfico de estadísticas -->
-              </div>
+                </div>
             </div>
 
             <div class="stat-chart-card">
               <h3>Ingresos por Categoría</h3>
               <div class="chart-container-large" id="statsIngresosChart">
-                <!-- Gráfico de ingresos -->
-              </div>
+                </div>
             </div>
 
             <div class="stat-chart-card">
               <h3>Distribución de Usuarios</h3>
               <div class="chart-container-large" id="statsUsuariosChart">
-                <!-- Gráfico de usuarios -->
-              </div>
+                </div>
             </div>
 
             <div class="stat-chart-card">
               <h3>Servicios Más Populares</h3>
               <div class="chart-container-large" id="statsServiciosChart">
-                <!-- Gráfico de servicios -->
-              </div>
+                </div>
             </div>
           </div>
         </section>
       </div>
     </main>
 
-    <!-- Modales para CRUD operations -->
     <div id="modalContainer"></div>
 
-    <!-- Scripts modulares -->
     <script type="module" src="./js/pages/dashboard-admin.js"></script>
   </body>
 </html>

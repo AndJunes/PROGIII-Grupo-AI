@@ -1,12 +1,17 @@
+// Ruta: frontend/js/admin/api.js (COMPLETO Y CORREGIDO)
+
 import { CONSTANTS } from './utils/constants.js';
 import { Helpers } from './utils/helpers.js';
 
 export class API {
     constructor() {
-        this.baseURL = 'https://localhost:3006/api';
+        this.baseURL = 'https://localhost:3006/api'; // esta es la base de tu api
         this.token = localStorage.getItem(CONSTANTS.LOCAL_STORAGE_KEYS.AUTH_TOKEN);
     }
 
+    /**
+     * esta funcion 'request' ahora la usamos solo para pedir JSON (GET, POST, PUT, DELETE)
+     */
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         
@@ -23,11 +28,11 @@ export class API {
         }
 
         try {
-            console.log(`Haciendo request a: ${url}`, config);
+            console.log(`Haciendo request JSON a: ${url}`, config);
             const response = await fetch(url, config);
             
             if (response.status === 401) {
-                // Token inválido o expirado
+                // token inválido o expirado
                 localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.AUTH_TOKEN);
                 localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA);
                 window.location.replace('./index.html?auth=failed');
@@ -36,26 +41,62 @@ export class API {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+                // buscamos el 'mensaje' que pusimos en el backend
+                throw new Error(errorData.mensaje || errorData.message || errorData.error || `Error ${response.status}`);
             }
 
-            // Para endpoints que devuelven archivos (PDF, CSV)
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/pdf')) {
-                return await response.blob();
-            }
-            if (contentType && contentType.includes('text/csv')) {
-                return await response.text();
+            // comentario: borramos la logica de descargar archivos de aca.
+            // si la respuesta no tiene contenido (como en un DELETE), devolvemos ok
+            if (response.status === 204) {
+                return { ok: true };
             }
 
+            // si todo sale bien, devolvemos el json
             return await response.json();
+
         } catch (error) {
             console.error('API request failed:', error);
             throw error;
         }
     }
 
+    /**
+     * esta es la funcion nueva que 'reports.js' necesita.
+     * se especializa solo en descargar archivos (pdf o csv)
+     */
+    async getReport(endpoint) {
+        const url = `${this.baseURL}${endpoint}`;
+        console.log(`Pidiendo reporte (archivo) a: ${url}`);
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                // NO mandamos 'Content-Type': 'application/json'
+                // porque estamos pidiendo un archivo
+                ...(this.token && { 'Authorization': `Bearer ${this.token}` })
+            }
+        });
+
+        if (response.status === 401) {
+             // token inválido o expirado
+             localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.AUTH_TOKEN);
+             localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA);
+             window.location.replace('./index.html?auth=failed');
+             throw new Error('Sesión expirada');
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json(); // el backend tira json si hay error
+            throw new Error(errorData.mensaje || `Error ${response.status}`);
+        }
+
+        // si sale todo ok, devolvemos el archivo como un 'blob'
+        // 'reports.js' sabe como manejar esto
+        return response.blob(); 
+    }
+
     // ===== USUARIOS =====
+    // (toda esta seccion de CRUD estaba perfecta, no se toca)
     async getUsuarios() {
         return this.request(CONSTANTS.API_ENDPOINTS.USUARIOS);
     }
@@ -89,6 +130,7 @@ export class API {
     }
 
     // ===== RESERVAS =====
+    // (toda esta seccion de CRUD estaba perfecta, no se toca)
     async getReservas() {
         return this.request(CONSTANTS.API_ENDPOINTS.RESERVAS);
     }
@@ -122,6 +164,7 @@ export class API {
     }
 
     // ===== SALONES =====
+    // (toda esta seccion de CRUD estaba perfecta, no se toca)
     async getSalones() {
         return this.request(CONSTANTS.API_ENDPOINTS.SALONES);
     }
@@ -151,6 +194,7 @@ export class API {
     }
 
     // ===== SERVICIOS =====
+    // (toda esta seccion de CRUD estaba perfecta, no se toca)
     async getServicios() {
         return this.request(CONSTANTS.API_ENDPOINTS.SERVICIOS);
     }
@@ -180,6 +224,7 @@ export class API {
     }
 
     // ===== TURNOS =====
+    // (toda esta seccion de CRUD estaba perfecta, no se toca)
     async getTurnos() {
         return this.request(CONSTANTS.API_ENDPOINTS.TURNOS);
     }
@@ -209,30 +254,10 @@ export class API {
     }
 
     // ===== REPORTES =====
-    async getReporteReservas(formato = 'pdf') {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.REPORTE_RESERVAS}?formato=${formato}`);
-    }
-
-    async getEstadisticasSalones(formato = null) {
-        const endpoint = formato ? 
-            `${CONSTANTS.API_ENDPOINTS.ESTADISTICAS_SALONES}?formato=${formato}` :
-            CONSTANTS.API_ENDPOINTS.ESTADISTICAS_SALONES;
-        return this.request(endpoint);
-    }
-
-    async getEstadisticasServicios(formato = null) {
-        const endpoint = formato ? 
-            `${CONSTANTS.API_ENDPOINTS.ESTADISTICAS_SERVICIOS}?formato=${formato}` :
-            CONSTANTS.API_ENDPOINTS.ESTADISTICAS_SERVICIOS;
-        return this.request(endpoint);
-    }
-
-    async getEstadisticasTurnos(formato = null) {
-        const endpoint = formato ? 
-            `${CONSTANTS.API_ENDPOINTS.ESTADISTICAS_TURNOS}?formato=${formato}` :
-            CONSTANTS.API_ENDPOINTS.ESTADISTICAS_TURNOS;
-        return this.request(endpoint);
-    }
+    // comentario: borramos todas las funciones viejas de reportes 
+    // (getReporteReservas, getEstadisticasSalones, etc)
+    // porque ahora usamos la nueva funcion 'getReport' que es mas simple
+    // y funciona con el 'reports.js' que hicimos.
 }
 
 // Para compatibilidad con código existente

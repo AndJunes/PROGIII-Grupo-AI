@@ -1,24 +1,37 @@
-import { BaseCRUDManager } from './base-manager.js';
+import { BaseCRUDManager } from './base-manager.js?v=4';
 import { Validators } from '../../utils/validators.js';
 import { Helpers } from '../../utils/helpers.js';
 
 export class SalonesManager extends BaseCRUDManager {
     constructor() {
         super();
+        
+        // --- INICIO DE CAMBIOS ---
+        // comentario: aca le decimos al 'padre' (base-manager)
+        // cuales son los nombres especificos para este modulo
         this.entityName = 'Salon';
+        this.tableBodyId = 'salonesTableBody';
+        this.dataKey = 'salones'; // la clave del array en el json de la api
+        // --- FIN DE CAMBIOS ---
     }
 
     async loadSalones() {
+        // --- INICIO DE CAMBIOS ---
+        // comentario: this.showLoadingState ahora existe en el 'padre'
+        // y ya sabe cual es el tableBodyId, asi que no pasamos nada.
+        this.showLoadingState(true); 
+        // --- FIN DE CAMBIOS ---
+        
         try {
-            const salones = await this.api.getSalones();
-            this.renderSalones(salones);
+            const salonesData = await this.api.getSalones(); // api.getSalones() debe devolver el objeto { ..., salones: [...] }
+            this.renderSalones(salonesData);
         } catch (error) {
             console.error('Error loading salones:', error);
-            this.showTableError('salonesTableBody', 'Error cargando salones');
+            this.showTableError(this.tableBodyId, 'Error cargando salones');
         }
     }
 
-    renderSalones(salones) {
+    renderSalones(salonesData) {
         const columns = [
             { key: 'salon_id', title: 'ID' },
             { key: 'titulo', title: 'Nombre' },
@@ -28,10 +41,16 @@ export class SalonesManager extends BaseCRUDManager {
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
 
-        this.renderTable('salonesTableBody', salones, columns, 'No hay salones registrados');
+        // --- INICIO DE CAMBIOS ---
+        // comentario: le pasamos 'salonesData' (el objeto entero) a renderTable.
+        // el 'padre' (base-manager) se encarga de buscar la lista
+        // adentro de 'salonesData[this.dataKey]' (o sea, salonesData['salones'])
+        this.renderTable(this.tableBodyId, salonesData, columns, 'No hay salones registrados');
+        // --- FIN DE CAMBIOS ---
     }
 
     // Sobrescribir createTableRow para usar salon_id correctamente
+    // (Esta función estaba perfecta, no se toca)
     createTableRow(data, columns, actions = true) {
         const cells = columns.map(col => {
             let value = data[col.key];
@@ -74,6 +93,7 @@ export class SalonesManager extends BaseCRUDManager {
     }
 
     async showSalonModal(salon = null) {
+        // ... (esta función estaba perfecta, no se toca) ...
         this.currentEditingId = salon?.salon_id || null;
         this.currentEntity = 'salon';
         
@@ -89,37 +109,37 @@ export class SalonesManager extends BaseCRUDManager {
                             <div class="form-group">
                                 <label for="titulo">Nombre del Salón</label>
                                 <input type="text" id="titulo" class="form-control" required 
-                                       value="${salon?.titulo || ''}" placeholder="Ej: Salón Principal">
+                                    value="${salon?.titulo || ''}" placeholder="Ej: Salón Principal">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="direccion">Dirección</label>
                                 <input type="text" id="direccion" class="form-control"
-                                       value="${salon?.direccion || ''}" placeholder="Dirección completa">
+                                    value="${salon?.direccion || ''}" placeholder="Dirección completa">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="capacidad">Capacidad</label>
                                 <input type="number" id="capacidad" class="form-control" required
-                                       value="${salon?.capacidad || ''}" min="1" placeholder="Número de personas">
+                                    value="${salon?.capacidad || ''}" min="1" placeholder="Número de personas">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="importe">Precio Base</label>
                                 <input type="number" id="importe" class="form-control" step="0.01" required
-                                       value="${salon?.importe || ''}" min="0" placeholder="Precio en ARS">
+                                    value="${salon?.importe || ''}" min="0" placeholder="Precio en ARS">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="latitud">Latitud</label>
                                 <input type="number" id="latitud" class="form-control" step="any"
-                                       value="${salon?.latitud || ''}" placeholder="Coordenada latitud">
+                                    value="${salon?.latitud || ''}" placeholder="Coordenada latitud">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="longitud">Longitud</label>
                                 <input type="number" id="longitud" class="form-control" step="any"
-                                       value="${salon?.longitud || ''}" placeholder="Coordenada longitud">
+                                    value="${salon?.longitud || ''}" placeholder="Coordenada longitud">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
@@ -144,7 +164,6 @@ export class SalonesManager extends BaseCRUDManager {
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
         
-        // Agregar validación en tiempo real
         this.setupRealTimeValidation('salonForm', {
             titulo: ['required', 'minLength:2'],
             capacidad: ['required', 'number', 'minValue:1'],
@@ -153,96 +172,84 @@ export class SalonesManager extends BaseCRUDManager {
         });
     }
 
-   async saveSalon() {
-    try {
-        // Obtener datos del formulario manualmente
-        const formData = {
-            titulo: document.getElementById('titulo').value,
-            direccion: document.getElementById('direccion').value,
-            capacidad: document.getElementById('capacidad').value,
-            importe: document.getElementById('importe').value,
-            latitud: document.getElementById('latitud').value,
-            longitud: document.getElementById('longitud').value
-        };
-
-        console.log('Datos del formulario:', formData);
-
-        // Validación
-        const validation = Validators.validateForm(formData, {
-            titulo: ['required', 'minLength:2'],
-            capacidad: ['required', 'number', 'minValue:1'],
-            importe: ['required', 'number', 'minValue:0']
-        });
-
-        if (!validation.isValid) {
-            this.showFormErrors(validation.errors);
-            return;
-        }
-
-        // Preparar payload - CONVERTIR CAMPOS VACÍOS A null
-        const payload = {
-            titulo: formData.titulo.trim(),
-            direccion: formData.direccion.trim() || null, // Convertir vacío a null
-            capacidad: parseInt(formData.capacidad),
-            importe: parseFloat(formData.importe)
-        };
-
-        // Manejar coordenadas - convertir vacíos explícitamente a null
-        if (formData.latitud && formData.latitud.trim() !== '') {
-            payload.latitud = parseFloat(formData.latitud);
-        } else {
-            payload.latitud = null; // Explícitamente null en lugar de undefined
-        }
-
-        if (formData.longitud && formData.longitud.trim() !== '') {
-            payload.longitud = parseFloat(formData.longitud);
-        } else {
-            payload.longitud = null; // Explícitamente null en lugar de undefined
-        }
-
-        console.log('JSON final a enviar:', JSON.stringify(payload, null, 2));
-
-        let result;
-        if (this.currentEditingId) {
-            console.log('Actualizando salón ID:', this.currentEditingId);
-            // Para update, agregar activo si es necesario
-            const updatePayload = {
-                ...payload,
-                activo: parseInt(document.getElementById('activo').value)
+    async saveSalon() {
+        // ... (esta función estaba perfecta, no se toca) ...
+        try {
+            const formData = {
+                titulo: document.getElementById('titulo').value,
+                direccion: document.getElementById('direccion').value,
+                capacidad: document.getElementById('capacidad').value,
+                importe: document.getElementById('importe').value,
+                latitud: document.getElementById('latitud').value,
+                longitud: document.getElementById('longitud').value
             };
-            result = await this.api.updateSalon(this.currentEditingId, updatePayload);
-            this.showNotification('Salón actualizado exitosamente', 'success');
-        } else {
-            console.log('Creando nuevo salón');
-            // Para CREATE, usar solo el payload sin activo
-            result = await this.api.createSalon(payload);
-            this.showNotification('Salón creado exitosamente', 'success');
-        }
 
-        console.log('Respuesta del servidor:', result);
+            const validation = Validators.validateForm(formData, {
+                titulo: ['required', 'minLength:2'],
+                capacidad: ['required', 'number', 'minValue:1'],
+                importe: ['required', 'number', 'minValue:0']
+            });
 
-        this.closeModal();
-        await this.loadSalones();
-        
-        document.dispatchEvent(new CustomEvent('dataUpdated', { 
-            detail: { entity: 'salones' } 
-        }));
-        
-    } catch (error) {
-        console.error('Error completo saving salon:', error);
-        
-        let errorMessage = 'Error al guardar el salón';
-        if (error.response) {
-            errorMessage = `Error ${error.response.status}: ${error.response.data?.message || error.message}`;
-        } else if (error.message) {
-            errorMessage = error.message;
+            if (!validation.isValid) {
+                this.showFormErrors(validation.errors);
+                return;
+            }
+
+            const payload = {
+                titulo: formData.titulo.trim(),
+                direccion: formData.direccion.trim() || null, 
+                capacidad: parseInt(formData.capacidad),
+                importe: parseFloat(formData.importe)
+            };
+
+            if (formData.latitud && formData.latitud.trim() !== '') {
+                payload.latitud = parseFloat(formData.latitud);
+            } else {
+                payload.latitud = null; 
+            }
+
+            if (formData.longitud && formData.longitud.trim() !== '') {
+                payload.longitud = parseFloat(formData.longitud);
+            } else {
+                payload.longitud = null; 
+            }
+
+            let result;
+            if (this.currentEditingId) {
+                const updatePayload = {
+                    ...payload,
+                    activo: parseInt(document.getElementById('activo').value)
+                };
+                result = await this.api.updateSalon(this.currentEditingId, updatePayload);
+                this.showNotification('Salón actualizado exitosamente', 'success');
+            } else {
+                result = await this.api.createSalon(payload);
+                this.showNotification('Salón creado exitosamente', 'success');
+            }
+
+            this.closeModal();
+            await this.loadSalones();
+            
+            document.dispatchEvent(new CustomEvent('dataUpdated', { 
+                detail: { entity: 'salones' } 
+            }));
+            
+        } catch (error) {
+            console.error('Error completo saving salon:', error);
+            
+            let errorMessage = 'Error al guardar el salón';
+            if (error.response) {
+                errorMessage = `Error ${error.response.status}: ${error.response.data?.message || error.message}`;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            this.showNotification(errorMessage, 'error');
         }
-        
-        this.showNotification(errorMessage, 'error');
     }
-}
 
     async editSalon(id) {
+        // ... (esta función estaba perfecta, no se toca) ...
         try {
             console.log('Editando salón con ID:', id);
             
@@ -259,6 +266,7 @@ export class SalonesManager extends BaseCRUDManager {
     }
 
     async deleteSalon(id) {
+        // ... (esta función estaba perfecta, no se toca) ...
         if (!this.confirmDelete('salón')) return;
 
         try {
@@ -272,7 +280,6 @@ export class SalonesManager extends BaseCRUDManager {
             this.showNotification('Salón eliminado exitosamente', 'success');
             await this.loadSalones();
             
-            // Disparar evento para actualizar dashboard si es necesario
             document.dispatchEvent(new CustomEvent('dataUpdated', { 
                 detail: { entity: 'salones' } 
             }));
@@ -283,8 +290,8 @@ export class SalonesManager extends BaseCRUDManager {
         }
     }
 
-    // Método para búsqueda y filtrado
     setupSearch() {
+        // ... (esta función estaba perfecta, no se toca) ...
         const searchInput = document.getElementById('searchSalones');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
@@ -299,9 +306,8 @@ export class SalonesManager extends BaseCRUDManager {
         }
     }
 
-    // Método para limpiar recursos si es necesario
     destroy() {
-        // Limpiar event listeners si se agregaron
+        // ... (esta función estaba perfecta, no se toca) ...
         const searchInput = document.getElementById('searchSalones');
         if (searchInput) {
             searchInput.replaceWith(searchInput.cloneNode(true));

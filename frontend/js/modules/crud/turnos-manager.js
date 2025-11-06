@@ -1,25 +1,37 @@
-import { BaseCRUDManager } from './base-manager.js';
+import { BaseCRUDManager } from './base-manager.js?v=4';
 import { Validators } from '../../utils/validators.js';
 
 export class TurnosManager extends BaseCRUDManager {
     constructor() {
         super();
+
+        // --- INICIO DE CAMBIOS ---
+        // comentario: aca le decimos al 'padre' (base-manager)
+        // cuales son los nombres especificos para este modulo
         this.entityName = 'Turno';
+        this.tableBodyId = 'turnosTableBody';
+        this.dataKey = 'turnos'; // la clave del array en el json de la api
+        // --- FIN DE CAMBIOS ---
     }
 
     async loadTurnos() {
+        // --- INICIO DE CAMBIOS ---
+        // comentario: this.showLoadingState ahora existe en el 'padre'
+        this.showLoadingState(true);
+        // --- FIN DE CAMBIOS ---
+        
         try {
-            const turnos = await this.api.getTurnos();
-            this.renderTurnos(turnos);
+            const turnosData = await this.api.getTurnos(); // api.getTurnos() debe devolver el objeto { ..., turnos: [...] }
+            this.renderTurnos(turnosData);
         } catch (error) {
             console.error('Error loading turnos:', error);
-            this.showTableError('turnosTableBody', 'Error cargando turnos');
+            this.showTableError(this.tableBodyId, 'Error cargando turnos');
         }
     }
 
-    renderTurnos(turnos) {
+    renderTurnos(turnosData) {
         const columns = [
-            { key: 'id', title: 'ID' },
+            { key: 'turno_id', title: 'ID' }, // comentario: ajustado a 'turno_id' (como seguro viene de tu bd)
             { 
                 key: 'orden', 
                 title: 'Turno',
@@ -38,13 +50,19 @@ export class TurnosManager extends BaseCRUDManager {
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
 
-        this.renderTable('turnosTableBody', turnos, columns, 'No hay turnos registrados');
+        // --- INICIO DE CAMBIOS ---
+        // comentario: le pasamos 'turnosData' (el objeto entero) a renderTable.
+        // el 'padre' (base-manager) se encarga de buscar la lista
+        // adentro de 'turnosData[this.dataKey]' (o sea, turnosData['turnos'])
+        this.renderTable(this.tableBodyId, turnosData, columns, 'No hay turnos registrados');
+        // --- FIN DE CAMBIOS ---
     }
 
     async showTurnoModal(turno = null) {
-        this.currentEditingId = turno?.id || null;
+        this.currentEditingId = turno?.turno_id || null; // comentario: ajustado a 'turno_id'
         this.currentEntity = 'turno';
         
+        // comentario: agregamos los 'name' a los inputs para que getFormData() funcione
         const modalHTML = `
             <div class="modal-overlay active" id="turnoModal">
                 <div class="modal modal-sm">
@@ -56,25 +74,29 @@ export class TurnosManager extends BaseCRUDManager {
                         <form id="turnoForm" class="form-grid">
                             <div class="form-group">
                                 <label for="orden">Orden</label>
-                                <input type="number" id="orden" class="form-control" required 
-                                       value="${turno?.orden || ''}" min="1" placeholder="Número de orden">
+                                <input type="number" id="orden" name="orden" class="form-control" required 
+                                    value="${turno?.orden || ''}" min="1" placeholder="Número de orden">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="hora_desde">Hora Inicio</label>
-                                <input type="time" id="hora_desde" class="form-control" required
-                                       value="${turno?.hora_desde || ''}">
+                                <input type="time" id="hora_desde" name="hora_desde" class="form-control" required
+                                    value="${turno?.hora_desde || ''}">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="hora_hasta">Hora Fin</label>
-                                <input type="time" id="hora_hasta" class="form-control" required
-                                       value="${turno?.hora_hasta || ''}">
+                                <input type="time" id="hora_hasta" name="hora_hasta" class="form-control" required
+                                    value="${turno?.hora_hasta || ''}">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="activo">Estado</label>
-                                <select id="activo" class="form-control" required>
-                                    <option value="1" ${turno?.activo !== false ? 'selected' : ''}>Activo</option>
-                                    <option value="0" ${turno?.activo === false ? 'selected' : ''}>Inactivo</option>
+                                <select id="activo" name="activo" class="form-control" required>
+                                    <option value="1" ${turno?.activo !== 0 ? 'selected' : ''}>Activo</option>
+                                    <option value="0" ${turno?.activo === 0 ? 'selected' : ''}>Inactivo</option>
                                 </select>
+                                <div class="error-message"></div>
                             </div>
                         </form>
                     </div>
@@ -134,7 +156,7 @@ export class TurnosManager extends BaseCRUDManager {
 
     async editTurno(id) {
         try {
-            const turno = await this.api.getTurno(id);
+            const turno = await this.api.getTurno(id); // Asumo que api.getTurno devuelve el objeto solo
             this.showTurnoModal(turno);
         } catch (error) {
             console.error('Error loading turno:', error);

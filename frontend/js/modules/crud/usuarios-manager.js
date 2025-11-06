@@ -1,43 +1,43 @@
-import { BaseCRUDManager } from './base-manager.js';
+import { BaseCRUDManager } from './base-manager.js?v=4';
 import { Validators } from '../../utils/validators.js';
 import { Helpers } from '../../utils/helpers.js';
 
 export class UsuariosManager extends BaseCRUDManager {
     constructor() {
         super();
+
+        // --- INICIO DE CAMBIOS ---
+        // comentario: aca le decimos al 'padre' (base-manager)
+        // cuales son los nombres especificos para este modulo
         this.entityName = 'Usuario';
+        this.tableBodyId = 'usuariosTableBody';
+        this.dataKey = 'usuarios'; // la clave del array en el json de la api
+        // --- FIN DE CAMBIOS ---
     }
 
     async loadUsuarios() {
+        // --- INICIO DE CAMBIOS ---
+        // comentario: this.showLoadingState ahora existe en el 'padre'
+        this.showLoadingState(true);
+        // --- FIN DE CAMBIOS ---
+        
         try {
             console.log('🔍 Cargando usuarios...');
-            const response = await this.api.getUsuarios();
-            console.log('📦 Respuesta completa de API:', response);
-            console.log('📊 Tipo de respuesta:', typeof response);
-            console.log('🔢 Es array?', Array.isArray(response));
+            const responseData = await this.api.getUsuarios(); // api.getUsuarios() debe devolver el objeto { ..., usuarios: [...] }
+            console.log('📦 Respuesta completa de API:', responseData);
             
-            // Si response es un objeto, extraer el array
-            let usuarios;
-            if (Array.isArray(response)) {
-                usuarios = response;
-            } else if (response && response.data && Array.isArray(response.data)) {
-                usuarios = response.data;
-            } else if (response && response.usuarios && Array.isArray(response.usuarios)) {
-                usuarios = response.usuarios;
-            } else {
-                console.warn('⚠️ Formato inesperado, usando array vacío');
-                usuarios = [];
-            }
+            // comentario: ya no necesitamos la logica de 'if (Array.isArray...)'
+            // porque el 'padre' (base-manager) se va a encargar de eso en renderTable.
             
-            console.log('👥 Usuarios procesados:', usuarios);
-            this.renderUsuarios(usuarios);
+            this.renderUsuarios(responseData);
+            
         } catch (error) {
             console.error('❌ Error loading usuarios:', error);
-            this.showTableError('usuariosTableBody', 'Error cargando usuarios');
+            this.showTableError(this.tableBodyId, 'Error cargando usuarios');
         }
     }
 
-    renderUsuarios(usuarios) {
+    renderUsuarios(usuariosData) {
         const columns = [
             { key: 'usuario_id', title: 'ID' },
             { key: 'nombre', title: 'Nombre' },
@@ -52,10 +52,16 @@ export class UsuariosManager extends BaseCRUDManager {
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
 
-        this.renderTable('usuariosTableBody', usuarios, columns, 'No hay usuarios registrados');
+        // --- INICIO DE CAMBIOS ---
+        // comentario: le pasamos 'usuariosData' (el objeto entero) a renderTable.
+        // el 'padre' (base-manager) se encarga de buscar la lista
+        // adentro de 'usuariosData[this.dataKey]' (o sea, usuariosData['usuarios'])
+        this.renderTable(this.tableBodyId, usuariosData, columns, 'No hay usuarios registrados');
+        // --- FIN DE CAMBIOS ---
     }
 
     // Sobrescribir createTableRow para usar usuario_id correctamente
+    // (Esta función estaba perfecta, no se toca)
     createTableRow(data, columns, actions = true) {
         const cells = columns.map(col => {
             let value = data[col.key];
@@ -98,9 +104,11 @@ export class UsuariosManager extends BaseCRUDManager {
     }
 
     async showUsuarioModal(usuario = null) {
+        // ... (esta función estaba perfecta, no se toca) ...
         this.currentEditingId = usuario?.usuario_id || null;
         this.currentEntity = 'usuario';
         
+        // comentario: agregamos los 'name' a los inputs para que getFormData() funcione
         const modalHTML = `
             <div class="modal-overlay active" id="usuarioModal">
                 <div class="modal modal-sm">
@@ -112,32 +120,32 @@ export class UsuariosManager extends BaseCRUDManager {
                         <form id="usuarioForm" class="form-grid">
                             <div class="form-group">
                                 <label for="nombre">Nombre</label>
-                                <input type="text" id="nombre" class="form-control" required 
-                                       value="${usuario?.nombre || ''}">
+                                <input type="text" id="nombre" name="nombre" class="form-control" required 
+                                    value="${usuario?.nombre || ''}">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="apellido">Apellido</label>
-                                <input type="text" id="apellido" class="form-control" required
-                                       value="${usuario?.apellido || ''}">
+                                <input type="text" id="apellido" name="apellido" class="form-control" required
+                                    value="${usuario?.apellido || ''}">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="nombre_usuario">Usuario</label>
-                                <input type="text" id="nombre_usuario" class="form-control" required
-                                       value="${usuario?.nombre_usuario || ''}">
+                                <input type="text" id="nombre_usuario" name="nombre_usuario" class="form-control" required
+                                    value="${usuario?.nombre_usuario || ''}">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="contrasenia">Contraseña</label>
-                                <input type="password" id="contrasenia" class="form-control" 
-                                       ${!usuario ? 'required' : ''} 
-                                       placeholder="${usuario ? 'Dejar vacío para mantener actual' : 'Ingrese contraseña'}">
+                                <input type="password" id="contrasenia" name="contrasenia" class="form-control" 
+                                    ${!usuario ? 'required' : ''} 
+                                    placeholder="${usuario ? 'Dejar vacío para mantener actual' : 'Ingrese contraseña'}">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="tipo_usuario">Tipo de Usuario</label>
-                                <select id="tipo_usuario" class="form-control" required>
+                                <select id="tipo_usuario" name="tipo_usuario" class="form-control" required>
                                     <option value="1" ${usuario?.tipo_usuario == 1 ? 'selected' : ''}>Administrador</option>
                                     <option value="2" ${usuario?.tipo_usuario == 2 ? 'selected' : ''}>Empleado</option>
                                     <option value="3" ${usuario?.tipo_usuario == 3 ? 'selected' : ''}>Cliente</option>
@@ -146,16 +154,16 @@ export class UsuariosManager extends BaseCRUDManager {
                             </div>
                             <div class="form-group">
                                 <label for="celular">Teléfono</label>
-                                <input type="tel" id="celular" class="form-control"
-                                       value="${usuario?.celular || ''}" placeholder="Ej: 3416123456">
+                                <input type="tel" id="celular" name="celular" class="form-control"
+                                    value="${usuario?.celular || ''}" placeholder="Ej: 3416123456">
                                 <div class="error-message"></div>
                             </div>
                             ${usuario ? `
                             <div class="form-group">
                                 <label for="activo">Estado</label>
-                                <select id="activo" class="form-control" required>
-                                    <option value="1" ${usuario?.activo !== false ? 'selected' : ''}>Activo</option>
-                                    <option value="0" ${usuario?.activo === false ? 'selected' : ''}>Inactivo</option>
+                                <select id="activo" name="activo" class="form-control" required>
+                                    <option value="1" ${usuario?.activo !== 0 ? 'selected' : ''}>Activo</option>
+                                    <option value="0" ${usuario?.activo === 0 ? 'selected' : ''}>Inactivo</option>
                                 </select>
                                 <div class="error-message"></div>
                             </div>
@@ -174,7 +182,6 @@ export class UsuariosManager extends BaseCRUDManager {
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
         
-        // Agregar validación en tiempo real
         this.setupRealTimeValidation('usuarioForm', {
             nombre: ['required', 'minLength:2'],
             apellido: ['required', 'minLength:2'],
@@ -185,8 +192,8 @@ export class UsuariosManager extends BaseCRUDManager {
     }
 
     async saveUsuario() {
+        // ... (esta función estaba perfecta, no se toca) ...
         try {
-            // Obtener datos del formulario manualmente
             const formData = {
                 nombre: document.getElementById('nombre').value,
                 apellido: document.getElementById('apellido').value,
@@ -198,7 +205,6 @@ export class UsuariosManager extends BaseCRUDManager {
 
             console.log('Datos del formulario usuario:', formData);
 
-            // Validación básica
             const validationRules = {
                 nombre: ['required', 'minLength:2'],
                 apellido: ['required', 'minLength:2'],
@@ -206,7 +212,6 @@ export class UsuariosManager extends BaseCRUDManager {
                 tipo_usuario: ['required']
             };
 
-            // Solo validar contraseña si es nuevo usuario o se está cambiando
             if (!this.currentEditingId || formData.contrasenia) {
                 validationRules.contrasenia = ['required', 'minLength:4'];
             }
@@ -218,7 +223,6 @@ export class UsuariosManager extends BaseCRUDManager {
                 return;
             }
 
-            // Preparar payload
             const payload = {
                 nombre: formData.nombre.trim(),
                 apellido: formData.apellido.trim(),
@@ -227,12 +231,10 @@ export class UsuariosManager extends BaseCRUDManager {
                 celular: formData.celular.trim() || null
             };
 
-            // Solo incluir contraseña si se proporcionó
             if (formData.contrasenia && formData.contrasenia.trim() !== '') {
                 payload.contrasenia = formData.contrasenia.trim();
             }
 
-            // Para edición, incluir activo si existe el campo
             if (this.currentEditingId) {
                 const activoField = document.getElementById('activo');
                 if (activoField) {
@@ -277,6 +279,7 @@ export class UsuariosManager extends BaseCRUDManager {
     }
 
     async editUsuario(id) {
+        // ... (esta función estaba perfecta, no se toca) ...
         try {
             console.log('Editando usuario con ID:', id);
             
@@ -293,6 +296,7 @@ export class UsuariosManager extends BaseCRUDManager {
     }
 
     async deleteUsuario(id) {
+        // ... (esta función estaba perfecta, no se toca) ...
         if (!this.confirmDelete('usuario')) return;
 
         try {
@@ -316,8 +320,8 @@ export class UsuariosManager extends BaseCRUDManager {
         }
     }
 
-    // Método para búsqueda y filtrado
     setupSearch() {
+        // ... (esta función estaba perfecta, no se toca) ...
         const searchInput = document.getElementById('searchUsuarios');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
@@ -332,8 +336,8 @@ export class UsuariosManager extends BaseCRUDManager {
         }
     }
 
-    // Método para limpiar recursos si es necesario
     destroy() {
+        // ... (esta función estaba perfecta, no se toca) ...
         const searchInput = document.getElementById('searchUsuarios');
         if (searchInput) {
             searchInput.replaceWith(searchInput.cloneNode(true));

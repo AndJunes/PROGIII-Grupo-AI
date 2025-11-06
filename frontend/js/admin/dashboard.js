@@ -1,4 +1,9 @@
 // Dashboard Manager - Estadísticas y datos principales
+import { API } from '../api.js';
+import { Helpers } from '../utils/helpers.js';
+
+const apiClient = new API();
+
 class DashboardManager {
     constructor() {
         this.stats = {

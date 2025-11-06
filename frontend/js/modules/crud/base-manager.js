@@ -8,10 +8,17 @@ export class BaseCRUDManager {
         this.api = new API();
         this.currentEditingId = null;
         this.currentEntity = null;
+
+        // comentario: los 'hijos' (ej: reservas-manager) tienen que definir
+        // estas 3 propiedades en su constructor:
+        // this.entityName = 'Reserva';
+        // this.tableBodyId = 'reservasTableBody';
+        // this.dataKey = 'reservas'; // la clave del array en el json de la api
     }
 
     // Métodos comunes a todos los managers
     getFormData(formId) {
+        // ... (esta función estaba perfecta, no se toca) ...
         const form = document.getElementById(formId);
         const formData = new FormData(form);
         const data = {};
@@ -26,7 +33,7 @@ export class BaseCRUDManager {
     }
 
     showFormErrors(errors) {
-        // Limpiar errores anteriores
+        // ... (esta función estaba perfecta, no se toca) ...
         document.querySelectorAll('.error-message').forEach(el => {
             el.textContent = '';
         });
@@ -35,7 +42,6 @@ export class BaseCRUDManager {
             el.classList.remove('input-error');
         });
 
-        // Mostrar nuevos errores
         for (const [field, message] of Object.entries(errors)) {
             const input = document.getElementById(field);
             const errorElement = input?.parentElement?.querySelector('.error-message');
@@ -48,6 +54,7 @@ export class BaseCRUDManager {
     }
 
     showTableError(tableBodyId, message) {
+        // ... (esta función estaba perfecta, no se toca) ...
         const tbody = document.getElementById(tableBodyId);
         if (tbody) {
             tbody.innerHTML = `<tr><td colspan="8" class="error">${message}</td></tr>`;
@@ -55,6 +62,7 @@ export class BaseCRUDManager {
     }
 
     showNotification(message, type = 'info') {
+        // ... (esta función estaba perfecta, no se toca) ...
         if (window.notificationsManager) {
             window.notificationsManager.addNotification({
                 title: type === 'error' ? 'Error' : 'Éxito',
@@ -67,14 +75,34 @@ export class BaseCRUDManager {
     }
 
     closeModal() {
+        // ... (esta función estaba perfecta, no se toca) ...
         document.getElementById('modalContainer').innerHTML = '';
         this.currentEditingId = null;
         this.currentEntity = null;
     }
 
     formatTime(timeString) {
+        // ... (esta función estaba perfecta, no se toca) ...
         if (!timeString) return 'N/A';
         return timeString.substring(0, 5);
+    }
+
+    // ---
+    // comentario: agregamos la funcion que faltaba
+    // (la que causaba 'this.showLoadingState is not a function')
+    // ---
+    showLoadingState(show) {
+        const tbody = document.getElementById(this.tableBodyId);
+        if (!tbody) return;
+
+        if (show) {
+            // mostramos 'cargando...' en la tabla
+            const colCount = tbody.parentElement.querySelector('thead tr').childElementCount;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Cargando...</td></tr>`;
+        } else {
+            // limpiamos la tabla (despues se rellena)
+            tbody.innerHTML = '';
+        }
     }
 
     // Método para crear filas de tabla
@@ -97,14 +125,16 @@ export class BaseCRUDManager {
             return `<td>${value || 'N/A'}</td>`;
         }).join('');
 
+        // comentario: cambiamos el 'onclick' para que use 'this.entityName'
+        // (ej: 'Reserva', 'Salon', 'Turno') que define el 'hijo'
         const actionButtons = actions ? `
             <td>
                 <div class="action-buttons">
-                    <button class="btn btn-sm btn-outline" onclick="crudManager.edit${this.entityName}(${data.id})">
+                    <button class="btn btn-sm btn-outline" onclick="crudManager.edit${this.entityName}(${data.id || data.reserva_id || data.salon_id || data.servicio_id || data.turno_id || data.usuario_id})">
                         <span class="btn-icon material-icons">edit</span>
                         Editar
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="crudManager.delete${this.entityName}(${data.id})">
+                    <button class="btn btn-sm btn-danger" onclick="crudManager.delete${this.entityName}(${data.id || data.reserva_id || data.salon_id || data.servicio_id || data.turno_id || data.usuario_id})">
                         <span class="btn-icon material-icons">delete</span>
                         Eliminar
                     </button>
@@ -116,16 +146,35 @@ export class BaseCRUDManager {
     }
 
     // Método para renderizar tabla completa
+    // Método para renderizar tabla completa
     renderTable(tableBodyId, data, columns, emptyMessage = 'No hay registros') {
         const tbody = document.getElementById(tableBodyId);
         if (!tbody) return;
         
-        if (!data || data.length === 0) {
+        // ---
+        // comentario: aca estaba el error 'list.map is not a function'
+        // la api nos da un objeto (ej: { pagina_actual: 1, usuarios: [...] })
+        // tenemos que buscar el array adentro de ese objeto.
+        // ---
+        let list;
+        if (Array.isArray(data)) {
+            // caso 1: la api devolvio un array simple (ej: [ ... ])
+            list = data;
+        } else if (data && Array.isArray(data[this.dataKey])) {
+            // caso 2: la api devolvio un objeto paginado (ej: { ..., usuarios: [ ... ] })
+            list = data[this.dataKey];
+        } else {
+            // caso 3: no encontramos nada
+            console.warn(`renderTable esperaba un array o un objeto con la clave '${this.dataKey}', pero recibió:`, data);
+            list = [];
+        }
+
+        if (!list || list.length === 0) {
             tbody.innerHTML = `<tr><td colspan="${columns.length + 1}" class="text-center">${emptyMessage}</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = data.map(item => 
+        tbody.innerHTML = list.map(item => 
             this.createTableRow(item, columns)
         ).join('');
     }

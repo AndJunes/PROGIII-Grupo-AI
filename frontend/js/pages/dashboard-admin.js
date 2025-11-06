@@ -1,10 +1,10 @@
-import { SidebarManager } from '../modules/sidebar.js';
-import { NotificationsManager } from '../modules/notifications.js';
-import { CRUDManager } from '../modules/crud/index.js';
-import { ReportsManager } from '../modules/reports.js';
-import { DashboardManager } from '../modules/dashboard.js';
-import { WebSocketManager } from '../modules/websocket.js';
-import { Auth } from '../auth.js';
+import { SidebarManager } from '../modules/sidebar.js?v=4';
+import { NotificationsManager } from '../modules/notifications.js?v=4';
+import { CRUDManager } from '../modules/crud/index.js?v=4';
+import { ReportsManager } from '../modules/reports.js?v=4';
+import { DashboardManager } from '../modules/dashboard.js?v=4';
+import { WebSocketManager } from '../modules/websocket.js?v=4';
+import { Auth } from '../auth.js?v=4';
 
 class DashboardAdmin {
     constructor() {
@@ -14,33 +14,25 @@ class DashboardAdmin {
 
     async init() {
         try {
-            // Inicializar autenticación primero
+            // comentario: primero inicializamos auth.
+            // auth.js se encarga de verificar si hay token y redirigir
+            // si no estamos logueados.
             this.auth = new Auth();
             
-            // Esperar a que la autenticación se complete
-            await this.waitForAuth();
+            // comentario: borramos el 'await waitForAuth()' que trababa todo.
+            // si el codigo llega aca, es porque auth.js dijo que SI estamos logueados.
             
             // Inicializar módulos
             this.initializeModules();
             this.bindEvents();
             
             console.log('Dashboard Admin inicializado correctamente');
+
         } catch (error) {
             console.error('Error inicializando Dashboard Admin:', error);
+            // si hay un error aca (ej: no encuentra un modulo),
+            // lo mostramos en la consola.
         }
-    }
-
-    waitForAuth() {
-        return new Promise((resolve) => {
-            const checkAuth = () => {
-                if (this.auth && this.auth.isLoggedIn()) {
-                    resolve();
-                } else {
-                    setTimeout(checkAuth, 100);
-                }
-            };
-            checkAuth();
-        });
     }
 
     initializeModules() {
@@ -67,6 +59,7 @@ class DashboardAdmin {
         });
 
         // Evento de logout
+        // comentario: esto ahora funciona porque 'this.auth' SI existe.
         document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
             this.auth.logOut();
@@ -82,6 +75,7 @@ class DashboardAdmin {
         });
 
         // Actualizar información del usuario en el sidebar
+        // comentario: esto ahora funciona porque 'this.auth' SI existe.
         const userData = this.auth.userData;
         if (userData && this.modules.sidebar) {
             this.modules.sidebar.updateUserInfo(userData);

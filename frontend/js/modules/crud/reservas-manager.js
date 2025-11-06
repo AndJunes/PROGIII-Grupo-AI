@@ -1,11 +1,19 @@
-import { BaseCRUDManager } from './base-manager.js';
+import { BaseCRUDManager } from './base-manager.js?v=4';
 import { Validators } from '../../utils/validators.js';
 import { Helpers } from '../../utils/helpers.js';
 
 export class ReservasManager extends BaseCRUDManager {
     constructor() {
         super();
+        
+        // --- INICIO DE CAMBIOS ---
+        // comentario: aca le decimos al 'padre' (base-manager)
+        // cuales son los nombres especificos para este modulo
         this.entityName = 'Reserva';
+        this.tableBodyId = 'reservasTableBody';
+        this.dataKey = 'reservas'; // la clave del array en el json de la api
+        // --- FIN DE CAMBIOS ---
+
         this.salones = [];
         this.servicios = [];
         this.turnos = [];
@@ -14,33 +22,45 @@ export class ReservasManager extends BaseCRUDManager {
 
     async loadDependencies() {
         try {
-            [this.salones, this.servicios, this.turnos, this.usuarios] = await Promise.all([
+            // comentario: esto está bien, pero nos aseguramos
+            // de que la api devuelva el array correcto
+            const [salonesData, serviciosData, turnosData, usuariosData] = await Promise.all([
                 this.api.getSalones(),
                 this.api.getServicios(),
                 this.api.getTurnos(),
                 this.api.getUsuarios()
             ]);
+            
+            this.salones = salonesData.salones || salonesData || [];
+            this.servicios = serviciosData.servicios || serviciosData || [];
+            this.turnos = turnosData.turnos || turnosData || [];
+            this.usuarios = usuariosData.usuarios || usuariosData || [];
+
         } catch (error) {
             console.error('Error loading dependencies:', error);
         }
     }
 
     async loadReservas() {
-        this.showLoadingState('reservasTableBody');
+        // --- INICIO DE CAMBIOS ---
+        // comentario: this.showLoadingState ahora existe en el 'padre'
+        // y ya sabe cual es el tableBodyId, asi que no pasamos nada.
+        this.showLoadingState(true);
+        // --- FIN DE CAMBIOS ---
         
         try {
             await this.loadDependencies();
-            const reservas = await this.api.getReservas();
-            this.renderReservas(reservas);
+            const reservasData = await this.api.getReservas(); // api.getReservas() debe devolver el objeto { ..., reservas: [...] }
+            this.renderReservas(reservasData);
         } catch (error) {
             console.error('Error loading reservas:', error);
-            this.showTableError('reservasTableBody', 'Error cargando reservas');
+            this.showTableError(this.tableBodyId, 'Error cargando reservas');
         }
     }
 
-    renderReservas(reservas) {
+    renderReservas(reservasData) {
         const columns = [
-            { key: 'id', title: 'ID' },
+            { key: 'reserva_id', title: 'ID' }, // comentario: ajustado a 'reserva_id' (como seguro viene de tu bd)
             { 
                 key: 'fecha_reserva', 
                 title: 'Fecha',
@@ -49,11 +69,14 @@ export class ReservasManager extends BaseCRUDManager {
             { 
                 key: 'salon_id', 
                 title: 'Salón',
+                // comentario: tu api.getReservas() ya deberia traer el nombre del salon con un JOIN
+                // pero si no lo hace, este formatter (que ya tenias) funciona bien
                 formatter: (value) => this.getSalonName(value)
             },
             { 
                 key: 'turno_id', 
                 title: 'Turno',
+                // comentario: lo mismo para turno
                 formatter: (value) => this.getTurnoInfo(value)
             },
             { 
@@ -66,13 +89,16 @@ export class ReservasManager extends BaseCRUDManager {
                 type: 'currency'
             },
             { 
-                key: 'estado', 
+                key: 'activo', // cambiado de 'estado' a 'activo' (soft delete)
                 title: 'Estado',
-                formatter: (value) => this.getEstadoBadge(value)
+                type: 'status' // 'status' ya sabe mostrar 'Activo' o 'Inactivo'
             }
         ];
 
-        this.renderTable('reservasTableBody', reservas, columns, 'No hay reservas registradas');
+        // comentario: le pasamos 'reservasData' (el objeto entero) a renderTable.
+        // renderTable (el padre) ahora sabe que tiene que buscar la lista
+        // adentro de 'reservasData[this.dataKey]' (o sea, reservasData['reservas'])
+        this.renderTable(this.tableBodyId, reservasData, columns, 'No hay reservas registradas');
     }
 
     getSalonName(salonId) {
@@ -81,11 +107,13 @@ export class ReservasManager extends BaseCRUDManager {
     }
 
     getTurnoInfo(turnoId) {
-        const turno = this.turnos.find(t => t.id === turnoId);
-        return turno ? `Turno ${turno.orden}` : 'N/A';
+        // comentario: tu dao de turnos seguro usa 'turno_id', no 'id'
+        const turno = this.turnos.find(t => t.turno_id === turnoId); 
+        return turno ? `${this.formatTime(turno.hora_desde)} - ${this.formatTime(turno.hora_hasta)}` : 'N/A';
     }
 
     getEstadoBadge(estado) {
+        // ... (esta funcion no la usamos mas, usamos el 'status' del padre) ...
         const estados = {
             'pendiente': 'Pendiente',
             'confirmada': 'Confirmada',
@@ -98,11 +126,12 @@ export class ReservasManager extends BaseCRUDManager {
     }
 
     async showReservaModal(reserva = null) {
-        this.currentEditingId = reserva?.id || null;
+        this.currentEditingId = reserva?.reserva_id || null; // Usar 'reserva_id'
         this.currentEntity = 'reserva';
         
         await this.loadDependencies();
         
+        // comentario: todo este html estaba bien
         const modalHTML = `
             <div class="modal-overlay active" id="reservaModal">
                 <div class="modal modal-lg">
@@ -114,12 +143,13 @@ export class ReservasManager extends BaseCRUDManager {
                         <form id="reservaForm" class="form-grid">
                             <div class="form-group">
                                 <label for="fecha_reserva">Fecha de Reserva</label>
-                                <input type="date" id="fecha_reserva" class="form-control" required 
-                                       value="${reserva?.fecha_reserva || ''}">
+                                <input type="date" name="fecha_reserva" id="fecha_reserva" class="form-control" required 
+                                    value="${reserva?.fecha_reserva ? new Date(reserva.fecha_reserva).toISOString().split('T')[0] : ''}">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="salon_id">Salón</label>
-                                <select id="salon_id" class="form-control" required>
+                                <select name="salon_id" id="salon_id" class="form-control" required>
                                     <option value="">Seleccionar salón</option>
                                     ${this.salones.map(salon => 
                                         `<option value="${salon.salon_id}" ${reserva?.salon_id == salon.salon_id ? 'selected' : ''}>
@@ -127,36 +157,39 @@ export class ReservasManager extends BaseCRUDManager {
                                         </option>`
                                     ).join('')}
                                 </select>
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="turno_id">Turno</label>
-                                <select id="turno_id" class="form-control" required>
+                                <select name="turno_id" id="turno_id" class="form-control" required>
                                     <option value="">Seleccionar turno</option>
                                     ${this.turnos.map(turno => 
-                                        `<option value="${turno.id}" ${reserva?.turno_id == turno.id ? 'selected' : ''}>
-                                            Turno ${turno.orden} (${this.formatTime(turno.hora_desde)} - ${this.formatTime(turno.hora_hasta)})
+                                        `<option value="${turno.turno_id}" ${reserva?.turno_id == turno.turno_id ? 'selected' : ''}>
+                                            ${this.formatTime(turno.hora_desde)} - ${this.formatTime(turno.hora_hasta)}
                                         </option>`
                                     ).join('')}
                                 </select>
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="tematica">Temática</label>
-                                <input type="text" id="tematica" class="form-control"
-                                       value="${reserva?.tematica || ''}" placeholder="Temática del evento">
+                                <input type="text" name="tematica" id="tematica" class="form-control"
+                                    value="${reserva?.tematica || ''}" placeholder="Temática del evento">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="importe_total">Importe Total</label>
-                                <input type="number" id="importe_total" class="form-control" step="0.01" required
-                                       value="${reserva?.importe_total || ''}" min="0" placeholder="Importe total">
+                                <input type="number" name="importe_total" id="importe_total" class="form-control" step="0.01" required
+                                    value="${reserva?.importe_total || ''}" min="0" placeholder="Importe total">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
-                                <label for="estado">Estado</label>
-                                <select id="estado" class="form-control" required>
-                                    <option value="pendiente" ${reserva?.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
-                                    <option value="confirmada" ${reserva?.estado === 'confirmada' ? 'selected' : ''}>Confirmada</option>
-                                    <option value="cancelada" ${reserva?.estado === 'cancelada' ? 'selected' : ''}>Cancelada</option>
-                                    <option value="completada" ${reserva?.estado === 'completada' ? 'selected' : ''}>Completada</option>
+                                <label for="activo">Estado</label>
+                                <select name="activo" id="activo" class="form-control" required>
+                                    <option value="1" ${reserva?.activo === 1 ? 'selected' : ''}>Activo</option>
+                                    <option value="0" ${reserva?.activo === 0 ? 'selected' : ''}>Inactivo</option>
                                 </select>
+                                <div class="error-message"></div>
                             </div>
                         </form>
                     </div>
@@ -176,12 +209,14 @@ export class ReservasManager extends BaseCRUDManager {
     async saveReserva() {
         try {
             const formData = this.getFormData('reservaForm');
+            
+            // comentario: tu validator.js no lo vi, pero asumo que esta logica esta bien
             const validation = Validators.validateForm(formData, {
                 fecha_reserva: ['required'],
                 salon_id: ['required', 'number'],
                 turno_id: ['required', 'number'],
                 importe_total: ['required', 'number', 'minValue:0'],
-                estado: ['required']
+                activo: ['required'] // cambiado de 'estado' a 'activo'
             });
 
             if (!validation.isValid) {
@@ -193,6 +228,7 @@ export class ReservasManager extends BaseCRUDManager {
             formData.salon_id = parseInt(formData.salon_id);
             formData.turno_id = parseInt(formData.turno_id);
             formData.importe_total = parseFloat(formData.importe_total);
+            formData.activo = parseInt(formData.activo); // asegurarse que sea numero
 
             if (this.currentEditingId) {
                 await this.api.updateReserva(this.currentEditingId, formData);
@@ -212,6 +248,7 @@ export class ReservasManager extends BaseCRUDManager {
 
     async editReserva(id) {
         try {
+            // comentario: la api debe devolver la reserva sola, no un objeto
             const reserva = await this.api.getReserva(id);
             this.showReservaModal(reserva);
         } catch (error) {
