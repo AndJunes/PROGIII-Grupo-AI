@@ -111,6 +111,9 @@ FLUSH PRIVILEGES;
 ```
 > **Nota:** `api_user` y `localhost` deberia ser cambiado por tu usuario e ip especial correspondientemente para asignar dichos permisos.
 
+> Para poder usar los procedimientos almacenados, deben ser creados manualmente en la base de datos. Estos procedimientos estan documentados en el archivo `procedimientosAlmacenados.txt` en la raiz del proyecto.
+
+
 4. Configurar tu API para usar el usuario dedicado. Crea un archivo `.env` como este.
 ```js
 DB_NAME=nombre_de_la_base_de_datos
@@ -152,9 +155,9 @@ npm install
 - Abri MySQL Workbench (o tu cliente MySQL de preferencia)
 - Conectate como root (solo para crear la base de datos).
 - Ejectua el script `script_reservas.sql` ubicado en la raiz del proyecto.
-- Dar permiso para ejecutar el procedimiento almacenado.
+- Dar permiso para ejecutar los procedimientos almacenados.
 
-- > **Nota:** El API **no debe usar root**, sino el usuario `api_user` que creaste.
+- > **Nota:** El API **no debe usar root**, sino el usuario `(de la base de datos)` que creaste.
 ---
 
 ##  Ejecución en desarrollo

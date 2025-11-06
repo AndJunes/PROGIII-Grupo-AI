@@ -15,8 +15,14 @@ class UsuariosController {
     // Listar todos los usuarios activos
     static async getAll(req, res) {
         try {
-            const usuarios = await UsuariosService.listarUsuarios();
-            res.json(usuarios);
+            const { pagina = 1, limite = 10, orden, direccion } = req.query;
+            const resultado = await UsuariosService.listarUsuariosConFiltros({
+                pagina: Number(pagina),
+                limite: Number(limite),
+                orden,
+                direccion
+            });
+            res.json(resultado);
         } catch (error) {
             console.error("Error al obtener usuarios:", error);
             res.status(500).json({ error: "Error al obtener usuarios" });

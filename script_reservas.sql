@@ -169,32 +169,3 @@ ALTER TABLE reservas_servicios
   ADD CONSTRAINT reservas_servicios_fk2 FOREIGN KEY (servicio_id) REFERENCES servicios (servicio_id);
 
 COMMIT;
-
--- --------------------------------------------------------
--- Procedimiento almacenado: reporte_detalle_reservas
--- --------------------------------------------------------
-DELIMITER $$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE reporte_detalle_reservas()
-BEGIN
-    SELECT
-        r.fecha_reserva,
-        r.tematica,
-        t.hora_desde,
-        t.hora_hasta,
-        s.titulo AS salon_titulo,
-        s.direccion AS salon_direccion,
-        se.descripcion AS servicio_descripcion,
-        rs.importe AS servicio_importe,
-        u.nombre AS cliente_nombre,
-        u.apellido AS cliente_apellido
-    FROM reservas AS r
-    INNER JOIN turnos AS t ON t.turno_id = r.turno_id
-    INNER JOIN salones AS s ON s.salon_id = r.salon_id
-    INNER JOIN usuarios AS u ON u.usuario_id = r.usuario_id
-    LEFT JOIN reservas_servicios AS rs ON rs.reserva_id = r.reserva_id
-    LEFT JOIN servicios AS se ON se.servicio_id = rs.servicio_id
-    WHERE r.activo = 1;
-END $$
-
-DELIMITER ;

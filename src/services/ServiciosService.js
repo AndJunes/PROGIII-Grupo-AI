@@ -2,8 +2,9 @@ import ServiciosDAO from "../database/ServiciosDAO.js";
 
 class ServiciosService {
 
-    async getAll() {
-        return await ServiciosDAO.getAll();
+    async getAllWithFilters(limit, offset) {
+        const { rows, total } = await ServiciosDAO.findAllWithFilters(limit, offset);
+        return { servicios: rows, total };
     }
 
     async getByUser(usuarioId) {

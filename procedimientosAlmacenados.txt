@@ -1,0 +1,120 @@
+-- --------------------------------------------------------
+-- Procedimiento almacenado: reporte_detalle_reservas
+-- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
+DELIMITER $$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE reporte_detalle_reservas()
+BEGIN
+    SELECT
+        r.fecha_reserva,
+        r.tematica,
+        t.hora_desde,
+        t.hora_hasta,
+        s.titulo AS salon_titulo,
+        s.direccion AS salon_direccion,
+        se.descripcion AS servicio_descripcion,
+        rs.importe AS servicio_importe,
+        u.nombre AS cliente_nombre,
+        u.apellido AS cliente_apellido
+    FROM reservas AS r
+    INNER JOIN turnos AS t ON t.turno_id = r.turno_id
+    INNER JOIN salones AS s ON s.salon_id = r.salon_id
+    INNER JOIN usuarios AS u ON u.usuario_id = r.usuario_id
+    LEFT JOIN reservas_servicios AS rs ON rs.reserva_id = r.reserva_id
+    LEFT JOIN servicios AS se ON se.servicio_id = rs.servicio_id
+    WHERE r.activo = 1;
+END $$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+-- Procedimiento almacenado: reporte_estadistico_salones
+-- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
+DELIMITER $$
+
+CREATE DEFINER=root@localhost PROCEDURE reporte_estadistico_salones()
+BEGIN
+    -- consulta estadistica
+    SELECT
+        s.titulo AS salon,
+        COUNT(r.reserva_id) AS cantidad_reservas,
+        SUM(r.importe_total) AS total_facturado 
+    FROM
+        reservas AS r
+    INNER JOIN
+        salones AS s ON s.salon_id = r.salon_id
+    WHERE
+        r.activo = 1 AND s.activo = 1 
+    GROUP BY
+        s.titulo 
+    ORDER BY
+        total_facturado DESC;
+
+-- fin del procedimiento
+END
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+-- Procedimiento almacenado: reporte_estadistico_servicios
+-- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
+DELIMITER $$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reporte_estadistico_servicios`()
+BEGIN
+
+    SELECT
+        s.descripcion AS servicio,
+        COUNT(rs.reserva_servicio_id) AS cantidad_contratada,
+        SUM(rs.importe) AS total_facturado_servicio
+    FROM
+        reservas_servicios AS rs
+    INNER JOIN
+        servicios AS s ON s.servicio_id = rs.servicio_id
+    WHERE
+        s.activo = 1 
+    GROUP BY
+        s.descripcion 
+    ORDER BY
+        cantidad_contratada DESC;
+
+-- termina el procedure
+END
+
+DELIMITER ;
+
+
+-- --------------------------------------------------------
+-- Procedimiento almacenado: reporte_estadistico_turnos
+-- --------------------------------------------------------
+USE (nombre_de_la_base_de_datos);
+
+DELIMITER $$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reporte_estadistico_turnos`()
+BEGIN
+    -- consulta mas usados
+    SELECT
+        CONCAT(t.hora_desde, ' a ', t.hora_hasta) AS turno,
+        COUNT(r.reserva_id) AS cantidad_reservas
+    FROM
+        reservas AS r
+    INNER JOIN
+        turnos AS t ON t.turno_id = r.turno_id
+    WHERE
+        r.activo = 1 -- solo activas
+    GROUP BY
+        turno 
+    ORDER BY
+        cantidad_reservas DESC; 
+
+-- fin
+END
+
+DELIMITER ;

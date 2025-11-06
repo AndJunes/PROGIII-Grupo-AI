@@ -1,6 +1,8 @@
 import ReservaDAO from "../database/ReservasDAO.js";
-import { enviarNotificacion } from "../notificacion/mailer.js";
+import NotificacionesService from './NotificacionesService.js';
 import InformeService from "./InformeService.js";
+
+const notificacionesService = new NotificacionesService();
 
 class ReservaService {
 
@@ -9,13 +11,14 @@ class ReservaService {
         await ReservaDAO.asociarServicios(nuevaReservaId, data.servicios);
         const nuevaReserva = await ReservaDAO.obtenerPorId(nuevaReservaId);
         const usuario = await ReservaDAO.obtenerUsuarioPorId(usuarioId);
-        await enviarNotificacion(nuevaReserva, usuario);
+        //notificaciones
+        notificacionesService.enviarNotificacion(nuevaReserva, usuario);
         return nuevaReserva;
     }
 
 
-    async listar(usuarioId) {
-        return ReservaDAO.listarPorUsuario(usuarioId);
+    async listar(usuarioId, opciones = {}) {
+        return ReservaDAO.listarPorUsuario(usuarioId, opciones);
     }
 
     async obtenerPorId(id) {
@@ -38,8 +41,8 @@ class ReservaService {
         return { mensaje: "Reserva eliminada correctamente (soft delete)" };
     }
 
-    async listarTodas() {
-        return ReservaDAO.listarTodas();
+    async listarTodas(opciones = {}) {
+        return ReservaDAO.listarTodas(opciones);
     }
 
     async generarReporteDetalle() {

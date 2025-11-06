@@ -45,31 +45,72 @@ class ReservaDAO {
         return rows[0];
     }
 
-    // Listar reservas por usuario
-    async listarPorUsuario(usuarioId) {
-        const [rows] = await pool.query(
-            `SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta
-             FROM reservas r
-             LEFT JOIN salones s ON r.salon_id = s.salon_id
-             LEFT JOIN turnos t ON r.turno_id = t.turno_id
-             WHERE r.usuario_id = ? AND r.activo = 1`,
-            [usuarioId]
-        );
+    //Listar por usuario
+    async listarPorUsuario(usuarioId, { pagina = 1, limite = 10, orden = 'fecha_reserva', direccion = 'ASC' }) {
+        let query = `
+            SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta
+            FROM reservas r
+            LEFT JOIN salones s ON r.salon_id = s.salon_id
+            LEFT JOIN turnos t ON r.turno_id = t.turno_id
+            WHERE r.usuario_id = ? AND r.activo = 1
+        `;
+
+        const params = [usuarioId];
+
+        const columnasValidas = ['fecha_reserva', 'importe_total', 'salon_id'];
+        if (!columnasValidas.includes(orden)) orden = 'fecha_reserva';
+        if (direccion.toUpperCase() !== 'DESC') direccion = 'ASC';
+        query += ` ORDER BY ${orden} ${direccion}`;
+
+        const offset = (pagina - 1) * limite;
+        query += ` LIMIT ? OFFSET ?`;
+        params.push(parseInt(limite), parseInt(offset));
+
+        const [rows] = await pool.query(query, params);
         return rows;
     }
 
-    // Listar todas las reservas
-    async listarTodas() {
-        const [rows] = await pool.query(
-            `SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta, u.usuario_id, u.nombre, u.nombre_usuario
-             FROM reservas r
-             LEFT JOIN salones s ON r.salon_id = s.salon_id
-             LEFT JOIN turnos t ON r.turno_id = t.turno_id
-             LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
-             WHERE r.activo = 1`
-        );
+
+    // Listar todas las reservas con filtrado, paginación y ordenación
+    async listarTodas({ pagina = 1, limite = 10, orden = 'fecha_reserva', direccion = 'ASC', filtro_salon, filtro_usuario }) {
+        let query = `
+            SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta,
+                u.usuario_id, u.nombre, u.nombre_usuario
+            FROM reservas r
+            LEFT JOIN salones s ON r.salon_id = s.salon_id
+            LEFT JOIN turnos t ON r.turno_id = t.turno_id
+            LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
+            WHERE r.activo = 1
+        `;
+
+        const params = [];
+
+        // --- FILTRADO ---
+        if (filtro_salon) {
+            query += " AND r.salon_id = ?";
+            params.push(filtro_salon);
+        }
+
+        if (filtro_usuario) {
+            query += " AND r.usuario_id = ?";
+            params.push(filtro_usuario);
+        }
+
+        // --- ORDENACIÓN ---
+        const columnasValidas = ['fecha_reserva', 'importe_total', 'salon_id', 'usuario_id'];
+        if (!columnasValidas.includes(orden)) orden = 'fecha_reserva';
+        if (direccion.toUpperCase() !== 'DESC') direccion = 'ASC';
+        query += ` ORDER BY ${orden} ${direccion}`;
+
+        // --- PAGINACIÓN ---
+        const offset = (pagina - 1) * limite;
+        query += ` LIMIT ? OFFSET ?`;
+        params.push(parseInt(limite), parseInt(offset));
+
+        const [rows] = await pool.query(query, params);
         return rows;
     }
+
 
     // Actualizar reserva
     async actualizarReserva(id, data) {
