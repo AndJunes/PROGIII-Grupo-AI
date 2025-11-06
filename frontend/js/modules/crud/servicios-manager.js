@@ -5,12 +5,20 @@ export class ServiciosManager extends BaseCRUDManager {
     constructor() {
         super();
         this.entityName = 'Servicio';
+        this.servicios = [];
     }
 
     async loadServicios() {
         try {
             const response = await this.api.getServicios();
-            const servicios = (response.servicios || []).map(s => ({ ...s, id: s.servicio_id }));
+            const servicios = response.servicios.map(s => ({
+                servicio_id: s.servicio_id,      
+                id: s.servicio_id,                
+                descripcion: s.descripcion || 'N/A',
+                importe: parseFloat(s.importe) || 0,
+                activo: Boolean(s.activo)
+            }));
+
             this.renderServicios(servicios);
         } catch (error) {
             console.error('Error loading servicios:', error);
@@ -20,15 +28,18 @@ export class ServiciosManager extends BaseCRUDManager {
 
 
     renderServicios(servicios) {
+        this.entityName = 'Servicio'; 
         const columns = [
             { key: 'servicio_id', title: 'ID' },
-            { key: 'descripcion', title: 'Descripcion' },
+            { key: 'descripcion', title: 'Descripción' },
             { key: 'importe', title: 'Precio', type: 'currency' },
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
-
+        
+        console.log('Servicios a renderizar:', servicios);
         this.renderTable('serviciosTableBody', servicios, columns, 'No hay servicios registrados');
     }
+
 
 
     async showServicioModal(servicio = null) {
@@ -53,14 +64,14 @@ export class ServiciosManager extends BaseCRUDManager {
                             <div class="form-group">
                                 <label for="importe">Precio</label>
                                 <input type="number" id="importe" name="importe" class="form-control" step="0.01" required
-                                    value="${servicio?.importe != null ? servicio.importe : ''}" min="0" placeholder="Precio en ARS">
+                                    value="${servicio?.importe != null ? parseFloat(servicio.importe) : ''}" min="0" placeholder="Precio en ARS">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="activo">Estado</label>
                                 <select id="activo" name="activo" class="form-control" required>
-                                    <option value="1" ${servicio?.activo !== false ? 'selected' : ''}>Activo</option>
-                                    <option value="0" ${servicio?.activo === false ? 'selected' : ''}>Inactivo</option>
+                                    <option value="1" ${servicio?.activo ? 'selected' : ''}>Activo</option>
+                                    <option value="0" ${!servicio?.activo ? 'selected' : ''}>Inactivo</option>
                                 </select>
                                 <div class="error-message"></div>
                             </div>
@@ -100,30 +111,39 @@ export class ServiciosManager extends BaseCRUDManager {
                 return;
             }
 
-            // Convertir campos a números
             formData.importe = parseFloat(formData.importe);
             formData.activo = parseInt(formData.activo);
 
-            console.log('Editing ID:', this.currentEditingId); // Debug
+            let savedServicio;
 
             if (this.currentEditingId) {
-                await this.api.updateServicio(this.currentEditingId, formData);
+                savedServicio = await this.api.updateServicio(this.currentEditingId, formData);
+
+                // Actualizar servicio en el array local
+                const index = this.servicios.findIndex(s => s.servicio_id === this.currentEditingId);
+                if (index !== -1) this.servicios[index] = savedServicio;
+
                 this.showNotification('Servicio actualizado exitosamente', 'success');
             } else {
-                await this.api.createServicio(formData);
+                savedServicio = await this.api.createServicio(formData);
+
+                // Agregar al array local
+                this.servicios.push(savedServicio);
+
                 this.showNotification('Servicio creado exitosamente', 'success');
             }
 
             this.closeModal();
 
-            await this.loadServicios();
-
+            // Renderizar tabla con la lista local actualizada
+            this.renderServicios(this.servicios);
 
         } catch (error) {
             console.error('Error saving servicio:', error);
             this.showNotification(error.message || 'Error al guardar el servicio', 'error');
         }
     }
+
 
 
     async editServicio(id) {
@@ -141,11 +161,18 @@ export class ServiciosManager extends BaseCRUDManager {
 
         try {
             await this.api.deleteServicio(id);
+
+            // Remover del array local
+            this.servicios = this.servicios.filter(s => s.servicio_id !== id);
+
+            // Renderizar tabla actualizada
+            this.renderServicios(this.servicios);
+
             this.showNotification('Servicio eliminado exitosamente', 'success');
-            await this.loadServicios();
         } catch (error) {
             console.error('Error deleting servicio:', error);
             this.showNotification(error.message, 'error');
         }
     }
+
 }
