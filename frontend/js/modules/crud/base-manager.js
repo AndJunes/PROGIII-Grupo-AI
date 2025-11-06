@@ -17,9 +17,7 @@ export class BaseCRUDManager {
         const data = {};
         
         for (const [key, value] of formData.entries()) {
-            if (value !== '') {
-                data[key] = value;
-            }
+            data[key] = value;
         }
         
         return data;
@@ -97,14 +95,16 @@ export class BaseCRUDManager {
             return `<td>${value || 'N/A'}</td>`;
         }).join('');
 
+        const entityId = data[`${this.entityName.toLowerCase()}_id`];
+
         const actionButtons = actions ? `
             <td>
                 <div class="action-buttons">
-                    <button class="btn btn-sm btn-outline" onclick="crudManager.edit${this.entityName}(${data.id})">
+                    <button class="btn btn-sm btn-outline" onclick="crudManager.edit${this.entityName}(${entityId})">
                         <span class="btn-icon material-icons">edit</span>
                         Editar
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="crudManager.delete${this.entityName}(${data.id})">
+                    <button class="btn btn-sm btn-danger" onclick="crudManager.delete${this.entityName}(${entityId})">
                         <span class="btn-icon material-icons">delete</span>
                         Eliminar
                     </button>

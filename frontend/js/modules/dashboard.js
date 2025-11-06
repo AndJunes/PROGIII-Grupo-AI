@@ -352,7 +352,7 @@ export class DashboardManager {
             if (dashboardSection && dashboardSection.classList.contains('active')) {
                 this.loadDashboardData();
             }
-        }, 120000);
+        }, 30000);
     }
 
     showLoadingState(show) {

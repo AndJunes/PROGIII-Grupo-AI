@@ -9,7 +9,8 @@ export class ServiciosManager extends BaseCRUDManager {
 
     async loadServicios() {
         try {
-            const servicios = await this.api.getServicios();
+            const response = await this.api.getServicios();
+            const servicios = (response.servicios || []).map(s => ({ ...s, id: s.servicio_id }));
             this.renderServicios(servicios);
         } catch (error) {
             console.error('Error loading servicios:', error);
@@ -17,10 +18,11 @@ export class ServiciosManager extends BaseCRUDManager {
         }
     }
 
+
     renderServicios(servicios) {
         const columns = [
-            { key: 'id', title: 'ID' },
-            { key: 'descripcion', title: 'Descripción' },
+            { key: 'servicio_id', title: 'ID' },
+            { key: 'descripcion', title: 'Descripcion' },
             { key: 'importe', title: 'Precio', type: 'currency' },
             { key: 'activo', title: 'Estado', type: 'status' }
         ];
@@ -28,10 +30,11 @@ export class ServiciosManager extends BaseCRUDManager {
         this.renderTable('serviciosTableBody', servicios, columns, 'No hay servicios registrados');
     }
 
+
     async showServicioModal(servicio = null) {
-        this.currentEditingId = servicio?.id || null;
+        this.currentEditingId = servicio?.servicio_id || null;
         this.currentEntity = 'servicio';
-        
+
         const modalHTML = `
             <div class="modal-overlay active" id="servicioModal">
                 <div class="modal modal-sm">
@@ -43,26 +46,29 @@ export class ServiciosManager extends BaseCRUDManager {
                         <form id="servicioForm" class="form-grid">
                             <div class="form-group">
                                 <label for="descripcion">Descripción del Servicio</label>
-                                <input type="text" id="descripcion" class="form-control" required 
-                                       value="${servicio?.descripcion || ''}" placeholder="Ej: Decoración temática">
+                                <input type="text" id="descripcion" name="descripcion" class="form-control" required
+                                    value="${servicio?.descripcion || ''}" placeholder="Ej: Decoración temática">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="importe">Precio</label>
-                                <input type="number" id="importe" class="form-control" step="0.01" required
-                                       value="${servicio?.importe || ''}" min="0" placeholder="Precio en ARS">
+                                <input type="number" id="importe" name="importe" class="form-control" step="0.01" required
+                                    value="${servicio?.importe != null ? servicio.importe : ''}" min="0" placeholder="Precio en ARS">
+                                <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="activo">Estado</label>
-                                <select id="activo" class="form-control" required>
+                                <select id="activo" name="activo" class="form-control" required>
                                     <option value="1" ${servicio?.activo !== false ? 'selected' : ''}>Activo</option>
                                     <option value="0" ${servicio?.activo === false ? 'selected' : ''}>Inactivo</option>
                                 </select>
+                                <div class="error-message"></div>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-outline" onclick="crudManager.closeModal()">Cancelar</button>
-                        <button class="btn btn-primary" onclick="crudManager.saveServicio()">
+                        <button class="btn btn-primary" id="saveServicioBtn">
                             ${servicio ? 'Actualizar' : 'Crear'} Servicio
                         </button>
                     </div>
@@ -71,11 +77,18 @@ export class ServiciosManager extends BaseCRUDManager {
         `;
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
+
+        // Vincular botón para crear/actualizar
+        document.getElementById('saveServicioBtn').addEventListener('click', () => this.saveServicio());
     }
+
+
+
 
     async saveServicio() {
         try {
             const formData = this.getFormData('servicioForm');
+
             const validation = Validators.validateForm(formData, {
                 descripcion: ['required', 'minLength:3'],
                 importe: ['required', 'number', 'minValue:0'],
@@ -87,9 +100,11 @@ export class ServiciosManager extends BaseCRUDManager {
                 return;
             }
 
-            // Convertir a números
+            // Convertir campos a números
             formData.importe = parseFloat(formData.importe);
             formData.activo = parseInt(formData.activo);
+
+            console.log('Editing ID:', this.currentEditingId); // Debug
 
             if (this.currentEditingId) {
                 await this.api.updateServicio(this.currentEditingId, formData);
@@ -100,12 +115,16 @@ export class ServiciosManager extends BaseCRUDManager {
             }
 
             this.closeModal();
+
             await this.loadServicios();
+
+
         } catch (error) {
             console.error('Error saving servicio:', error);
-            this.showNotification(error.message, 'error');
+            this.showNotification(error.message || 'Error al guardar el servicio', 'error');
         }
     }
+
 
     async editServicio(id) {
         try {
