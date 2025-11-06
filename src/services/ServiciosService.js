@@ -2,8 +2,8 @@ import ServiciosDAO from "../database/ServiciosDAO.js";
 
 class ServiciosService {
 
-    async getAllWithFilters(limit, offset) {
-        const { rows, total } = await ServiciosDAO.findAllWithFilters(limit, offset);
+    async getAllWithFilters(limit, offset, includeInactive = false) {
+        const { rows, total } = await ServiciosDAO.findAllWithFilters(limit, offset, includeInactive);
         return { servicios: rows, total };
     }
 
@@ -13,8 +13,8 @@ class ServiciosService {
         return rows;
     }
 
-    async getById(id) {
-        const servicio = await ServiciosDAO.getById(id);
+    async getById(id, includeInactive = false) {
+        const servicio = await ServiciosDAO.getById(id, includeInactive);
         if (!servicio) throw new Error("not_found");
         return servicio;
     }

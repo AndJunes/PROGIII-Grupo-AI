@@ -9,6 +9,8 @@ import SalonesController from '../controllers/Salones/SalonesController.js';
 
 const router = express.Router();
 const cache = apicache.middleware;
+// middleware para agrupar entradas de caché de salones
+const tagSalones = (req, res, next) => { res.apicacheGroup = 'salones'; next(); };
 
 /**
  * @swagger
@@ -24,6 +26,7 @@ const cache = apicache.middleware;
  */
 router.get(
   '/',
+  tagSalones,
   cache('5 minutes'),
   auth,
   roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]),
@@ -49,6 +52,7 @@ router.get(
  */
 router.get(
   '/:id',
+  tagSalones,
   cache('5 minutes'),
   auth,
   roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]),

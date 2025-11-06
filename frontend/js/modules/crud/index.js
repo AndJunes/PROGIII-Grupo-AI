@@ -229,37 +229,23 @@ export class CRUDManager {
     deleteTurno(id) { 
         return this.managers.turnos.deleteTurno(id); 
     }
-    
-    deleteUsuario(id) { 
-        return this.managers.usuarios.deleteUsuario(id); 
+
+    deleteUsuario(id) {
+        return this.managers.usuarios.deleteUsuario(id);
     }
 
-    // Métodos comunes
+    // Cerrar modal de forma centralizada (usado por botones X/Cancelar)
     closeModal() {
         const modalContainer = document.getElementById('modalContainer');
         if (modalContainer) {
             modalContainer.innerHTML = '';
         }
-        // Resetear estado en todos los managers
+        // Solo resetear la edición en curso
         Object.values(this.managers).forEach(manager => {
-            if (manager.currentEditingId !== undefined) {
+            if (manager && 'currentEditingId' in manager) {
                 manager.currentEditingId = null;
             }
-            if (manager.currentEntity !== undefined) {
-                manager.currentEntity = null;
-            }
         });
-    }
-
-    showNotification(message, type = 'info') {
-        // Usar el manager de salones para mostrar notificación
-        if (this.managers.salones && this.managers.salones.showNotification) {
-            this.managers.salones.showNotification(message, type);
-        } else {
-            // Fallback básico si no hay manager disponible
-            console.log(`${type.toUpperCase()}: ${message}`);
-            alert(`${type.toUpperCase()}: ${message}`);
-        }
     }
 
     // Método para refrescar datos específicos
@@ -279,7 +265,6 @@ export class CRUDManager {
                 return this.managers[managerName][methodName]();
             }
         }
-        
         console.warn(`No se encontró manager para la entidad: ${entity}`);
         return this.loadInitialData();
     }
@@ -297,7 +282,6 @@ export class CRUDManager {
                 manager.destroy();
             }
         });
-        
         // Limpiar event listeners
         document.removeEventListener('click', this.handleEditClick);
         document.removeEventListener('click', this.handleDeleteClick);

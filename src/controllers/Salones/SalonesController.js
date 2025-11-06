@@ -1,4 +1,5 @@
 import SalonesService from '../../services/SalonesService.js';
+import apicache from 'apicache';
 
 class SalonesController {
 
@@ -36,6 +37,8 @@ class SalonesController {
     async create(req, res) {
         try {
             const salon = await SalonesService.create(req.body);
+            // invalidar caché de grupo 'salones'
+            apicache.clear('salones');
             res.status(201).json(salon);
         } catch (error) {
             console.error(error);
@@ -47,6 +50,8 @@ class SalonesController {
     async update(req, res) {
         try {
             const salon = await SalonesService.update(req.params.id, req.body);
+            // invalidar caché de grupo 'salones'
+            apicache.clear('salones');
             res.json(salon);
         } catch (error) {
             res.status(500).json({ error: 'Error al actualizar el salón' });
@@ -57,6 +62,8 @@ class SalonesController {
     async delete(req, res) {
         try {
             const salon = await SalonesService.delete(req.params.id);
+            // invalidar caché de grupo 'salones'
+            apicache.clear('salones');
             res.json(salon);
         } catch (error) {
             res.status(500).json({ error: "Error al eliminar el salón" });

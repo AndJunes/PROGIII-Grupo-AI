@@ -47,7 +47,6 @@ export class BaseCRUDManager {
     closeModal() {
         document.getElementById('modalContainer').innerHTML = '';
         this.currentEditingId = null;
-        this.currentEntity = null;
     }
 
     createTableRow(data, columns, actions = true) {
@@ -67,15 +66,16 @@ export class BaseCRUDManager {
         }).join('');
 
         const entityId = data.id;
+        const entitySlug = (this.currentEntity || '').toLowerCase();
 
         const actionButtons = actions ? `
             <td>
                 <div class="action-buttons">
-                    <button class="btn btn-sm btn-outline" onclick="crudManager.edit${this.currentEntity}(${entityId})">
+                    <button class="btn btn-sm btn-outline edit-btn" data-id="${entityId}" data-entity="${entitySlug}">
                         <span class="btn-icon material-icons">edit</span>
                         Editar
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="crudManager.delete${this.currentEntity}(${entityId})">
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="${entityId}" data-entity="${entitySlug}">
                         <span class="btn-icon material-icons">delete</span>
                         Eliminar
                     </button>

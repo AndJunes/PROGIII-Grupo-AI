@@ -10,7 +10,15 @@ export class ServiciosManager extends BaseCRUDManager {
 
     async loadServicios() {
         try {
-            const response = await this.api.getServicios();
+            // Enganchar el toggle si existe para recargar automáticamente
+            const toggle = document.getElementById('toggleInactivos');
+            if (toggle && !toggle._serviciosListenerAttached) {
+                toggle.addEventListener('change', () => this.loadServicios());
+                toggle._serviciosListenerAttached = true;
+            }
+
+            const includeInactive = document.getElementById('toggleInactivos')?.checked || false;
+            const response = await this.api.getServicios({ includeInactive });
 
             this.servicios = response.servicios.map(s => ({
                 servicio_id: s.servicio_id,
@@ -58,13 +66,13 @@ export class ServiciosManager extends BaseCRUDManager {
                             <div class="form-group">
                                 <label for="descripcion">Descripción del Servicio</label>
                                 <input type="text" id="descripcion" name="descripcion" class="form-control" required
-                                    value="${servicio?.descripcion || ''}" placeholder="Ej: Decoración temática">
+                                    value="${servicio?.descripcion ?? ''}" placeholder="Ej: Decoración temática">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
                                 <label for="importe">Precio</label>
                                 <input type="number" id="importe" name="importe" class="form-control" step="0.01" required
-                                    value="${servicio?.importe != null ? parseFloat(servicio.importe) : ''}" min="0" placeholder="Precio en ARS">
+                                    value="${servicio?.importe ?? ''}" min="0" placeholder="Precio en ARS">
                                 <div class="error-message"></div>
                             </div>
                             <div class="form-group">
@@ -90,6 +98,13 @@ export class ServiciosManager extends BaseCRUDManager {
         document.getElementById('modalContainer').innerHTML = modalHTML;
 
         document.getElementById('saveServicioBtn').addEventListener('click', () => this.saveServicio());
+
+        // Si existe un toggle de inactivos en el layout, enganchar cambio para recargar
+        const toggle = document.getElementById('toggleInactivos');
+        if (toggle && !toggle._serviciosListenerAttached) {
+            toggle.addEventListener('change', () => this.loadServicios());
+            toggle._serviciosListenerAttached = true;
+        }
     }
 
     async saveServicio() {
@@ -117,16 +132,17 @@ export class ServiciosManager extends BaseCRUDManager {
             if (this.currentEditingId) {
                 // Actualizar servicio existente
                 savedServicio = await this.api.updateServicio(this.currentEditingId, formData);
+                const servicioData = savedServicio?.servicio || savedServicio;
 
                 // Actualizar el array local
                 const index = this.servicios.findIndex(s => s.servicio_id === this.currentEditingId);
                 if (index !== -1) {
                     this.servicios[index] = {
-                        servicio_id: savedServicio.servicio_id ?? this.currentEditingId,
-                        id: savedServicio.servicio_id ?? this.currentEditingId,
-                        descripcion: savedServicio.descripcion ?? formData.descripcion,
-                        importe: parseFloat(savedServicio.importe ?? formData.importe),
-                        activo: savedServicio.activo != null ? Boolean(savedServicio.activo) : Boolean(formData.activo)
+                        servicio_id: servicioData?.servicio_id ?? this.currentEditingId,
+                        id: servicioData?.servicio_id ?? this.currentEditingId,
+                        descripcion: servicioData?.descripcion ?? formData.descripcion,
+                        importe: parseFloat(servicioData?.importe ?? formData.importe),
+                        activo: servicioData?.activo != null ? Boolean(servicioData.activo) : Boolean(formData.activo)
                     };
                 }
 
@@ -134,14 +150,15 @@ export class ServiciosManager extends BaseCRUDManager {
             } else {
                 // Crear nuevo servicio
                 savedServicio = await this.api.createServicio(formData);
+                const servicioData = savedServicio?.servicio || savedServicio;
 
                 // Agregar al array local
                 this.servicios.push({
-                    servicio_id: savedServicio.servicio_id,
-                    id: savedServicio.servicio_id,
-                    descripcion: savedServicio.descripcion ?? formData.descripcion,
-                    importe: parseFloat(savedServicio.importe ?? formData.importe),
-                    activo: savedServicio.activo != null ? Boolean(savedServicio.activo) : Boolean(formData.activo)
+                    servicio_id: servicioData?.servicio_id,
+                    id: servicioData?.servicio_id,
+                    descripcion: servicioData?.descripcion ?? formData.descripcion,
+                    importe: parseFloat(servicioData?.importe ?? formData.importe),
+                    activo: servicioData?.activo != null ? Boolean(servicioData.activo) : Boolean(formData.activo)
                 });
 
                 this.showNotification('Servicio creado exitosamente', 'success');
@@ -161,7 +178,11 @@ export class ServiciosManager extends BaseCRUDManager {
 
     async editServicio(id) {
         try {
-            const servicio = await this.api.getServicio(id);
+            // Preferir estado local para evitar valores viejos por caché
+            let servicio = this.servicios.find(s => s.servicio_id === id);
+            if (!servicio) {
+                servicio = await this.api.getServicio(id);
+            }
             this.showServicioModal(servicio);
         } catch (error) {
             console.error('Error loading servicio:', error);

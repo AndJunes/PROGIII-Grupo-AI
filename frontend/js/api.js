@@ -36,7 +36,8 @@ export class API {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+                const msg = errorData.mensaje || errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`;
+                throw new Error(msg);
             }
 
             // Para endpoints que devuelven archivos (PDF, CSV)
@@ -151,12 +152,19 @@ export class API {
     }
 
     // ===== SERVICIOS =====
-    async getServicios() {
-        return this.request(CONSTANTS.API_ENDPOINTS.SERVICIOS);
+    async getServicios({ includeInactive = false, page = 1, limit = 1000 } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (page != null) params.set('page', String(page));
+        if (limit != null) params.set('limit', String(limit));
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.SERVICIOS}?${qs}` : CONSTANTS.API_ENDPOINTS.SERVICIOS;
+        return this.request(url);
     }
 
-    async getServicio(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.SERVICIOS}/${id}`);
+    async getServicio(id, { includeInactive = false } = {}) {
+        const qs = includeInactive ? '?include_inactive=true' : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.SERVICIOS}/${id}${qs}`);
     }
 
     async createServicio(data) {
