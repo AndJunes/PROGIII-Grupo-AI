@@ -1,8 +1,8 @@
 import SalonesDAO from '../database/SalonesDAO.js';
 
 class SalonesService {
-    async getALL() {
-        return await SalonesDAO.findAll();
+    async getAllWithFilters(params) {
+        return await SalonesDAO.findAllWithFilters(params);
     }
 
     async getById(id) {

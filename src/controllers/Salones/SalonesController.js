@@ -2,14 +2,23 @@ import SalonesService from '../../services/SalonesService.js';
 
 class SalonesController {
 
-    // Listar todos los salones
+    // Listar todos los salones (con filtros, paginación y orden)
     async getAll(req, res) {
         try {
-            const salones = await SalonesService.getALL();
+            const { pagina = 1, limite = 10, orden, direccion, filtro_titulo } = req.query;
+
+            const salones = await SalonesService.getAllWithFilters({
+                pagina: Number(pagina) || 1,
+                limite: Number(limite) || 10,
+                orden,
+                direccion,
+                filtro_titulo
+            });
+
             res.json(salones);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ error: 'error al buscar salones' });
+            res.status(500).json({ error: 'Error al buscar salones' });
         }
     }
 
@@ -19,11 +28,7 @@ class SalonesController {
             const salon = await SalonesService.getById(req.params.id);
             res.json(salon);
         } catch (error) {
-            if (error.code === "not_found") {
-                return res.status(404).json({ error: "Salon no encontrado"})
-            }
-            console.error(error);
-            res.status(500).json({ error: 'error al buscar el salón' });
+            res.status(404).json({ error: "Salón no encontrado" });
         }
     }
 
@@ -34,7 +39,7 @@ class SalonesController {
             res.status(201).json(salon);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ error: 'error al crear el salon' });
+            res.status(500).json({ error: 'Error al crear el salón' });
         }
     }
 
@@ -44,11 +49,7 @@ class SalonesController {
             const salon = await SalonesService.update(req.params.id, req.body);
             res.json(salon);
         } catch (error) {
-            if (error.code === "not_found") {
-                return res.status(404).json({ error: "Salon no encontrado"})
-            }
-            console.error(error);
-            res.status(500).json({ error: 'error al actualizar el salon' });
+            res.status(500).json({ error: 'Error al actualizar el salón' });
         }
     }
 
@@ -58,10 +59,6 @@ class SalonesController {
             const salon = await SalonesService.delete(req.params.id);
             res.json(salon);
         } catch (error) {
-            if (error.code === "not_found") {
-                return res.status(404).json({ error: "Salon no encontrado"})
-            }
-            console.error(error);
             res.status(500).json({ error: "Error al eliminar el salón" });
         }
     }
