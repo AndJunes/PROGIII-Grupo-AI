@@ -1,4 +1,5 @@
 import UsuariosService from '../../services/UsuariosService.js';
+import apicache from 'apicache';
 
 class UsuariosController {
     // Crear usuario
@@ -6,6 +7,7 @@ class UsuariosController {
         try {
             const usuario = await UsuariosService.crearUsuario(req.body);
             res.status(201).json({ mensaje: "usuario creado exitosamente", usuario });
+            apicache.clear('usuarios');
         } catch (error) {
             console.error("Error al crear usuario:", error);
             res.status(400).json({ error: error.message });
@@ -16,12 +18,13 @@ class UsuariosController {
     async getAll(req, res) {
         try {
             const { pagina = 1, limite = 10, orden, direccion } = req.query;
+            const includeInactive = req.query.include_inactive === 'true';
             const resultado = await UsuariosService.listarUsuariosConFiltros({
                 pagina: Number(pagina),
                 limite: Number(limite),
                 orden,
                 direccion
-            });
+            }, includeInactive);
             res.json(resultado);
         } catch (error) {
             console.error("Error al obtener usuarios:", error);
@@ -43,7 +46,8 @@ class UsuariosController {
     // Obtener usuario por ID
     async getById(req, res) {
         try {
-            const usuario = await UsuariosService.obtenerUsuarioPorId(req.params.id);
+            const includeInactive = req.query.include_inactive === 'true';
+            const usuario = await UsuariosService.obtenerUsuarioPorId(req.params.id, includeInactive);
             if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
             res.json(usuario);
         } catch (error) {
@@ -58,6 +62,7 @@ class UsuariosController {
             const usuario = await UsuariosService.actualizarUsuario(req.params.id, req.body);
             if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
             res.json(usuario);
+            apicache.clear('usuarios');
         } catch (error) {
             console.error("Error al actualizar usuario:", error);
             res.status(500).json({ error: "Error al actualizar el usuario" });
@@ -70,6 +75,7 @@ class UsuariosController {
             const ok = await UsuariosService.eliminarUsuario(req.params.id);
             if (!ok) return res.status(404).json({ error: "usuario no encontrado" });
             res.json({ message: "Usuario eliminado (soft delete)" });
+            apicache.clear('usuarios');
         } catch (error) {
             console.error("Error al eliminar usuario:", error);
             res.status(500).json({ error: "Error al eliminar el usuario" });

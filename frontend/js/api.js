@@ -57,16 +57,30 @@ export class API {
     }
 
     // ===== USUARIOS =====
-    async getUsuarios() {
-        return this.request(CONSTANTS.API_ENDPOINTS.USUARIOS);
+    async getUsuarios({ includeInactive = false, pagina = 1, limite = 1000, orden, direccion } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        if (orden) params.set('orden', String(orden));
+        if (direccion) params.set('direccion', String(direccion));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.USUARIOS}?${qs}` : CONSTANTS.API_ENDPOINTS.USUARIOS;
+        return this.request(url);
     }
 
     async getClientes() {
         return this.request(CONSTANTS.API_ENDPOINTS.CLIENTES);
     }
 
-    async getUsuario(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.USUARIOS}/${id}`);
+    async getUsuario(id, { includeInactive = false } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const sep = qs ? `?${qs}` : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.USUARIOS}/${id}${sep}`);
     }
 
     async createUsuario(data) {

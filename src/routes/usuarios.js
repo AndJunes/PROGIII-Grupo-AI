@@ -18,13 +18,44 @@ const cache = apicache.middleware;
  *     summary: Obtener todos los usuarios (solo ADMIN)
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: pagina
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Página a consultar
+ *       - in: query
+ *         name: limite
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Cantidad de registros por página
+ *       - in: query
+ *         name: orden
+ *         schema:
+ *           type: string
+ *           enum: [usuario_id, nombre, apellido, tipo_usuario]
+ *         description: Campo por el que se ordena el resultado
+ *       - in: query
+ *         name: direccion
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *         description: Dirección del ordenamiento
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Incluir usuarios inactivos (activo = 0)
  *     responses:
  *       200:
  *         description: Lista de usuarios
  */
 router.get(
   '/',
-  cache('5 minutes'),
+  cache('5 minutes', null, { group: 'usuarios' }),
   auth,
   roleCheck([ADMINISTRADOR]),
   UsuariosController.getAll.bind(UsuariosController)
@@ -44,7 +75,7 @@ router.get(
  */
 router.get(
   '/clientes',
-  cache('5 minutes'),
+  cache('5 minutes', null, { group: 'usuarios' }),
   auth,
   roleCheck([EMPLEADO, ADMINISTRADOR]),
   UsuariosController.getClientes.bind(UsuariosController)
@@ -59,6 +90,11 @@ router.get(
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Permite obtener un usuario inactivo
  *       - in: path
  *         name: id
  *         required: true
@@ -70,7 +106,7 @@ router.get(
  */
 router.get(
   '/:id',
-  cache('5 minutes'),
+  cache('5 minutes', null, { group: 'usuarios' }),
   auth,
   roleCheck([ADMINISTRADOR]),
   [param('id').isInt().withMessage('El id debe ser un número entero')],

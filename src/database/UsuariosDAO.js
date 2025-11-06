@@ -10,7 +10,7 @@ class UsuariosDAO {
             [nombre, apellido, nombre_usuario, contrasenia, tipo_usuario, celular, foto]
         );
         const [rows] = await pool.query(
-            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, activo 
              FROM usuarios WHERE usuario_id = ?`,
             [result.insertId]
         );
@@ -19,7 +19,7 @@ class UsuariosDAO {
 
     async listar() {
         const [rows] = await pool.query(
-            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, activo 
              FROM usuarios WHERE activo = 1 ORDER BY usuario_id ASC`
         );
         return rows;
@@ -27,28 +27,29 @@ class UsuariosDAO {
 
     async listarClientes() {
         const [rows] = await pool.query(
-            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, activo 
              FROM usuarios WHERE activo = 1 AND tipo_usuario = 3 ORDER BY usuario_id ASC`
         );
         return rows;
     }
 
-    async listarConFiltros({ limite = 10, offset = 0, orden = 'usuario_id', direccion = 'ASC' }) {
+    async listarConFiltros({ limite = 10, offset = 0, orden = 'usuario_id', direccion = 'ASC' }, includeInactive = false) {
         const ordenCamposPermitidos = ['usuario_id', 'nombre', 'apellido', 'tipo_usuario'];
         const direccionPermitida = direccion.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         const campoOrden = ordenCamposPermitidos.includes(orden) ? orden : 'usuario_id';
 
+        const where = includeInactive ? '1=1' : 'activo = 1';
         const [rows] = await pool.query(
-            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, activo 
             FROM usuarios 
-            WHERE activo = 1 
+            WHERE ${where} 
             ORDER BY ${campoOrden} ${direccionPermitida}
             LIMIT ? OFFSET ?`,
             [Number(limite), Number(offset)]
         );
 
         const [[{ total }]] = await pool.query(
-            `SELECT COUNT(*) AS total FROM usuarios WHERE activo = 1`
+            `SELECT COUNT(*) AS total FROM usuarios WHERE ${where}`
         );
 
         return {
@@ -57,10 +58,11 @@ class UsuariosDAO {
         };
     }
 
-    async obtenerPorId(id) {
+    async obtenerPorId(id, includeInactive = false) {
+        const where = includeInactive ? 'usuario_id = ?' : 'usuario_id = ? AND activo = 1';
         const [rows] = await pool.query(
-            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
-             FROM usuarios WHERE usuario_id = ? AND activo = 1`,
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, activo 
+             FROM usuarios WHERE ${where}`,
             [id]
         );
         return rows[0];
@@ -69,7 +71,7 @@ class UsuariosDAO {
     async actualizar(id, campos, valores) {
         valores.push(id);
         const [result] = await pool.query(
-            `UPDATE usuarios SET ${campos.join(", ")}, modificado = NOW() WHERE usuario_id = ? AND activo = 1`,
+            `UPDATE usuarios SET ${campos.join(", ")} , modificado = NOW() WHERE usuario_id = ?`,
             valores
         );
         if (result.affectedRows === 0) throw new Error("Usuario no encontrado o inactivo");
