@@ -11,6 +11,23 @@ class UsuariosService {
         return UsuariosDAO.listar();
     }
 
+    static async listarUsuariosConFiltros({ pagina = 1, limite = 10, orden, direccion }) {
+        const offset = (pagina - 1) * limite;
+        const { total, usuarios } = await UsuariosDAO.listarConFiltros({
+            limite,
+            offset,
+            orden,
+            direccion
+        });
+
+        return {
+            pagina_actual: Number(pagina),
+            total_paginas: Math.ceil(total / limite),
+            total_registros: total,
+            usuarios
+        };
+    }
+
     static async listarClientes() {
         return UsuariosDAO.listarClientes();
     }

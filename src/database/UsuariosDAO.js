@@ -33,6 +33,30 @@ class UsuariosDAO {
         return rows;
     }
 
+    async listarConFiltros({ limite = 10, offset = 0, orden = 'usuario_id', direccion = 'ASC' }) {
+        const ordenCamposPermitidos = ['usuario_id', 'nombre', 'apellido', 'tipo_usuario'];
+        const direccionPermitida = direccion.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        const campoOrden = ordenCamposPermitidos.includes(orden) ? orden : 'usuario_id';
+
+        const [rows] = await pool.query(
+            `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
+            FROM usuarios 
+            WHERE activo = 1 
+            ORDER BY ${campoOrden} ${direccionPermitida}
+            LIMIT ? OFFSET ?`,
+            [Number(limite), Number(offset)]
+        );
+
+        const [[{ total }]] = await pool.query(
+            `SELECT COUNT(*) AS total FROM usuarios WHERE activo = 1`
+        );
+
+        return {
+            total,
+            usuarios: rows
+        };
+    }
+
     async obtenerPorId(id) {
         const [rows] = await pool.query(
             `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto 
