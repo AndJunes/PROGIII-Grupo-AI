@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Cliente</title>
+    <link rel="stylesheet" href="./css/style.css" />
+    <script defer src="./js/auth.js"></script>
+    <script defer src="./js/api.js"></script>
+    <script defer src="./js/init.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Mi Cuenta</h1>
+        <div class="user-info"></div>
+        <p><a href="#" class="logout">Cerrar Sesión</a></p>
+      </header>
+
+      <main>
+        <section class="cliente-only">
+          <h2>Mis Datos</h2>
+          <div id="mis-datos"></div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        displayUserData(userData);
+      });
+
+      function displayUserData(userData) {
+        const container = document.getElementById("mis-datos");
+        container.innerHTML = `
+          <div class="user-data">
+            <p><strong>Nombre:</strong> ${userData.nombre} ${
+          userData.apellido
+        }</p>
+            <p><strong>Usuario:</strong> ${userData.nombre_usuario}</p>
+            <p><strong>Teléfono:</strong> ${
+              userData.celular || "No especificado"
+            }</p>
+            <p><strong>Tipo de usuario:</strong> Cliente</p>
+          </div>
+        `;
+      }
+    </script>
+  </body>
+</html>

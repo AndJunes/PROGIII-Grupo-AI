@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestión - Login</title>
+    <link rel="stylesheet" href="./css/style.css" />
+    <script defer src="/frontend/js/login.js"></script>
+  </head>
+  <body class="login">
+    <div class="container">
+      <!-- Header con logo -->
+      <div class="login-header">
+        <h1 class="text-center">Sistema de Gestión</h1>
+        <p class="text-center">Ingresa a tu cuenta</p>
+      </div>
+
+      <!-- Mensajes del sistema -->
+      <div id="system-messages"></div>
+
+      <!-- Formulario de login -->
+      <form action="#" class="loginForm">
+        <div class="input-group">
+          <label for="username" class="label">
+            <i class="icon-user"></i> Nombre de Usuario
+          </label>
+          <input
+            type="text"
+            id="username"
+            class="input"
+            placeholder="Ingresa tu usuario"
+          />
+          <span class="error-message"></span>
+        </div>
+
+        <br />
+
+        <div class="input-group">
+          <label for="password" class="label">
+            <i class="icon-lock"></i> Contraseña
+          </label>
+          <input
+            type="password"
+            id="password"
+            class="input"
+            placeholder="Ingresa tu contraseña"
+          />
+          <span class="error-message"></span>
+        </div>
+
+        <br />
+
+        <!-- Recordar contraseña -->
+        <div class="login-options">
+          <label class="checkbox">
+            <input type="checkbox" id="remember" />
+            <span class="checkmark"></span>
+            Recordar usuario
+          </label>
+        </div>
+
+        <br />
+
+        <button class="button" type="submit">
+          <span class="button-text">Iniciar Sesión</span>
+          <span class="button-loading" style="display: none">
+            <i class="spinner"></i> Verificando...
+          </span>
+        </button>
+      </form>
+
+    <script>
+      // Cargar usuario recordado si existe
+      document.addEventListener("DOMContentLoaded", function () {
+        const rememberedUser = localStorage.getItem("rememberedUser");
+        if (rememberedUser) {
+          document.getElementById("username").value = rememberedUser;
+          document.getElementById("remember").checked = true;
+        }
+
+        // Verificar si hay un mensaje de logout
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("logout") === "success") {
+          showSystemMessage("Sesión cerrada correctamente", "success");
+        }
+
+        // Verificar si hay un error de autenticación
+        if (urlParams.get("auth") === "failed") {
+          showSystemMessage("Debes iniciar sesión para acceder", "error");
+        }
+      });
+
+      function showSystemMessage(message, type) {
+        const messagesDiv = document.getElementById("system-messages");
+        const messageElement = document.createElement("div");
+        messageElement.className = `system-message ${type}`;
+        messageElement.textContent = message;
+        messagesDiv.appendChild(messageElement);
+
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+          messageElement.remove();
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

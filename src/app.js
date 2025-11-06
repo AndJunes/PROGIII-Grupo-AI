@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
+import cors from "cors";
 
 import routes from './routes/index.js';
 import authRoutes from './routes/auth.js';
@@ -19,6 +20,14 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: __dirname + '/../.env' });
 
 const app = express();
+// Configurar CORS - MÁS FLEXIBLE PARA DESARROLLO
+app.use(cors({
+    origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'https://localhost:3006', 'http://localhost:3006'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";

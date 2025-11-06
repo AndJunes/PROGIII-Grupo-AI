@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Administrador</title>
+    <link rel="stylesheet" href="./css/style.css" />
+
+    <!-- Librerías para reportes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  </head>
+  <body class="dashboard-admin">
+    <!-- Panel lateral -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-logo">SistemaGestión</h2>
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <span class="material-icons">menu</span>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <h3 class="nav-section-title">Gestión Principal</h3>
+          <ul class="nav-menu">
+            <li class="nav-item">
+              <a
+                href="#dashboard"
+                class="nav-link active"
+                data-section="dashboard"
+              >
+                <span class="nav-icon material-icons">dashboard</span>
+                <span class="nav-text">Dashboard</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <h3 class="nav-section-title">CRUD Operations</h3>
+          <ul class="nav-menu">
+            <li class="nav-item">
+              <a href="#reservas" class="nav-link" data-section="reservas">
+                <span class="nav-icon material-icons">event</span>
+                <span class="nav-text">Reservas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#salones" class="nav-link" data-section="salones">
+                <span class="nav-icon material-icons">meeting_room</span>
+                <span class="nav-text">Salones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#servicios" class="nav-link" data-section="servicios">
+                <span class="nav-icon material-icons">celebration</span>
+                <span class="nav-text">Servicios</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#turnos" class="nav-link" data-section="turnos">
+                <span class="nav-icon material-icons">schedule</span>
+                <span class="nav-text">Turnos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#usuarios" class="nav-link" data-section="usuarios">
+                <span class="nav-icon material-icons">people</span>
+                <span class="nav-text">Usuarios</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <h3 class="nav-section-title">Reportes</h3>
+          <ul class="nav-menu">
+            <li class="nav-item">
+              <a href="#reportes" class="nav-link" data-section="reportes">
+                <span class="nav-icon material-icons">assessment</span>
+                <span class="nav-text">Reportes</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="#estadisticas"
+                class="nav-link"
+                data-section="estadisticas"
+              >
+                <span class="nav-icon material-icons">bar_chart</span>
+                <span class="nav-text">Estadísticas</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            <span class="avatar-text">A</span>
+          </div>
+          <div class="user-details">
+            <span class="user-name" id="userName">Administrador</span>
+            <span class="user-role">Administrador</span>
+          </div>
+        </div>
+        <button class="logout-btn" id="logoutBtn">
+          <span class="logout-icon material-icons">logout</span>
+          <span class="logout-text">Cerrar Sesión</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Overlay para móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Contenido principal -->
+    <main class="main-content" id="mainContent">
+      <header class="content-header">
+        <div class="header-left">
+          <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <div class="notifications" id="notifications">
+            <button class="notification-btn" id="notificationBtn">
+              <span class="notification-icon material-icons"
+                >notifications</span
+              >
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notificaciones</h3>
+                <button class="mark-all-read" id="markAllRead">
+                  Marcar todas como leídas
+                </button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notificaciones se cargarán aquí -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+        <!-- Secciones de contenido -->
+
+        <!-- Dashboard -->
+        <section id="dashboard-section" class="content-section active">
+          <div class="dashboard-stats">
+            <div class="stat-card">
+              <div class="stat-icon material-icons">event</div>
+              <div class="stat-info">
+                <h3 class="stat-value" id="totalReservas">0</h3>
+                <p class="stat-label">Reservas Totales</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon material-icons">attach_money</div>
+              <div class="stat-info">
+                <h3 class="stat-value" id="ingresosTotales">$0</h3>
+                <p class="stat-label">Ingresos Totales</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon material-icons">people</div>
+              <div class="stat-info">
+                <h3 class="stat-value" id="totalUsuarios">0</h3>
+                <p class="stat-label">Usuarios Registrados</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon material-icons">today</div>
+              <div class="stat-info">
+                <h3 class="stat-value" id="reservasHoy">0</h3>
+                <p class="stat-label">Reservas Hoy</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-charts">
+            <div class="chart-container">
+              <h3>Reservas por Mes</h3>
+              <div class="chart-placeholder" id="reservasChart">
+                <!-- Gráfico se cargará aquí -->
+              </div>
+            </div>
+            <div class="chart-container">
+              <h3>Tipos de Usuario</h3>
+              <div class="chart-placeholder" id="usuariosChart">
+                <!-- Gráfico se cargará aquí -->
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-activity">
+            <h3>Actividad Reciente</h3>
+            <div class="activity-list" id="activityList">
+              <!-- Actividad reciente se cargará aquí -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Gestión de Reservas -->
+        <section id="reservas-section" class="content-section">
+          <div class="section-header">
+            <h2>Gestión de Reservas</h2>
+            <button class="btn btn-primary" id="addReservaBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nueva Reserva
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="reservasTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Fecha</th>
+                  <th>Salón</th>
+                  <th>Turno</th>
+                  <th>Temática</th>
+                  <th>Importe Total</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="reservasTableBody">
+                <!-- Datos de reservas se cargarán aquí -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Gestión de Salones -->
+        <section id="salones-section" class="content-section">
+          <div class="section-header">
+            <h2>Gestión de Salones</h2>
+            <button class="btn btn-primary" id="addSalonBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nuevo Salón
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="salonesTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Capacidad</th>
+                  <th>Precio Base</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="salonesTableBody">
+                <!-- Datos de salones se cargarán aquí -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Gestión de Servicios -->
+        <section id="servicios-section" class="content-section">
+          <div class="section-header">
+            <h2>Gestión de Servicios</h2>
+            <button class="btn btn-primary" id="addServicioBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nuevo Servicio
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="serviciosTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Precio</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="serviciosTableBody">
+                <!-- Datos de servicios se cargarán aquí -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Gestión de Turnos -->
+        <section id="turnos-section" class="content-section">
+          <div class="section-header">
+            <h2>Gestión de Turnos</h2>
+            <button class="btn btn-primary" id="addTurnoBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nuevo Turno
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="turnosTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Hora Inicio</th>
+                  <th>Hora Fin</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="turnosTableBody">
+                <!-- Datos de turnos se cargarán aquí -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Gestión de Usuarios -->
+        <section id="usuarios-section" class="content-section">
+          <div class="section-header">
+            <h2>Gestión de Usuarios</h2>
+            <button class="btn btn-primary" id="addUsuarioBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nuevo Usuario
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="usuariosTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Apellido</th>
+                  <th>Usuario</th>
+                  <th>Tipo</th>
+                  <th>Teléfono</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="usuariosTableBody">
+                <!-- Datos de usuarios se cargarán aquí -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Reportes -->
+        <section id="reportes-section" class="content-section">
+          <div class="section-header">
+            <h2>Generación de Reportes</h2>
+          </div>
+
+          <div class="reports-grid">
+            <div class="report-card">
+              <h3>Reporte de Reservas</h3>
+              <p>Genera reportes completos de todas las reservas</p>
+              <div class="report-actions">
+                <button
+                  class="btn btn-outline"
+                  data-report="reservas"
+                  data-format="pdf"
+                >
+                  <span class="btn-icon material-icons">picture_as_pdf</span>
+                  PDF
+                </button>
+                <button
+                  class="btn btn-outline"
+                  data-report="reservas"
+                  data-format="csv"
+                >
+                  <span class="btn-icon material-icons">table_chart</span>
+                  CSV
+                </button>
+              </div>
+            </div>
+
+            <div class="report-card">
+              <h3>Reporte Financiero</h3>
+              <p>Informes de ingresos y gastos del sistema</p>
+              <div class="report-actions">
+                <button
+                  class="btn btn-outline"
+                  data-report="financiero"
+                  data-format="pdf"
+                >
+                  <span class="btn-icon material-icons">picture_as_pdf</span>
+                  PDF
+                </button>
+                <button
+                  class="btn btn-outline"
+                  data-report="financiero"
+                  data-format="csv"
+                >
+                  <span class="btn-icon material-icons">table_chart</span>
+                  CSV
+                </button>
+              </div>
+            </div>
+
+            <div class="report-card">
+              <h3>Reporte de Usuarios</h3>
+              <p>Listado completo de usuarios registrados</p>
+              <div class="report-actions">
+                <button
+                  class="btn btn-outline"
+                  data-report="usuarios"
+                  data-format="pdf"
+                >
+                  <span class="btn-icon material-icons">picture_as_pdf</span>
+                  PDF
+                </button>
+                <button
+                  class="btn btn-outline"
+                  data-report="usuarios"
+                  data-format="csv"
+                >
+                  <span class="btn-icon material-icons">table_chart</span>
+                  CSV
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-filters">
+            <h3>Filtros de Reporte</h3>
+            <div class="filter-form">
+              <div class="form-group">
+                <label for="fechaInicio">Fecha Inicio</label>
+                <input type="date" id="fechaInicio" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="fechaFin">Fecha Fin</label>
+                <input type="date" id="fechaFin" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="tipoReporte">Tipo de Reporte</label>
+                <select id="tipoReporte" class="form-control">
+                  <option value="completo">Completo</option>
+                  <option value="resumen">Resumen</option>
+                  <option value="detallado">Detallado</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Estadísticas -->
+        <section id="estadisticas-section" class="content-section">
+          <div class="section-header">
+            <h2>Estadísticas del Sistema</h2>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-chart-card">
+              <h3>Reservas por Mes</h3>
+              <div class="chart-container-large" id="statsReservasChart">
+                <!-- Gráfico de estadísticas -->
+              </div>
+            </div>
+
+            <div class="stat-chart-card">
+              <h3>Ingresos por Categoría</h3>
+              <div class="chart-container-large" id="statsIngresosChart">
+                <!-- Gráfico de ingresos -->
+              </div>
+            </div>
+
+            <div class="stat-chart-card">
+              <h3>Distribución de Usuarios</h3>
+              <div class="chart-container-large" id="statsUsuariosChart">
+                <!-- Gráfico de usuarios -->
+              </div>
+            </div>
+
+            <div class="stat-chart-card">
+              <h3>Servicios Más Populares</h3>
+              <div class="chart-container-large" id="statsServiciosChart">
+                <!-- Gráfico de servicios -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Modales para CRUD operations -->
+    <div id="modalContainer"></div>
+
+    <!-- Scripts modulares -->
+    <script type="module" src="./js/pages/dashboard-admin.js"></script>
+  </body>
+</html>
