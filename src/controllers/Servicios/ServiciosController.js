@@ -2,21 +2,34 @@ import ServiciosService from '../../services/ServiciosService.js';
 
 class ServiciosController {
 
-
     async getAll(req, res) {
         try {
-            //parametros de la consulta
             const propios = req.query.propios === 'true';
             const usuarioId = propios ? req.usuario.usuario_id : null;
 
+            // Paginación
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+
             let servicios;
+
             if (propios) {
                 servicios = await ServiciosService.getByUser(usuarioId);
+                return res.json(servicios);
             } else {
-                servicios = await ServiciosService.getAll();
+                const { servicios: rows, total } = await ServiciosService.getAllWithFilters(limit, offset);
+
+                const totalPaginas = Math.ceil(total / limit);
+
+                return res.json({
+                    pagina_actual: page,
+                    total_paginas: totalPaginas,
+                    total_registros: total,
+                    servicios: rows
+                });
             }
 
-            res.json(servicios);
         } catch (error) {
             if (error.message === "no_services") {
                 return res.json({ mensaje: "No tienes ningún servicio vinculado" });

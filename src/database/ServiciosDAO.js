@@ -2,11 +2,19 @@ import pool from "../database/database.js";
 
 class ServiciosDAO {
 
-    async getAll() {
+    async findAllWithFilters(limit, offset) {
+        // Consulta de paginación
         const [rows] = await pool.query(
-            `SELECT * FROM servicios WHERE activo = 1 ORDER BY servicio_id ASC`
+            `SELECT * FROM servicios WHERE activo = 1 ORDER BY servicio_id ASC LIMIT ? OFFSET ?`,
+            [Number(limit), Number(offset)]
         );
-        return rows;
+
+        // Total de registros activos (para calcular total_paginas)
+        const [[{ total }]] = await pool.query(
+            `SELECT COUNT(*) AS total FROM servicios WHERE activo = 1`
+        );
+
+        return { rows, total };
     }
 
     async getByUser(usuarioId) {
