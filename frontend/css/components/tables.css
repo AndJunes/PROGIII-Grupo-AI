@@ -1,65 +1,181 @@
 /* ===== TABLES STYLES ===== */
 .table-container {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 .data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
 }
 
 .data-table th {
-  background-color: var(--bg-tertiary);
-  padding: var(--space-md);
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .data-table td {
-  padding: var(--space-md);
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-secondary);
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    vertical-align: middle;
 }
 
 .data-table tr:last-child td {
-  border-bottom: none;
+    border-bottom: none;
 }
 
 .data-table tr:hover {
-  background-color: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
+}
+
+.data-table tr:hover td {
+    color: var(--text-primary);
 }
 
 /* Badges de estado */
 .status-badge {
-  display: inline-block;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .status-badge.active {
-  background-color: rgba(0, 255, 136, 0.1);
-  color: var(--success);
-  border: 1px solid rgba(0, 255, 136, 0.2);
+    background-color: rgba(0, 255, 136, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(0, 255, 136, 0.2);
 }
 
 .status-badge.inactive {
-  background-color: rgba(255, 51, 102, 0.1);
-  color: var(--error);
-  border: 1px solid rgba(255, 51, 102, 0.2);
+    background-color: rgba(255, 51, 102, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(255, 51, 102, 0.2);
 }
 
-/* Botones de acción */
+.status-badge.pending {
+    background-color: rgba(255, 204, 0, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(255, 204, 0, 0.2);
+}
+
+/* Botones de acción en tablas */
 .action-buttons {
-  display: flex;
-  gap: var(--space-sm);
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    min-width: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Estilos específicos para botones de editar en tablas */
+.btn-edit {
+    background: rgba(0, 217, 255, 0.1);
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    color: var(--accent-primary);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
+}
+
+.btn-edit:hover {
+    background: rgba(0, 217, 255, 0.2);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+/* Estilos específicos para botones de eliminar en tablas */
+.btn-delete {
+    background: rgba(255, 51, 102, 0.1);
+    border: 1px solid rgba(255, 51, 102, 0.2);
+    color: var(--error);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
+}
+
+.btn-delete:hover {
+    background: rgba(255, 51, 102, 0.2);
+    border-color: var(--error);
+    transform: translateY(-1px);
+}
+
+/* Iconos en botones de acción */
+.action-buttons .btn-icon {
+    font-size: 0.875rem;
+    margin-right: var(--space-xs);
+}
+
+/* Estados de la tabla */
+.data-table .highlight {
+    background-color: rgba(0, 217, 255, 0.05);
+}
+
+.data-table .selected {
+    background-color: rgba(123, 97, 255, 0.1);
+}
+
+/* Responsive para tablas */
+@media (max-width: 768px) {
+    .table-container {
+        border-radius: var(--border-radius);
+    }
+    
+    .data-table {
+        font-size: 0.8125rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: var(--space-sm);
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Tabla vacía */
+.table-empty {
+    text-align: center;
+    padding: var(--space-xxl);
+    color: var(--text-muted);
+}
+
+.table-empty .empty-icon {
+    font-size: 3rem;
+    margin-bottom: var(--space-md);
+    opacity: 0.5;
+}
+
+.table-empty .empty-text {
+    font-size: 1.125rem;
+    margin-bottom: var(--space-sm);
+}
+
+.table-empty .empty-subtext {
+    color: var(--text-muted);
+    font-size: 0.875rem;
 }
