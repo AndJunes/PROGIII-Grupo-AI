@@ -15,48 +15,43 @@ class Login {
     }
 
     validateonSubmit() {
-        let self = this;
-
-        this.form.addEventListener("submit", async (e) => {
-            e.preventDefault();
+        this.form.addEventListener("submit", async (event) => {
+            event.preventDefault();
             let error = 0;
-            
-            self.fields.forEach((field) => {
+
+            this.fields.forEach((field) => {
                 const input = document.querySelector(`#${field}`);
-                if (self.validateFields(input) == false) {
+                if (this.validateFields(input) === false) {
                     error++;
                 }
             });
 
             if (error === 0) {
                 try {
-                    // Mostrar estado de carga
                     this.showLoading(true);
 
-                    // Obtener datos del formulario
                     const username = document.querySelector('#username').value;
                     const password = document.querySelector('#password').value;
                     const remember = document.querySelector('#remember').checked;
 
-                    // Llamar al backend
                     const data = await this.loginToBackend(username, password);
-                    
-                    // VERIFICACIÓN CORREGIDA - usa data directamente
-                    if (data.token && data.usuario) {
-                        // Guardar token y datos de usuario
+
+                    if (data.token) {
                         localStorage.setItem("authToken", data.token);
-                        localStorage.setItem("userData", JSON.stringify(data.usuario));
-                        
-                        // Recordar usuario si está marcado
+
+                        const decoded = this.decodeToken(data.token);
+                        if (!decoded) throw new Error('Token inválido recibido del servidor');
+
+                        localStorage.setItem("userData", JSON.stringify(decoded));
+
                         if (remember) {
                             localStorage.setItem("rememberedUser", username);
                         } else {
                             localStorage.removeItem("rememberedUser");
                         }
-                        
-                        console.log('Login exitoso, redirigiendo...', data.usuario);
-                        // Redirigir al dashboard correspondiente
-                        this.redirectToDashboard(data.usuario.tipo_usuario);
+
+                        console.log('Login exitoso, redirigiendo...', decoded);
+                        this.redirectToDashboard(decoded.tipo_usuario);
                     } else {
                         throw new Error('Respuesta del servidor inválida');
                     }
@@ -70,11 +65,21 @@ class Login {
         });
     }
 
+    decodeToken(token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload;
+        } catch (err) {
+            console.error('Error al decodificar token:', err);
+            return null;
+        }
+    }
+
     showLoading(show) {
         const button = this.form.querySelector('button[type="submit"]');
         const buttonText = button.querySelector('.button-text');
         const buttonLoading = button.querySelector('.button-loading');
-        
+
         if (show) {
             buttonText.style.display = 'none';
             buttonLoading.style.display = 'inline-block';
@@ -88,14 +93,11 @@ class Login {
 
     async loginToBackend(username, password) {
         const API_URL = 'https://localhost:3006/auth/login';
-        
         console.log('Enviando login a:', API_URL);
-        
+
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 nombre_usuario: username,
                 contrasenia: password
@@ -114,15 +116,14 @@ class Login {
 
     redirectToDashboard(userType) {
         console.log('Redirigiendo usuario tipo:', userType);
-        // Redirigir según el tipo de usuario
         switch(parseInt(userType)) {
-            case 1: // ADMINISTRADOR
+            case 1:
                 window.location.replace('./dashboard-admin.html');
                 break;
-            case 2: // EMPLEADO
+            case 2:
                 window.location.replace('./dashboard-empleado.html');
                 break;
-            case 3: // CLIENTE
+            case 3:
                 window.location.replace('./dashboard-cliente.html');
                 break;
             default:
@@ -133,12 +134,13 @@ class Login {
 
     showSystemMessage(message, type) {
         const messagesDiv = document.getElementById('system-messages');
+        if (!messagesDiv) return;
+        
         messagesDiv.innerHTML = `
             <div class="system-message ${type}">
                 ${message}
             </div>
         `;
-        
         setTimeout(() => {
             messagesDiv.innerHTML = '';
         }, 5000);
@@ -146,11 +148,7 @@ class Login {
 
     validateFields(field) {
         if (field.value.trim() === "") {
-            this.setStatus(
-                field,
-                `${field.previousElementSibling.innerText} no puede estar vacío`,
-                "error"
-            );
+            this.setStatus(field, `${field.previousElementSibling.innerText} no puede estar vacío`, "error");
             return false;
         } else {
             this.setStatus(field, null, "success");
@@ -160,18 +158,13 @@ class Login {
 
     setStatus(field, message, status) {
         const errorMessage = field.parentElement.querySelector(".error-message");
-
         if (status === "success") {
-            if (errorMessage) {
-                errorMessage.innerText = "";
-            }
+            if (errorMessage) errorMessage.innerText = "";
             field.classList.remove("input-error");
             field.classList.add("input-success");
         }
         if (status === "error") {
-            if (errorMessage) {
-                errorMessage.innerText = message;
-            }
+            if (errorMessage) errorMessage.innerText = message;
             field.classList.add("input-error");
             field.classList.remove("input-success");
         }
@@ -179,17 +172,18 @@ class Login {
 }
 
 // Inicialización
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector(".loginForm");
     if (form) {
         const fields = ["username", "password"];
-        const validator = new Login(form, fields);
+        new Login(form, fields);
     }
 
-    // Verificar parámetros URL para mensajes
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("logout") === "success") {
         const messagesDiv = document.getElementById("system-messages");
-        messagesDiv.innerHTML = '<div class="system-message success">Sesión cerrada correctamente</div>';
+        if (messagesDiv) {
+            messagesDiv.innerHTML = '<div class="system-message success">Sesión cerrada correctamente</div>';
+        }
     }
 });
