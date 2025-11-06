@@ -17,32 +17,32 @@ class ReservaService {
     }
 
 
-    async listar(usuarioId, opciones = {}) {
-        return ReservaDAO.listarPorUsuario(usuarioId, opciones);
+    async listar(usuarioId, opciones = {}, includeInactive = false) {
+        return ReservaDAO.listarPorUsuario(usuarioId, opciones, includeInactive);
     }
 
-    async obtenerPorId(id) {
-        const reserva = await ReservaDAO.obtenerPorId(id);
-        if (!reserva) throw new Error("no se encontro");
+    async obtenerPorId(id, includeInactive = false) {
+        const reserva = await ReservaDAO.obtenerPorId(id, includeInactive);
+        if (!reserva) throw new Error("not_found");
         return reserva;
     }
 
     async actualizar(id, data) {
-        const existente = await ReservaDAO.obtenerPorId(id);
-        if (!existente) throw new Error("no se encontro");
+        const existente = await ReservaDAO.obtenerPorId(id, true);
+        if (!existente) throw new Error("not_found");
         await ReservaDAO.actualizarReserva(id, data);
-        return this.obtenerPorId(id);
+        return this.obtenerPorId(id, true);
     }
 
     async eliminar(id) {
-        const existente = await ReservaDAO.obtenerPorId(id);
-        if (!existente) throw new Error("no se encontro");
+        const existente = await ReservaDAO.obtenerPorId(id, true);
+        if (!existente) throw new Error("not_found");
         await ReservaDAO.eliminarReserva(id);
         return { mensaje: "Reserva eliminada correctamente (soft delete)" };
     }
 
-    async listarTodas(opciones = {}) {
-        return ReservaDAO.listarTodas(opciones);
+    async listarTodas(opciones = {}, includeInactive = false) {
+        return ReservaDAO.listarTodas(opciones, includeInactive);
     }
 
     async generarReporteDetalle() {

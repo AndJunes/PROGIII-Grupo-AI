@@ -32,27 +32,28 @@ class ReservaDAO {
     }
 
     // Obtener reserva por ID
-    async obtenerPorId(id) {
+    async obtenerPorId(id, includeInactive = false) {
+        const where = includeInactive ? 'r.reserva_id = ?' : 'r.reserva_id = ? AND r.activo = 1';
         const [rows] = await pool.query(
             `SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta, u.nombre, u.nombre_usuario
              FROM reservas r
              LEFT JOIN salones s ON r.salon_id = s.salon_id
              LEFT JOIN turnos t ON r.turno_id = t.turno_id
              LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
-             WHERE r.reserva_id = ? AND r.activo = 1`,
+             WHERE ${where}`,
             [id]
         );
         return rows[0];
     }
 
     //Listar por usuario
-    async listarPorUsuario(usuarioId, { pagina = 1, limite = 10, orden = 'fecha_reserva', direccion = 'ASC' }) {
+    async listarPorUsuario(usuarioId, { pagina = 1, limite = 10, orden = 'fecha_reserva', direccion = 'ASC' }, includeInactive = false) {
         let query = `
             SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta
             FROM reservas r
             LEFT JOIN salones s ON r.salon_id = s.salon_id
             LEFT JOIN turnos t ON r.turno_id = t.turno_id
-            WHERE r.usuario_id = ? AND r.activo = 1
+            WHERE r.usuario_id = ? ${includeInactive ? '' : 'AND r.activo = 1'}
         `;
 
         const params = [usuarioId];
@@ -72,7 +73,7 @@ class ReservaDAO {
 
 
     // Listar todas las reservas con filtrado, paginación y ordenación
-    async listarTodas({ pagina = 1, limite = 10, orden = 'fecha_reserva', direccion = 'ASC', filtro_salon, filtro_usuario }) {
+    async listarTodas({ pagina = 1, limite = 10, orden = 'fecha_reserva', direccion = 'ASC', filtro_salon, filtro_usuario }, includeInactive = false) {
         let query = `
             SELECT r.*, s.titulo AS salon, t.hora_desde, t.hora_hasta,
                 u.usuario_id, u.nombre, u.nombre_usuario
@@ -80,7 +81,7 @@ class ReservaDAO {
             LEFT JOIN salones s ON r.salon_id = s.salon_id
             LEFT JOIN turnos t ON r.turno_id = t.turno_id
             LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
-            WHERE r.activo = 1
+            WHERE ${includeInactive ? '1=1' : 'r.activo = 1'}
         `;
 
         const params = [];
@@ -114,12 +115,23 @@ class ReservaDAO {
 
     // Actualizar reserva
     async actualizarReserva(id, data) {
-        const { fecha_reserva, salon_id, turno_id, tematica, importe_total } = data;
+        const campos = [];
+        const valores = [];
+
+        const permitidos = ['fecha_reserva', 'salon_id', 'turno_id', 'tematica', 'importe_total', 'activo'];
+        for (const key of permitidos) {
+            if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== undefined) {
+                campos.push(`${key} = ?`);
+                valores.push(data[key]);
+            }
+        }
+
+        if (campos.length === 0) return; // nada que actualizar
+
+        valores.push(id);
         await pool.query(
-            `UPDATE reservas 
-             SET fecha_reserva=?, salon_id=?, turno_id=?, tematica=?, importe_total=?
-             WHERE reserva_id=? AND activo=1`,
-            [fecha_reserva, salon_id, turno_id, tematica, importe_total, id]
+            `UPDATE reservas SET ${campos.join(', ')} WHERE reserva_id = ?`,
+            valores
         );
     }
 

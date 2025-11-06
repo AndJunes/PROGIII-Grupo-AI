@@ -41,11 +41,42 @@ export class ReservasManager extends BaseCRUDManager {
         this.showLoadingState('reservasTableBody');
         
         try {
+            const loadToken = (this._lastLoadToken = Date.now());
+
+            // Enganchar toggle de inactivos
+            const toggle = document.getElementById('toggleInactivosReservas');
+            if (toggle && !toggle._reservasListenerAttached) {
+                toggle.addEventListener('change', () => this.loadReservas());
+                toggle._reservasListenerAttached = true;
+            }
+
             await this.loadDependencies();
-            const reservas = await this.api.getReservas();
-            
-            console.log('📦 Reservas cargadas:', reservas);
-            this.renderReservas(reservas);
+
+            const includeInactive = document.getElementById('toggleInactivosReservas')?.checked || false;
+            const reservasResp = await this.api.getReservas({ includeInactive, pagina: 1, limite: 1000 });
+
+            // Si llegó otra respuesta más nueva, ignorar esta
+            if (loadToken !== this._lastLoadToken) return;
+
+            // Asegurar que sea un array: si la API devuelve {mensaje: ...} u otro objeto, usar []
+            const reservas = Array.isArray(reservasResp)
+                ? reservasResp
+                : (Array.isArray(reservasResp?.reservas) ? reservasResp.reservas : []);
+
+            // Normalizar tipos y mantener en estado local
+            this.reservas = (reservas || []).map(r => ({
+                ...r,
+                reserva_id: Number(r.reserva_id),
+                usuario_id: r.usuario_id != null ? Number(r.usuario_id) : r.usuario_id,
+                salon_id: r.salon_id != null ? Number(r.salon_id) : r.salon_id,
+                turno_id: r.turno_id != null ? Number(r.turno_id) : r.turno_id,
+                importe_salon: r.importe_salon != null ? Number(r.importe_salon) : r.importe_salon,
+                importe_total: r.importe_total != null ? Number(r.importe_total) : r.importe_total,
+                activo: Number(r.activo ?? 1) === 1
+            }));
+
+            console.log('📦 Reservas cargadas:', this.reservas);
+            this.renderReservas(this.reservas);
         } catch (error) {
             console.error('❌ Error loading reservas:', error);
             this.showTableError('reservasTableBody', 'Error cargando reservas');
@@ -139,6 +170,15 @@ export class ReservasManager extends BaseCRUDManager {
             return `${this.formatTime(reserva.hora_desde)} - ${this.formatTime(reserva.hora_hasta)}`;
         }
         return 'N/A';
+    }
+
+    // Formatea valores de hora tipo "HH:MM:SS" a "HH:MM"
+    formatTime(value) {
+        if (!value) return 'N/A';
+        const str = String(value);
+        const parts = str.split(':');
+        if (parts.length >= 2) return `${parts[0].padStart(2,'0')}:${parts[1].padStart(2,'0')}`;
+        return str;
     }
 
     getEstadoBadge(activo) {
@@ -334,7 +374,8 @@ export class ReservasManager extends BaseCRUDManager {
                 throw new Error('ID de reserva inválido');
             }
             
-            const reserva = await this.api.getReserva(id);
+            const includeInactive = document.getElementById('toggleInactivosReservas')?.checked || false;
+            const reserva = await this.api.getReserva(id, { includeInactive });
             this.showReservaModal(reserva);
         } catch (error) {
             console.error('❌ Error loading reserva:', error);
