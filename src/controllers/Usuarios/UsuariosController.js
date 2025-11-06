@@ -2,7 +2,7 @@ import UsuariosService from '../../services/UsuariosService.js';
 
 class UsuariosController {
     // Crear usuario
-    static async create(req, res) {
+    async create(req, res) {
         try {
             const usuario = await UsuariosService.crearUsuario(req.body);
             res.status(201).json({ mensaje: "usuario creado exitosamente", usuario });
@@ -13,7 +13,7 @@ class UsuariosController {
     }
 
     // Listar todos los usuarios activos
-    static async getAll(req, res) {
+    async getAll(req, res) {
         try {
             const { pagina = 1, limite = 10, orden, direccion } = req.query;
             const resultado = await UsuariosService.listarUsuariosConFiltros({
@@ -30,7 +30,7 @@ class UsuariosController {
     }
 
     // Listar solo clientes (tipo_usuario = 1)
-    static async getClientes(req, res) {
+    async getClientes(req, res) {
         try {
             const clientes = await UsuariosService.listarClientes();
             res.json(clientes);
@@ -41,7 +41,7 @@ class UsuariosController {
     }
 
     // Obtener usuario por ID
-    static async getById(req, res) {
+    async getById(req, res) {
         try {
             const usuario = await UsuariosService.obtenerUsuarioPorId(req.params.id);
             if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
@@ -53,7 +53,7 @@ class UsuariosController {
     }
 
     // Actualizar usuario
-    static async update(req, res) {
+    async update(req, res) {
         try {
             const usuario = await UsuariosService.actualizarUsuario(req.params.id, req.body);
             if (!usuario) return res.status(404).json({ error: "usuario no encontrado" });
@@ -65,7 +65,7 @@ class UsuariosController {
     }
 
     // Eliminar usuario (soft delete)
-    static async delete(req, res) {
+    async delete(req, res) {
         try {
             const ok = await UsuariosService.eliminarUsuario(req.params.id);
             if (!ok) return res.status(404).json({ error: "usuario no encontrado" });
@@ -76,5 +76,4 @@ class UsuariosController {
         }
     }
 }
-
-export default UsuariosController;
+export default new UsuariosController();

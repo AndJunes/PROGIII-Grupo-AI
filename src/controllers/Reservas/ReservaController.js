@@ -4,7 +4,7 @@ import fs from 'fs';
 
 class ReservaController {
     // POST -> crea una reserva (cliente)
-    static async crear(req, res) {
+    async crear(req, res) {
     try {
         const nuevaReserva = await ReservaService.crear(req.body, req.usuario.usuario_id);
         res.status(201).json({
@@ -19,7 +19,7 @@ class ReservaController {
 
 
     // GET -> listar reservas del usuario logueado
-    static async listar(req, res) {
+    async listar(req, res) {
         try {
             const { tipo_usuario, usuario_id } = req.usuario;
             const { pagina, limite, orden, direccion } = req.query;
@@ -47,7 +47,7 @@ class ReservaController {
 
 
     // GET -> obtener una reserva específica por ID
-    static async obtenerPorId(req, res) {
+    async obtenerPorId(req, res) {
         try {
             const reserva = await ReservaService.obtenerPorId(req.params.id);
             res.json(reserva);
@@ -61,7 +61,7 @@ class ReservaController {
     }
 
     // PUT -> actualizar reservas (solo admin)
-    static async actualizar(req, res) {
+    async actualizar(req, res) {
         try {
             const reserva = await ReservaService.actualizar(req.params.id, req.body);
             res.json({ mensaje: 'reserva actualizada correctamente', reserva });
@@ -75,7 +75,7 @@ class ReservaController {
     }
 
     // DELETE -> eliminar reserva (soft delete, solo admin)
-    static async eliminar(req, res) {
+    async eliminar(req, res) {
         try {
             const resultado = await ReservaService.eliminar(req.params.id);
             res.json(resultado);
@@ -89,7 +89,7 @@ class ReservaController {
     }
 
     // GET -> listar todas las reservas (solo admin o empleado)
-    static async listarTodas(req, res) {
+    async listarTodas(req, res) {
         try {
             const { pagina, limite, orden, direccion, filtro_salon, filtro_usuario } = req.query;
 
@@ -110,7 +110,7 @@ class ReservaController {
     }
 
 
-    static async informe(req, res) {
+    async informe(req, res) {
         try {
             // Lee el formato de la URL
             const formato = req.query.formato;
@@ -143,7 +143,7 @@ class ReservaController {
         }
     }
 
-    static async estadisticaSalones(req, res) {
+    async estadisticaSalones(req, res) {
         try {
             const formato = req.query.formato;
             // sacamos los datos del procedure
@@ -178,7 +178,7 @@ class ReservaController {
     }
 
     // GET -> Devuelve la estadística de Servicios (JSON o CSV)
-    static async estadisticaServicios(req, res) {
+    async estadisticaServicios(req, res) {
         try {
             const formato = req.query.formato;
             const datos = await ReservaService.generarReporteEstadisticoServicios();
@@ -212,7 +212,7 @@ class ReservaController {
     }
 
     // GET -> Devuelve la estadística de Turnos (JSON o CSV)
-    static async estadisticaTurnos(req, res) {
+    async estadisticaTurnos(req, res) {
         try {
             const formato = req.query.formato;
             const datos = await ReservaService.generarReporteEstadisticoTurnos();
@@ -246,5 +246,4 @@ class ReservaController {
         }
     }
 }
-
-export default ReservaController;
+export default new ReservaController();
