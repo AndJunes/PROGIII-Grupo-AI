@@ -1,7 +1,10 @@
-class Auth {
+import { CONSTANTS } from './utils/constants.js';
+import { Helpers } from './utils/helpers.js';
+
+export class Auth {
     constructor() {
-        this.token = localStorage.getItem("authToken");
-        this.userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        this.token = localStorage.getItem(CONSTANTS.LOCAL_STORAGE_KEYS.AUTH_TOKEN);
+        this.userData = JSON.parse(localStorage.getItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA) || "{}");
         
         console.log('Auth initialized - Token:', !!this.token, 'UserData:', this.userData);
         
@@ -151,8 +154,51 @@ class Auth {
 
     logOut() {
         console.log('Cerrando sesión...');
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userData");
+        localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA);
         window.location.href = './index.html?logout=success';
+    }
+
+    // Métodos estáticos para uso en login
+    static async login(username, password) {
+        try {
+            const API_URL = 'https://localhost:3006/auth/login';
+            
+            console.log('Enviando login a:', API_URL);
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nombre_usuario: username,
+                    contrasenia: password
+                })
+            });
+
+            const data = await response.json();
+            console.log('Respuesta del backend:', data);
+
+            if (!response.ok) {
+                throw new Error(data.message || data.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
+        }
+    }
+
+    static saveSession(token, userData, rememberUser = false, username = '') {
+        localStorage.setItem(CONSTANTS.LOCAL_STORAGE_KEYS.AUTH_TOKEN, token);
+        localStorage.setItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+        
+        if (rememberUser && username) {
+            localStorage.setItem(CONSTANTS.LOCAL_STORAGE_KEYS.REMEMBERED_USER, username);
+        } else {
+            localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.REMEMBERED_USER);
+        }
     }
 }
