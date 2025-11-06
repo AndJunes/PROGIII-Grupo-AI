@@ -1,6 +1,6 @@
 import { SidebarManager } from '../modules/sidebar.js';
 import { NotificationsManager } from '../modules/notifications.js';
-import { CRUDManager } from '../modules/crud.js';
+import { CRUDManager } from '../modules/crud/index.js';
 import { ReportsManager } from '../modules/reports.js';
 import { DashboardManager } from '../modules/dashboard.js';
 import { WebSocketManager } from '../modules/websocket.js';
@@ -99,10 +99,20 @@ class DashboardAdmin {
             case 'reservas':
                 this.modules.crud.loadReservas();
                 break;
+            case 'salones':
+                this.modules.crud.loadSalones();
+                break;
+            case 'servicios':
+                this.modules.crud.loadServicios();
+                break;
+            case 'turnos':
+                this.modules.crud.loadTurnos();
+                break;
             case 'usuarios':
                 this.modules.crud.loadUsuarios();
                 break;
-            // Agregar más casos según sea necesario
+            default:
+                console.log('Sección no manejada:', section);
         }
     }
 
@@ -116,12 +126,26 @@ class DashboardAdmin {
                 reservasHoy: this.modules.dashboard.stats.reservasHoy + 1
             });
         }
+        
+        // Si estamos en la sección de reservas, actualizar la lista
+        if (document.querySelector('[data-section="reservas"]')?.classList.contains('active')) {
+            this.modules.crud.loadReservas();
+        }
     }
 
     // Método para limpiar recursos
     destroy() {
         if (this.modules.websocket) {
             this.modules.websocket.destroy();
+        }
+        
+        // Limpiar managers del CRUD si es necesario
+        if (this.modules.crud && this.modules.crud.managers) {
+            Object.values(this.modules.crud.managers).forEach(manager => {
+                if (manager.destroy) {
+                    manager.destroy();
+                }
+            });
         }
     }
 }
