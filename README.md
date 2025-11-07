@@ -77,7 +77,7 @@ PROGIII-Grupo-AI/
 
 ---
 
-##  Configuracion de la Base de Datos
+##  Configuracion de la Base de Datos - (En el caso que sea la primera vez)
 
 1.  Crea la base de datos (con usuario adminsitrador). Se recomienda
 usar un usuario con permisos de administrador (como root) para crear
@@ -117,8 +117,8 @@ FLUSH PRIVILEGES;
 4. Configurar tu API para usar el usuario dedicado. Crea un archivo `.env` como este.
 ```js
 DB_NAME=nombre_de_la_base_de_datos
-DB_USER=tu_usuario
-DB_PASS=tu_contrasenia
+DB_USER=tu_usuario_para_la_api
+DB_PASS=tu_contrasenia_del_usuario_de_la_api
 DB_HOST=localhost
 PORT=3006
 JWT_SECRET=tu_palabra_secreta
@@ -128,7 +128,9 @@ USER=tu_correo_electronico
 #esta es la clave de apliacion de google
 PASS=tu_clave_de_aplicacion
 ```
-> **Nota:** No subas tu `.env` real al repositorio.
+> **Nota:** No subas tu `.env` real al repositorio. 
+
+> **Notificacion via e-mail:** En el caso que decidas probar las notificaciones via e-mail, deberas contener en la base de datos un usuario de tipo Cliente y Administrador con correos electronicos validos (Gmail) para que te lleguen las notificaciones.
 
 ---
 
