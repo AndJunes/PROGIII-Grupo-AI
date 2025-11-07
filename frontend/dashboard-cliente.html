@@ -4,48 +4,136 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Cliente</title>
-    <link rel="stylesheet" href="./css/style.css" />
-    <script defer src="./js/auth.js"></script>
-    <script defer src="./js/api.js"></script>
-    <script defer src="./js/init.js"></script>
+    <link rel="stylesheet" href="./css/dashboardCliente.css" />
+    <script type="module" src="./js/pages/dashboard-cliente.js"></script>
   </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1>Mi Cuenta</h1>
-        <div class="user-info"></div>
-        <p><a href="#" class="logout">Cerrar Sesión</a></p>
+  <body class="dashboard">
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <h1>Mi Cuenta - Cliente</h1>
+          <div class="user-info">
+            <span id="user-welcome">Bienvenido</span>
+            <a href="#" class="logout-btn">Cerrar Sesión</a>
+          </div>
+        </div>
       </header>
 
-      <main>
-        <section class="cliente-only">
-          <h2>Mis Datos</h2>
-          <div id="mis-datos"></div>
+      <!-- Navegación entre secciones -->
+      <nav class="dashboard-nav">
+        <div class="nav-tabs">
+          <button class="nav-tab active" data-section="reservas">
+            Mis Reservas
+          </button>
+          <button class="nav-tab" data-section="salones">
+            Salones Disponibles
+          </button>
+          <button class="nav-tab" data-section="servicios">Servicios</button>
+          <button class="nav-tab" data-section="turnos">Turnos</button>
+          <button class="nav-tab" data-section="perfil">Mi Perfil</button>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="dashboard-main">
+        <!-- Sección: Mis Reservas -->
+        <section id="reservas" class="content-section active">
+          <div class="section-header">
+            <h2>Mis Reservas</h2>
+          </div>
+
+          <!-- Controles de paginación superior -->
+          <div class="pagination-controls">
+            <button id="prev-page" class="pagination-btn" disabled>
+              <span class="btn-icon">←</span> Anterior
+            </button>
+            <span id="page-info" class="page-info">Página 1 de 1</span>
+            <button id="next-page" class="pagination-btn" disabled>
+              Siguiente <span class="btn-icon">→</span>
+            </button>
+          </div>
+
+          <!-- Tabla de reservas -->
+          <div class="table-container">
+            <table id="reservas-table" class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Salón</th>
+                  <th>Fecha</th>
+                  <th>Turno</th>
+                  <th>Temática</th>
+                  <th>Importe Total</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="reservas-body">
+                <!-- Los datos se cargarán dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Controles de paginación inferior -->
+          <div class="pagination-controls">
+            <button id="prev-page-bottom" class="pagination-btn" disabled>
+              <span class="btn-icon">←</span> Anterior
+            </button>
+            <span id="page-info-bottom" class="page-info">Página 1 de 1</span>
+            <button id="next-page-bottom" class="pagination-btn" disabled>
+              Siguiente <span class="btn-icon">→</span>
+            </button>
+          </div>
+
+          <!-- Información de paginación -->
+          <div class="pagination-info">
+            Mostrando <span id="items-shown">0</span> de
+            <span id="total-items">0</span> registros
+          </div>
+        </section>
+
+        <!-- Sección: Salones Disponibles -->
+        <section id="salones" class="content-section">
+          <div class="section-header">
+            <h2>Salones Disponibles</h2>
+          </div>
+          <div id="salones-container" class="cards-grid">
+            <!-- Los salones se cargarán aquí -->
+          </div>
+        </section>
+
+        <!-- Sección: Servicios -->
+        <section id="servicios" class="content-section">
+          <div class="section-header">
+            <h2>Servicios Adicionales</h2>
+          </div>
+          <div id="servicios-container" class="cards-grid">
+            <!-- Los servicios se cargarán aquí -->
+          </div>
+        </section>
+
+        <!-- Sección: Turnos -->
+        <section id="turnos" class="content-section">
+          <div class="section-header">
+            <h2>Horarios de Turnos</h2>
+          </div>
+          <div id="turnos-container" class="cards-grid">
+            <!-- Los turnos se cargarán aquí -->
+          </div>
+        </section>
+
+        <!-- Sección: Mi Perfil -->
+        <section id="perfil" class="content-section">
+          <div class="section-header">
+            <h2>Mis Datos Personales</h2>
+          </div>
+          <div class="card">
+            <div id="user-data" class="user-data">
+              <!-- Los datos del usuario se cargarán aquí -->
+            </div>
+          </div>
         </section>
       </main>
     </div>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-        displayUserData(userData);
-      });
-
-      function displayUserData(userData) {
-        const container = document.getElementById("mis-datos");
-        container.innerHTML = `
-          <div class="user-data">
-            <p><strong>Nombre:</strong> ${userData.nombre} ${
-          userData.apellido
-        }</p>
-            <p><strong>Usuario:</strong> ${userData.nombre_usuario}</p>
-            <p><strong>Teléfono:</strong> ${
-              userData.celular || "No especificado"
-            }</p>
-            <p><strong>Tipo de usuario:</strong> Cliente</p>
-          </div>
-        `;
-      }
-    </script>
   </body>
 </html>
