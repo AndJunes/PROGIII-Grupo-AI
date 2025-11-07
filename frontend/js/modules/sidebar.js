@@ -115,7 +115,8 @@ export class SidebarManager {
             'turnos': 'Gestión de Turnos',
             'usuarios': 'Gestión de Usuarios',
             'reportes': 'Generación de Reportes',
-            'estadisticas': 'Estadísticas del Sistema'
+            'estadisticas': 'Estadísticas del Sistema',
+            'auditoria': 'Auditoría'
         };
 
         if (this.pageTitle) {

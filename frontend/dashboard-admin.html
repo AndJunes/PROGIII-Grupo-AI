@@ -99,6 +99,12 @@
                 <span class="nav-text">Estadísticas</span>
               </a>
             </li>
+            <li class="nav-item admin-only">
+              <a href="#auditoria" class="nav-link" data-section="auditoria">
+                <span class="nav-icon material-icons">history</span>
+                <span class="nav-text">Auditoría</span>
+              </a>
+            </li>
           </ul>
         </div>
       </nav>
@@ -211,6 +217,71 @@
             <div class="activity-list" id="activityList">
               <!-- Actividad reciente se cargará aquí -->
             </div>
+          </div>
+        </section>
+
+        <!-- Auditoría (solo Admin) -->
+        <section id="auditoria-section" class="content-section">
+          <div class="section-header">
+            <h2>Auditoría</h2>
+          </div>
+
+          <div class="filters-row" style="display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:12px;">
+            <div class="form-group">
+              <label for="auditFilterEntity">Entidad</label>
+              <select id="auditFilterEntity" class="form-control">
+                <option value="">Todas</option>
+                <option value="reservas">Reservas</option>
+                <option value="salones">Salones</option>
+                <option value="servicios">Servicios</option>
+                <option value="turnos">Turnos</option>
+                <option value="usuarios">Usuarios</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="auditFilterAction">Acción</label>
+              <select id="auditFilterAction" class="form-control">
+                <option value="">Todas</option>
+                <option value="create">create</option>
+                <option value="update">update</option>
+                <option value="delete">delete</option>
+                <option value="toggle_activo">toggle_activo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="auditFilterUser">Usuario (ID)</label>
+              <input type="number" id="auditFilterUser" class="form-control" placeholder="ID usuario" />
+            </div>
+            <div class="form-group">
+              <label for="auditFilterFrom">Desde</label>
+              <input type="datetime-local" id="auditFilterFrom" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="auditFilterTo">Hasta</label>
+              <input type="datetime-local" id="auditFilterTo" class="form-control" />
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary" id="auditSearchBtn">Buscar</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="auditoriaTable">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Usuario</th>
+                  <th>Tipo</th>
+                  <th>Entidad</th>
+                  <th>ID Entidad</th>
+                  <th>Acción</th>
+                  <th>IP</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="auditoriaTableBody"></tbody>
+            </table>
+            <div id="auditPagination" style="margin-top:8px;"></div>
           </div>
         </section>
 
@@ -538,6 +609,22 @@
 
     <!-- Modales para CRUD operations -->
     <div id="modalContainer"></div>
+
+    <!-- Modal Auditoría: Ver cambios -->
+    <div id="auditChangesModal" class="modal" style="display:none; position:fixed; inset:0; z-index:1000; background: rgba(0,0,0,0.5); align-items:center; justify-content:center; padding:16px;">
+      <div class="modal-content" style="max-width:900px; width:90%; background:#fff; color:#111; border-radius:8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <div class="modal-header">
+          <h3>Detalle de Auditoría</h3>
+          <button class="close" data-audit-close>&times;</button>
+        </div>
+        <div class="modal-body">
+          <pre id="auditChangesPre" style="max-height:60vh; overflow:auto; background:#0b1020; color:#eaeefb; padding:12px; border-radius:8px;"></pre>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-audit-close>Cerrar</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Scripts modulares -->
     <script type="module" src="./js/pages/dashboard-admin.js"></script>

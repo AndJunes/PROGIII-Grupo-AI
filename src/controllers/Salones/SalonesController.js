@@ -1,5 +1,6 @@
 import SalonesService from '../../services/SalonesService.js';
 import apicache from 'apicache';
+import AuditLogger from '../../utils/AuditLogger.js';
 
 class SalonesController {
 
@@ -42,6 +43,13 @@ class SalonesController {
             // invalidar caché de grupo 'salones'
             apicache.clear('salones');
             res.status(201).json(salon);
+            await AuditLogger.log({
+                req,
+                entity: 'salones',
+                entityId: salon?.id || salon?.salon_id,
+                action: 'create',
+                changes: { after: salon }
+            });
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: 'Error al crear el salón' });
@@ -51,10 +59,18 @@ class SalonesController {
     // Actualizar un salón existente
     async update(req, res) {
         try {
+            const before = await SalonesService.getById(req.params.id, true);
             const salon = await SalonesService.update(req.params.id, req.body);
             // invalidar caché de grupo 'salones'
             apicache.clear('salones');
             res.json(salon);
+            await AuditLogger.log({
+                req,
+                entity: 'salones',
+                entityId: Number(req.params.id),
+                action: 'update',
+                changes: { before, after: salon }
+            });
         } catch (error) {
             res.status(500).json({ error: 'Error al actualizar el salón' });
         }
@@ -63,10 +79,18 @@ class SalonesController {
     // Eliminar un salón
     async delete(req, res) {
         try {
+            const before = await SalonesService.getById(req.params.id, true);
             const salon = await SalonesService.delete(req.params.id);
             // invalidar caché de grupo 'salones'
             apicache.clear('salones');
             res.json(salon);
+            await AuditLogger.log({
+                req,
+                entity: 'salones',
+                entityId: Number(req.params.id),
+                action: 'delete',
+                changes: { before }
+            });
         } catch (error) {
             res.status(500).json({ error: "Error al eliminar el salón" });
         }

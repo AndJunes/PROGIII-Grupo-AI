@@ -2,6 +2,7 @@ import ReservaService from "../../services/ReservaService.js";
 import InformeService from '../../services/InformeService.js';
 import fs from 'fs';
 import apicache from 'apicache';
+import AuditLogger from '../../utils/AuditLogger.js';
 
 class ReservaController {
     // POST -> crea una reserva (cliente)
@@ -13,6 +14,14 @@ class ReservaController {
             reserva: nuevaReserva
         });
         apicache.clear('reservas');
+        // auditoría
+        await AuditLogger.log({
+            req,
+            entity: 'reservas',
+            entityId: nuevaReserva?.id || nuevaReserva?.reserva_id,
+            action: 'create',
+            changes: { after: nuevaReserva }
+        });
     } catch (error) {
         console.error('error al crear reserva:', error);
         res.status(500).json({ mensaje: 'error al crear reserva', error });
@@ -73,9 +82,18 @@ class ReservaController {
     // PUT -> actualizar reservas (solo admin)
     async actualizar(req, res) {
         try {
+            const before = await ReservaService.obtenerPorId(req.params.id, true);
             const reserva = await ReservaService.actualizar(req.params.id, req.body);
             res.json({ mensaje: 'reserva actualizada correctamente', reserva });
             apicache.clear('reservas');
+            // auditoría
+            await AuditLogger.log({
+                req,
+                entity: 'reservas',
+                entityId: Number(req.params.id),
+                action: 'update',
+                changes: { before, after: reserva }
+            });
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'reserva no encontrada'});
@@ -88,9 +106,18 @@ class ReservaController {
     // DELETE -> eliminar reserva (soft delete, solo admin)
     async eliminar(req, res) {
         try {
+            const before = await ReservaService.obtenerPorId(req.params.id, true);
             const resultado = await ReservaService.eliminar(req.params.id);
             res.json(resultado);
             apicache.clear('reservas');
+            // auditoría
+            await AuditLogger.log({
+                req,
+                entity: 'reservas',
+                entityId: Number(req.params.id),
+                action: 'delete',
+                changes: { before }
+            });
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'reserva no encontrada o ya eliminada'});

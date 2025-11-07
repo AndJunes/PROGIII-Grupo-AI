@@ -300,6 +300,29 @@ export class API {
             CONSTANTS.API_ENDPOINTS.ESTADISTICAS_TURNOS;
         return this.request(endpoint);
     }
+
+    // ===== AUDITORIA =====
+    async getAuditoria({ entity, action, user_id, from, to, page = 1, limit = 20 } = {}) {
+        const params = new URLSearchParams();
+        if (entity) params.set('entity', entity);
+        if (action) params.set('action', action);
+        if (user_id) params.set('user_id', String(user_id));
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        if (page != null) params.set('page', String(page));
+        if (limit != null) params.set('limit', String(limit));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.AUDITORIA}?${qs}` : CONSTANTS.API_ENDPOINTS.AUDITORIA;
+        return this.request(url);
+    }
+
+    async getAuditoriaById(id) {
+        const params = new URLSearchParams();
+        params.set('_ts', Date.now().toString());
+        const sep = `?${params.toString()}`;
+        return this.request(`${CONSTANTS.API_ENDPOINTS.AUDITORIA}/${id}${sep}`);
+    }
 }
 
 // Para compatibilidad con código existente

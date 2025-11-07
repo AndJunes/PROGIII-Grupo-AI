@@ -1,4 +1,5 @@
 import TurnosService from '../../services/TurnosService.js';
+import AuditLogger from '../../utils/AuditLogger.js';
 
 class TurnosController {
 
@@ -8,6 +9,13 @@ class TurnosController {
             res.status(201).json({
                 mensaje: "Turno creado correctamente",
                 turno
+            });
+            await AuditLogger.log({
+                req,
+                entity: 'turnos',
+                entityId: turno?.id || turno?.turno_id,
+                action: 'create',
+                changes: { after: turno }
             });
         } catch (error) {
             console.error("Error al crear turno:", error);
@@ -51,10 +59,18 @@ class TurnosController {
 
     async update(req, res) {
         try {
+            const before = await TurnosService.getById(req.params.id);
             const turno = await TurnosService.update(req.params.id, req.body);
             res.json({
                 mensaje: "Turno actualizado correctamente",
                 turno
+            });
+            await AuditLogger.log({
+                req,
+                entity: 'turnos',
+                entityId: Number(req.params.id),
+                action: 'update',
+                changes: { before, after: turno }
             });
         } catch (error) {
             if (error.message === "not_found") {
@@ -67,8 +83,16 @@ class TurnosController {
 
     async delete(req, res) {
         try {
+            const before = await TurnosService.getById(req.params.id);
             const result = await TurnosService.delete(req.params.id);
             res.json(result);
+            await AuditLogger.log({
+                req,
+                entity: 'turnos',
+                entityId: Number(req.params.id),
+                action: 'delete',
+                changes: { before }
+            });
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: "Turno no encontrado" });

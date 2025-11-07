@@ -1,6 +1,7 @@
 import ServiciosService from '../../services/ServiciosService.js';
 
 import apicache from 'apicache';
+import AuditLogger from '../../utils/AuditLogger.js';
 class ServiciosController {
 
     async getAll(req, res) {
@@ -64,6 +65,14 @@ class ServiciosController {
             });
             // invalidar cache de grupo 'servicios'
             apicache.clear('servicios');
+            // auditoría
+            await AuditLogger.log({
+                req,
+                entity: 'servicios',
+                entityId: nuevoServicio?.id || nuevoServicio?.servicio_id,
+                action: 'create',
+                changes: { after: nuevoServicio }
+            });
         } catch (error) {
             console.error(error);
             res.status(500).json({ mensaje: 'Error al crear servicio' });
@@ -72,6 +81,7 @@ class ServiciosController {
 
     async update(req, res) {
         try {
+            const before = await ServiciosService.getById(req.params.id, true);
             const servicio = await ServiciosService.update(req.params.id, req.body);
             res.json({
                 mensaje: 'Servicio actualizado correctamente',
@@ -79,6 +89,14 @@ class ServiciosController {
             });
             // invalidar cache de grupo 'servicios'
             apicache.clear('servicios');
+            // auditoría
+            await AuditLogger.log({
+                req,
+                entity: 'servicios',
+                entityId: Number(req.params.id),
+                action: 'update',
+                changes: { before, after: servicio }
+            });
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'Servicio no encontrado' });
@@ -90,10 +108,19 @@ class ServiciosController {
 
     async delete(req, res) {
         try {
+            const before = await ServiciosService.getById(req.params.id, true);
             const result = await ServiciosService.delete(req.params.id);
             res.json(result);
             // invalidar cache de grupo 'servicios'
             apicache.clear('servicios');
+            // auditoría
+            await AuditLogger.log({
+                req,
+                entity: 'servicios',
+                entityId: Number(req.params.id),
+                action: 'delete',
+                changes: { before }
+            });
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'Servicio no encontrado o ya eliminado' });

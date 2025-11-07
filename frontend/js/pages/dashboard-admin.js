@@ -4,6 +4,7 @@ import { ReportsManager } from '../modules/reports.js';
 import { DashboardManager } from '../modules/dashboard.js';
 import { WebSocketManager } from '../modules/websocket.js';
 import { Auth } from '../auth.js';
+import AuditoriaManager from '../modules/auditoria-manager.js';
 
 class DashboardAdmin {
     constructor() {
@@ -44,19 +45,21 @@ class DashboardAdmin {
 
     initializeModules() {
         this.modules.sidebar = new SidebarManager();
-        this.modules.notifications = new NotificationsManager();
+        //this.modules.notifications = new NotificationsManager();
         this.modules.crud = new CRUDManager();
         this.modules.reports = new ReportsManager();
         this.modules.dashboard = new DashboardManager();
         this.modules.websocket = new WebSocketManager();
+        this.modules.auditoria = new AuditoriaManager();
 
         // Hacer disponibles globalmente para compatibilidad
         window.sidebarManager = this.modules.sidebar;
-        window.notificationsManager = this.modules.notifications;
+        //window.notificationsManager = this.modules.notifications;
         window.crudManager = this.modules.crud;
         window.reportsManager = this.modules.reports;
         window.dashboardManager = this.modules.dashboard;
         window.websocketManager = this.modules.websocket;
+        window.auditoriaManager = this.modules.auditoria;
     }
 
     bindEvents() {
@@ -109,6 +112,9 @@ class DashboardAdmin {
                 break;
             case 'usuarios':
                 this.modules.crud.loadUsuarios();
+                break;
+            case 'auditoria':
+                this.modules.auditoria.reload();
                 break;
             default:
                 console.log('Sección no manejada:', section);
