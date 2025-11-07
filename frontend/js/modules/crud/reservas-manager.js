@@ -13,7 +13,7 @@ export class ReservasManager extends BaseCRUDManager {
 
     async loadDependencies() {
         try {
-            console.log('🔄 Cargando dependencias para reservas...');
+            console.log('Cargando dependencias para reservas...');
             
             const [salonesResponse, serviciosResponse, turnosResponse] = await Promise.all([
                 this.api.getSalones(),
@@ -26,14 +26,14 @@ export class ReservasManager extends BaseCRUDManager {
             this.servicios = serviciosResponse.servicios || serviciosResponse || [];
             this.turnos = turnosResponse.turnos || turnosResponse || [];
 
-            console.log('✅ Dependencias cargadas:', {
+            console.log('Dependencias cargadas:', {
                 salones: this.salones.length,
                 servicios: this.servicios.length,
                 turnos: this.turnos.length
             });
 
         } catch (error) {
-            console.error('❌ Error loading dependencies:', error);
+            console.error('Error loading dependencies:', error);
         }
     }
 
@@ -75,10 +75,10 @@ export class ReservasManager extends BaseCRUDManager {
                 activo: Number(r.activo ?? 1) === 1
             }));
 
-            console.log('📦 Reservas cargadas:', this.reservas);
+            console.log('Reservas cargadas:', this.reservas);
             this.renderReservas(this.reservas);
         } catch (error) {
-            console.error('❌ Error loading reservas:', error);
+            console.error('Error loading reservas:', error);
             this.showTableError('reservasTableBody', 'Error cargando reservas');
         }
     }
@@ -330,20 +330,20 @@ export class ReservasManager extends BaseCRUDManager {
                 payload.foto_cumpleaniero = formData.foto_cumpleaniero.trim();
             }
 
-            console.log('📦 JSON final a enviar:', JSON.stringify(payload, null, 2));
+            console.log('JSON final a enviar:', JSON.stringify(payload, null, 2));
 
             let result;
             if (this.currentEditingId) {
-                console.log('🔄 Actualizando reserva ID:', this.currentEditingId);
+                console.log('Actualizando reserva ID:', this.currentEditingId);
                 result = await this.api.updateReserva(this.currentEditingId, payload);
                 this.showNotification('Reserva actualizada exitosamente', 'success');
             } else {
-                console.log('🆕 Creando nueva reserva');
+                console.log('Creando nueva reserva');
                 result = await this.api.createReserva(payload);
                 this.showNotification('Reserva creada exitosamente', 'success');
             }
 
-            console.log('✅ Respuesta del servidor:', result);
+            console.log('Respuesta del servidor:', result);
 
             this.closeModal();
             await this.loadReservas();
@@ -353,7 +353,7 @@ export class ReservasManager extends BaseCRUDManager {
             }));
             
         } catch (error) {
-            console.error('❌ Error completo saving reserva:', error);
+            console.error('Error completo saving reserva:', error);
             
             let errorMessage = 'Error al guardar la reserva';
             if (error.response) {
@@ -368,7 +368,7 @@ export class ReservasManager extends BaseCRUDManager {
 
     async editReserva(id) {
         try {
-            console.log('✏️ Editando reserva con ID:', id);
+            console.log('Editando reserva con ID:', id);
             
             if (!id || isNaN(id)) {
                 throw new Error('ID de reserva inválido');
@@ -387,7 +387,7 @@ export class ReservasManager extends BaseCRUDManager {
         if (!this.confirmDelete('reserva')) return;
 
         try {
-            console.log('🗑️ Eliminando reserva con ID:', id);
+            console.log('Eliminando reserva con ID:', id);
             
             if (!id || isNaN(id)) {
                 throw new Error('ID de reserva inválido');
@@ -402,7 +402,7 @@ export class ReservasManager extends BaseCRUDManager {
             }));
             
         } catch (error) {
-            console.error('❌ Error deleting reserva:', error);
+            console.error('Error deleting reserva:', error);
             this.showNotification(error.message || 'Error al eliminar la reserva', 'error');
         }
     }

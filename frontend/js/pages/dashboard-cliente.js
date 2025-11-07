@@ -201,7 +201,7 @@ class DashboardCliente {
                 <tr>
                     <td colspan="7" class="no-data">
                         <div class="empty-state">
-                            <span class="empty-icon">📅</span>
+                            <span class="empty-icon"></span>
                             <h3>No tienes reservas</h3>
                             <p>No se encontraron reservas para mostrar</p>
                         </div>
@@ -446,7 +446,7 @@ class DashboardCliente {
         if (container) {
             container.innerHTML = `
                 <div class="error-state">
-                    <span class="error-icon">⚠️</span>
+                    <span class="error-icon"></span>
                     <h3>Error</h3>
                     <p>${message}</p>
                     <button class="btn btn-outline" onclick="dashboard.loadSection('${this.currentSection}')">

@@ -47,13 +47,13 @@ class Login {
                         // Guardar sesión usando el método estático
                         Auth.saveSession(data.token, decoded, remember, username);
 
-                        console.log('✅ Login exitoso, redirigiendo...', decoded);
+                        console.log('Login exitoso, redirigiendo...', decoded);
                         this.redirectToDashboard(decoded.tipo_usuario);
                     } else {
                         throw new Error('Respuesta del servidor inválida');
                     }
                 } catch (error) {
-                    console.error('❌ Login error:', error);
+                    console.error('Login error:', error);
                     this.showSystemMessage(error.message || 'Error de conexión con el servidor', 'error');
                 } finally {
                     this.showLoading(false);
@@ -65,10 +65,10 @@ class Login {
     decodeToken(token) {
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            console.log('🔐 Token decodificado:', payload);
+            console.log('Token decodificado:', payload);
             return payload;
         } catch (err) {
-            console.error('❌ Error al decodificar token:', err);
+            console.error('Error al decodificar token:', err);
             return null;
         }
     }
@@ -90,7 +90,7 @@ class Login {
     }
 
     redirectToDashboard(userType) {
-        console.log('🔄 Redirigiendo usuario tipo:', userType);
+        console.log('Redirigiendo usuario tipo:', userType);
         const dashboards = {
             1: 'dashboard-admin.html',
             2: 'dashboard-empleado.html', 
@@ -101,7 +101,7 @@ class Login {
         if (dashboard) {
             window.location.replace(`./${dashboard}`);
         } else {
-            console.error('❌ Tipo de usuario desconocido:', userType);
+            console.error('Tipo de usuario desconocido:', userType);
             this.showSystemMessage('Tipo de usuario no reconocido', 'error');
         }
     }
