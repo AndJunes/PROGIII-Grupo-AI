@@ -44,11 +44,11 @@ BEGIN
         COUNT(r.reserva_id) AS cantidad_reservas,
         SUM(r.importe_total) AS total_facturado 
     FROM
-        reservas AS r
-    INNER JOIN
-        salones AS s ON s.salon_id = r.salon_id
+        salones AS s
+    LEFT JOIN
+        reservas AS r ON s.salon_id = r.salon_id AND r.activo=1
     WHERE
-        r.activo = 1 AND s.activo = 1 
+        s.activo = 1
     GROUP BY
         s.titulo 
     ORDER BY
@@ -71,12 +71,14 @@ BEGIN
 
     SELECT
         s.descripcion AS servicio,
-        COUNT(rs.reserva_servicio_id) AS cantidad_contratada,
+        COUNT(r.reserva_id) AS cantidad_contratada,
         SUM(rs.importe) AS total_facturado_servicio
     FROM
-        reservas_servicios AS rs
-    INNER JOIN
-        servicios AS s ON s.servicio_id = rs.servicio_id
+        servicios AS s
+    LEFT JOIN
+        reservas_servicios AS rs ON s.servicio_id = rs.servicio_id
+        LEFT JOIN
+                reservas AS r ON rs.reserva_id = r.reserva_id AND r.activo = 1
     WHERE
         s.activo = 1 
     GROUP BY
@@ -104,11 +106,11 @@ BEGIN
         CONCAT(t.hora_desde, ' a ', t.hora_hasta) AS turno,
         COUNT(r.reserva_id) AS cantidad_reservas
     FROM
-        reservas AS r
-    INNER JOIN
-        turnos AS t ON t.turno_id = r.turno_id
+        turnos AS t
+    LEFT JOIN 
+        reservas AS r ON t.turno_id = r.turno_id AND r.activo=1
     WHERE
-        r.activo = 1 -- solo activas
+        t.activo = 1 
     GROUP BY
         turno 
     ORDER BY
