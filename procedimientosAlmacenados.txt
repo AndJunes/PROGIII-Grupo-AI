@@ -9,21 +9,24 @@ DELIMITER $$
 CREATE PROCEDURE reporte_detalle_reservas()
 BEGIN
     SELECT
-        r.reserva_id,
-        r.fecha_reserva,
-        s.titulo AS salon,
-        t.hora_desde,
-        t.hora_hasta,
-        u.usuario_id,
-        u.nombre,
-        u.nombre_usuario,
-        r.importe_total
+        DATE_FORMAT(r.fecha_reserva, '%Y-%m-%d') AS fecha_reserva,
+        r.tematica,
+        DATE_FORMAT(t.hora_desde, '%H:%i') AS hora_desde,
+        DATE_FORMAT(t.hora_hasta, '%H:%i') AS hora_hasta,
+        s.titulo AS salon_titulo,
+        s.direccion AS salon_direccion,
+        u.nombre AS cliente_nombre,
+        u.apellido AS cliente_apellido,
+        sv.descripcion AS servicio_descripcion,
+        rs.importe AS servicio_importe
     FROM reservas r
-    LEFT JOIN salones s  ON r.salon_id = s.salon_id
-    LEFT JOIN turnos t   ON r.turno_id = t.turno_id
-    LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
+    INNER JOIN turnos   t  ON t.turno_id   = r.turno_id
+    INNER JOIN salones  s  ON s.salon_id   = r.salon_id
+    INNER JOIN usuarios u  ON u.usuario_id = r.usuario_id
+    LEFT JOIN reservas_servicios rs ON rs.reserva_id = r.reserva_id
+    LEFT JOIN servicios sv         ON sv.servicio_id = rs.servicio_id
     WHERE r.activo = 1
-    ORDER BY r.fecha_reserva DESC, r.reserva_id DESC;
+    ORDER BY r.fecha_reserva DESC, r.reserva_id DESC, rs.reserva_servicio_id ASC;
 END$$
 DELIMITER ;
 
@@ -41,7 +44,7 @@ BEGIN
         s.salon_id,
         s.titulo AS salon,
         COUNT(r.reserva_id) AS cantidad_reservas,
-        COALESCE(SUM(r.importe_total), 0) AS ingresos_totales
+        COALESCE(SUM(r.importe_total), 0) AS total_facturado
     FROM salones s
     LEFT JOIN reservas r
         ON r.salon_id = s.salon_id
@@ -64,8 +67,8 @@ BEGIN
     SELECT
         sv.servicio_id,
         sv.descripcion AS servicio,
-        COUNT(rs.reserva_id) AS veces_contratado,
-        COALESCE(SUM(rs.importe), 0) AS ingresos_servicio
+        COUNT(rs.reserva_id) AS cantidad_contratada,
+        COALESCE(SUM(rs.importe), 0) AS total_facturado_servicio
     FROM servicios sv
     LEFT JOIN reservas_servicios rs
         ON rs.servicio_id = sv.servicio_id
@@ -73,7 +76,7 @@ BEGIN
         ON r.reserva_id = rs.reserva_id
        AND r.activo = 1
     GROUP BY sv.servicio_id, sv.descripcion
-    ORDER BY veces_contratado DESC, sv.descripcion ASC;
+    ORDER BY cantidad_contratada DESC, sv.descripcion ASC;
 END$$
 DELIMITER ;
 
