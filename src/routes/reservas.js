@@ -108,6 +108,7 @@ router.post(
  *   get:
  *     tags: [Reservas]
  *     summary: Listar reservas del usuario logueado
+ *     description: Acceso - Administrador, Empleado y Cliente (según su contexto).
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -153,7 +154,8 @@ router.get(
  * /api/reservas/all:
  *   get:
  *     tags: [Reservas]
- *     summary: Obtener todas las reservas (solo admin y empleado)
+ *     summary: Obtener todas las reservas
+ *     description: Acceso - Administrador y Empleado.
  *     security:
  *       - bearerAuth: []
  *     parameters:
