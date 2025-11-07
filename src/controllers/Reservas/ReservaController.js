@@ -62,6 +62,18 @@ class ReservaController {
         }
     }
 
+    // GET -> servicios asociados a una reserva
+    async serviciosPorReserva(req, res) {
+        try {
+            const id = Number(req.params.id);
+            const servicios = await ReservaService.obtenerServiciosPorReserva(id);
+            res.json(servicios);
+        } catch (error) {
+            console.error('error al obtener servicios de reserva:', error);
+            res.status(500).json({ mensaje: 'error al obtener servicios de la reserva', error });
+        }
+    }
+
 
 
     // GET -> obtener una reserva específica por ID

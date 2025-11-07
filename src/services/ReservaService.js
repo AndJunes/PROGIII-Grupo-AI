@@ -31,6 +31,9 @@ class ReservaService {
         const existente = await ReservaDAO.obtenerPorId(id, true);
         if (!existente) throw new Error("not_found");
         await ReservaDAO.actualizarReserva(id, data);
+        if (Array.isArray(data.servicios)) {
+            await ReservaDAO.reemplazarServicios(id, data.servicios);
+        }
         return this.obtenerPorId(id, true);
     }
 
@@ -72,6 +75,10 @@ class ReservaService {
             const csvPath = await InformeService.informeReservasCsv(datos);
             return { path: csvPath, headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="reporte_reservas.csv"' } };
         }
+    }
+
+    async obtenerServiciosPorReserva(reservaId) {
+        return ReservaDAO.obtenerServiciosPorReserva(reservaId);
     }
 }
 

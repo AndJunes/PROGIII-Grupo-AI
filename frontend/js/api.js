@@ -159,6 +159,10 @@ export class API {
         });
     }
 
+    async getReservaServicios(id) {
+        return this.request(`${CONSTANTS.API_ENDPOINTS.RESERVAS}/${id}/servicios`);
+    }
+
     // ===== SALONES =====
     async getSalones({ includeInactive = false, pagina = 1, limite = 1000 } = {}) {
         const params = new URLSearchParams();

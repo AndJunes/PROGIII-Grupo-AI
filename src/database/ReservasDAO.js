@@ -31,6 +31,25 @@ class ReservaDAO {
         );
     }
 
+    // Reemplazar servicios asociados a una reserva (delete + bulk insert)
+    async reemplazarServicios(reservaId, servicios) {
+        await pool.query('DELETE FROM reservas_servicios WHERE reserva_id = ?', [reservaId]);
+        if (servicios && servicios.length > 0) {
+            const rows = servicios.map(s => [
+                reservaId,
+                s.servicio_id,
+                s.importe || 0,
+                new Date(),
+                new Date()
+            ]);
+            await pool.query(
+                `INSERT INTO reservas_servicios (reserva_id, servicio_id, importe, creado, modificado)
+                 VALUES ?`,
+                [rows]
+            );
+        }
+    }
+
     // Obtener reserva por ID
     async obtenerPorId(id, includeInactive = false) {
         const where = includeInactive ? 'r.reserva_id = ?' : 'r.reserva_id = ? AND r.activo = 1';
@@ -158,6 +177,18 @@ class ReservaDAO {
             [id]
         );
         return rows[0];
+    }
+
+    // Obtener servicios asociados a una reserva
+    async obtenerServiciosPorReserva(reservaId) {
+        const [rows] = await pool.query(
+            `SELECT rs.servicio_id, rs.importe
+             FROM reservas_servicios rs
+             WHERE rs.reserva_id = ?
+             ORDER BY rs.reserva_servicio_id ASC`,
+            [reservaId]
+        );
+        return rows;
     }
 }
 

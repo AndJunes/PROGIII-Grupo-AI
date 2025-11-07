@@ -482,6 +482,17 @@ router.get(
  *               importe_total:
  *                 type: number
  *                 example: 95000
+ *               servicios:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     servicio_id:
+ *                       type: integer
+ *                       example: 3
+ *                     importe:
+ *                       type: number
+ *                       example: 12000
  *               activo:
  *                 type: integer
  *                 enum: [0, 1]
@@ -503,7 +514,9 @@ router.put(
     body('salon_id').optional().isInt().withMessage('Debe ser un número'),
     body('fecha').optional().isISO8601().withMessage('Debe ser una fecha válida'),
     body('hora').optional(),
-    body('servicio_id').optional().isInt().withMessage('Debe ser un número'),
+    body('servicios').optional().isArray().withMessage('Debe ser un arreglo'),
+    body('servicios.*.servicio_id').optional().isInt().withMessage('Debe ser un número'),
+    body('servicios.*.importe').optional().isNumeric().withMessage('Debe ser numérico'),
   ],
   validar,
   ReservaController.actualizar.bind(ReservaController)
@@ -533,6 +546,50 @@ router.delete(
   [param('id').isInt().withMessage('El id debe ser un número')],
   validar,
   ReservaController.eliminar.bind(ReservaController)
+);
+
+/**
+ * @swagger
+ * /api/reservas/{id}/servicios:
+ *   get:
+ *     tags: [Reservas]
+ *     summary: Obtener servicios asociados a una reserva
+ *     description: Devuelve los servicios (servicio_id, importe) asociados a la reserva indicada.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la reserva
+ *     responses:
+ *       200:
+ *         description: Lista de servicios asociados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   servicio_id:
+ *                     type: integer
+ *                   importe:
+ *                     type: number
+ *       401:
+ *         description: No autorizado
+ *       404:
+ *         description: Reserva no encontrada
+ */
+router.get(
+  '/:id/servicios',
+  auth,
+  roleCheck([ADMINISTRADOR, EMPLEADO, CLIENTE]),
+  [param('id').isInt().withMessage('El id debe ser un número')],
+  validar,
+  ReservaController.serviciosPorReserva.bind(ReservaController)
 );
 
 export default router;

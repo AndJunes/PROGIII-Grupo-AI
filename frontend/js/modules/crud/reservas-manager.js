@@ -245,6 +245,28 @@ export class ReservasManager extends BaseCRUDManager {
                                        value="${reserva?.importe_total || ''}" min="0" placeholder="Importe total">
                                 <div class="error-message"></div>
                             </div>
+                            <div class="form-group full-width">
+                                <label>Servicios adicionales</label>
+                                <div class="toolbar" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                                  <input type="text" id="serviciosSearch" class="form-control" placeholder="Buscar servicio..." style="flex:1;" />
+                                  <button type="button" class="btn btn-sm btn-outline" id="selectAllServicios">Todos</button>
+                                  <button type="button" class="btn btn-sm btn-outline" id="clearServicios">Ninguno</button>
+                                </div>
+                                <div id="serviciosSelector" class="list-group" style="max-height: 260px; overflow: auto; border: 1px solid #eee; border-radius: 6px;">
+                                    ${this.servicios.map(s => `
+                                        <div class="list-item servicio-item" data-servicio-id="${s.servicio_id}">
+                                            <label style="display:flex; align-items:center; gap:12px; width:100%; padding:8px 12px;">
+                                                <input type="checkbox" class="servicio-checkbox" data-id="${s.servicio_id}">
+                                                <span style="flex:1;">${s.descripcion}</span>
+                                                <span style="min-width:90px; text-align:right;">${Helpers.formatCurrency(s.importe)}</span>
+                                                <input type="number" class="form-control servicio-importe" step="0.01" min="0" 
+                                                       data-id="${s.servicio_id}" value="${s.importe || 0}" disabled style="max-width:140px;">
+                                            </label>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <small class="help-text">Marcá los servicios, buscá por nombre y ajustá el importe si corresponde.</small>
+                            </div>
                             <div class="form-group">
                                 <label for="foto_cumpleaniero">Foto Cumpleañero (URL)</label>
                                 <input type="text" id="foto_cumpleaniero" class="form-control"
@@ -273,13 +295,65 @@ export class ReservasManager extends BaseCRUDManager {
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
         
-        // Agregar validación en tiempo real
-        this.setupRealTimeValidation('reservaForm', {
-            fecha_reserva: ['required'],
-            salon_id: ['required'],
-            turno_id: ['required'],
-            importe_total: ['required', 'number', 'minValue:0'],
-            activo: ['required']
+        const container = document.getElementById('serviciosSelector');
+        if (container) {
+            // Delegación: checkbox change -> habilitar/deshabilitar importe
+            container.addEventListener('change', (e) => {
+                const cb = e.target.closest('.servicio-checkbox');
+                if (!cb) return;
+                const id = cb.getAttribute('data-id');
+                const input = container.querySelector(`.servicio-importe[data-id="${id}"]`);
+                if (input) input.disabled = !cb.checked;
+            });
+            // Delegación: focus en importe -> auto-check y habilitar
+            container.addEventListener('focusin', (e) => {
+                const inp = e.target.closest('.servicio-importe');
+                if (!inp) return;
+                const id = inp.getAttribute('data-id');
+                const cb = container.querySelector(`.servicio-checkbox[data-id="${id}"]`);
+                if (cb && !cb.checked) {
+                    cb.checked = true;
+                    inp.disabled = false;
+                }
+            });
+        }
+
+        // Buscar: ocultar/mostrar items existentes (sin re-render)
+        const serviciosSearch = document.getElementById('serviciosSearch');
+        if (serviciosSearch && container) {
+            const stripAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const normalized = (s) => stripAccents(String(s || '').toLowerCase());
+            serviciosSearch.addEventListener('input', (e) => {
+                const q = normalized(e.target.value || '');
+                container.querySelectorAll('.servicio-item').forEach(item => {
+                    const labelText = item.querySelector('span')?.textContent || '';
+                    const match = normalized(labelText).includes(q);
+                    item.style.display = match ? '' : 'none';
+                });
+            });
+        }
+
+        // Selección masiva: solo elementos visibles
+        document.getElementById('selectAllServicios')?.addEventListener('click', () => {
+            if (!container) return;
+            container.querySelectorAll('.servicio-item').forEach(item => {
+                if (item.style.display === 'none') return;
+                const cb = item.querySelector('.servicio-checkbox');
+                const inp = item.querySelector('.servicio-importe');
+                if (cb) cb.checked = true;
+                if (inp) inp.disabled = false;
+            });
+        });
+
+        document.getElementById('clearServicios')?.addEventListener('click', () => {
+            if (!container) return;
+            container.querySelectorAll('.servicio-item').forEach(item => {
+                if (item.style.display === 'none') return;
+                const cb = item.querySelector('.servicio-checkbox');
+                const inp = item.querySelector('.servicio-importe');
+                if (cb) cb.checked = false;
+                if (inp) inp.disabled = true;
+            });
         });
     }
 
@@ -330,6 +404,20 @@ export class ReservasManager extends BaseCRUDManager {
                 payload.foto_cumpleaniero = formData.foto_cumpleaniero.trim();
             }
 
+            // Recolectar servicios seleccionados
+            const servicios = [];
+            document.querySelectorAll('.servicio-checkbox:checked').forEach(cb => {
+                const id = parseInt(cb.getAttribute('data-id'));
+                const impInput = document.querySelector(`.servicio-importe[data-id="${id}"]`);
+                const importe = impInput ? parseFloat(impInput.value || '0') : 0;
+                if (!Number.isNaN(id)) {
+                    servicios.push({ servicio_id: id, importe: Number.isNaN(importe) ? 0 : importe });
+                }
+            });
+            if (servicios.length > 0) {
+                payload.servicios = servicios;
+            }
+
             console.log('JSON final a enviar:', JSON.stringify(payload, null, 2));
 
             let result;
@@ -375,8 +463,26 @@ export class ReservasManager extends BaseCRUDManager {
             }
             
             const includeInactive = document.getElementById('toggleInactivosReservas')?.checked || false;
-            const reserva = await this.api.getReserva(id, { includeInactive });
-            this.showReservaModal(reserva);
+            const [reserva, serviciosAsociados] = await Promise.all([
+                this.api.getReserva(id, { includeInactive }),
+                this.api.getReservaServicios(id)
+            ]);
+
+            await this.showReservaModal(reserva);
+
+            // Preseleccionar servicios asociados con sus importes
+            if (Array.isArray(serviciosAsociados) && serviciosAsociados.length > 0) {
+                const container = document.getElementById('serviciosSelector');
+                serviciosAsociados.forEach(s => {
+                    const cb = container?.querySelector(`.servicio-checkbox[data-id="${s.servicio_id}"]`);
+                    const inp = container?.querySelector(`.servicio-importe[data-id="${s.servicio_id}"]`);
+                    if (cb) cb.checked = true;
+                    if (inp) {
+                        inp.disabled = false;
+                        if (s.importe != null) inp.value = s.importe;
+                    }
+                });
+            }
         } catch (error) {
             console.error('❌ Error loading reserva:', error);
             this.showNotification('Error al cargar la reserva: ' + error.message, 'error');
