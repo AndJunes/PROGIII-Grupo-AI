@@ -64,25 +64,33 @@ export class ReportsManager {
             this.showReportLoading(true, reportType, format);
             
             let reportData;
-            let fileName;
+            let fileName = `reporte-${reportType}-${new Date().toISOString().split('T')[0]}`;
+
+            // Filtros (por ahora no los usamos, pero los dejamos para el futuro)
+            // const filters = this.currentFilters; 
 
             switch (reportType) {
                 case 'reservas':
-                    reportData = await this.generateReservasReport(format);
-                    fileName = `reporte-reservas-${new Date().toISOString().split('T')[0]}`;
+                    // Llama a la API de informe de reservas (PDF o CSV)
+                    reportData = await this.api.getReporteReservas(format);
                     break;
-                case 'financiero':
-                    reportData = await this.generateFinancieroReport();
-                    fileName = `reporte-financiero-${new Date().toISOString().split('T')[0]}`;
+                case 'salones':
+                    // Llama a la API de estadísticas de salones (solo CSV)
+                    reportData = await this.api.getEstadisticasSalones(format);
                     break;
-                case 'usuarios':
-                    reportData = await this.generateUsuariosReport();
-                    fileName = `reporte-usuarios-${new Date().toISOString().split('T')[0]}`;
+                case 'servicios':
+                    // Llama a la API de estadísticas de servicios (solo CSV)
+                    reportData = await this.api.getEstadisticasServicios(format);
+                    break;
+                case 'turnos':
+                    // Llama a la API de estadísticas de turnos (solo CSV)
+                    reportData = await this.api.getEstadisticasTurnos(format);
                     break;
                 default:
                     throw new Error(`Tipo de reporte no soportado: ${reportType}`);
             }
 
+            // El backend ya nos da el archivo listo (Blob o texto CSV)
             this.downloadReport(reportData, fileName, format);
             this.showReportSuccess(reportType, format);
             
@@ -90,151 +98,24 @@ export class ReportsManager {
             console.error('Error generating report:', error);
             this.showReportError(reportType, format, error.message);
         } finally {
-            this.showReportLoading(false);
+            this.showReportLoading(false, reportType, format);
         }
     }
 
-    async generateReservasReport(format) {
-        if (format === 'pdf' || format === 'csv') {
-            // Usar el endpoint del backend
-            return await this.api.getReporteReservas(format);
-        } else {
-            // Generar localmente para otros formatos
-            const reservas = await this.api.getAllReservas();
-            return this.processReservasData(reservas);
-        }
-    }
-
-    async generateFinancieroReport() {
-        const [reservas, estadisticasSalones, estadisticasServicios] = await Promise.all([
-            this.api.getAllReservas(),
-            this.api.getEstadisticasSalones(),
-            this.api.getEstadisticasServicios()
-        ]);
-
-        return {
-            titulo: 'Reporte Financiero',
-            periodo: this.getPeriodoTexto(),
-            datos: reservas,
-            metricas: this.calculateMetricasFinancieras(reservas),
-            estadisticas: {
-                salones: estadisticasSalones,
-                servicios: estadisticasServicios
-            }
-        };
-    }
-
-    async generateUsuariosReport() {
-        const usuarios = await this.api.getUsuarios();
-        return {
-            titulo: 'Reporte de Usuarios',
-            periodo: this.getPeriodoTexto(),
-            datos: usuarios,
-            estadisticas: this.calculateEstadisticasUsuarios(usuarios)
-        };
-    }
-
-    processReservasData(reservas) {
-        return {
-            titulo: 'Reporte de Reservas',
-            periodo: this.getPeriodoTexto(),
-            datos: reservas,
-            columnas: [
-                { key: 'id', titulo: 'ID' },
-                { key: 'fecha_reserva', titulo: 'Fecha' },
-                { key: 'salon_nombre', titulo: 'Salón' },
-                { key: 'turno_nombre', titulo: 'Turno' },
-                { key: 'tematica', titulo: 'Temática' },
-                { key: 'importe_total', titulo: 'Importe Total', tipo: 'moneda' }
-            ],
-            totales: {
-                totalReservas: reservas.length,
-                totalIngresos: reservas.reduce((sum, r) => sum + (r.importe_total || 0), 0)
-            }
-        };
-    }
-
-    calculateMetricasFinancieras(reservas) {
-        const ingresosTotales = reservas.reduce((sum, r) => sum + (r.importe_total || 0), 0);
-        return {
-            ingresosTotales: ingresosTotales,
-            reservasTotales: reservas.length,
-            promedioPorReserva: reservas.length > 0 ? ingresosTotales / reservas.length : 0,
-            reservasActivas: reservas.filter(r => r.activo).length
-        };
-    }
-
-    calculateEstadisticasUsuarios(usuarios) {
-        const porTipo = usuarios.reduce((acc, usuario) => {
-            const tipo = Helpers.getTipoUsuario(usuario.tipo_usuario);
-            acc[tipo] = (acc[tipo] || 0) + 1;
-            return acc;
-        }, {});
-
-        return {
-            totalUsuarios: usuarios.length,
-            porTipo: porTipo
-        };
-    }
 
     downloadReport(reportData, fileName, format) {
         if (format === 'pdf' && reportData instanceof Blob) {
+            // Descarga directa de Blob para PDF
             this.downloadBlob(reportData, `${fileName}.pdf`, 'application/pdf');
-        } else if (format === 'csv' && typeof reportData === 'string') {
-            this.downloadBlob(new Blob([reportData], { type: 'text/csv' }), `${fileName}.csv`, 'text/csv');
-        } else {
-            // Generar reporte localmente
-            const content = this.generateLocalReport(reportData, format);
-            const mimeType = this.getMimeType(format);
-            this.downloadBlob(new Blob([content], { type: mimeType }), `${fileName}.${format}`, mimeType);
-        }
-    }
-
-    generateLocalReport(reportData, format) {
-        switch (format) {
-            case 'csv':
-                return this.generateCSV(reportData);
-            case 'pdf':
-                return this.generatePDF(reportData);
-            default:
-                return JSON.stringify(reportData, null, 2);
-        }
-    }
-
-    generateCSV(reportData) {
-        let csvContent = '';
         
-        if (reportData.columnas) {
-            // Reporte tabular
-            const headers = reportData.columnas.map(col => col.titulo);
-            csvContent += headers.join(',') + '\n';
-
-            reportData.datos.forEach(item => {
-                const row = reportData.columnas.map(col => {
-                    let value = item[col.key];
-                    if (col.tipo === 'moneda') {
-                        value = Helpers.formatCurrency(value, false);
-                    }
-                    return `"${value || ''}"`;
-                });
-                csvContent += row.join(',') + '\n';
-            });
-        } else if (reportData.metricas) {
-            // Reporte de métricas
-            csvContent = 'Métrica,Valor\n';
-            Object.entries(reportData.metricas).forEach(([key, value]) => {
-                const metrica = this.formatMetricaNombre(key);
-                csvContent += `"${metrica}","${value}"\n`;
-            });
+        } else if (format === 'csv' && typeof reportData === 'string') {
+            // Descarga de texto plano como CSV
+            this.downloadBlob(new Blob([reportData], { type: 'text/csv' }), `${fileName}.csv`, 'text/csv');
+        
+        } else {
+            console.error('Formato de reporte no esperado recibido del backend:', reportData);
+            throw new Error('El backend devolvió un formato de archivo desconocido.');
         }
-
-        return csvContent;
-    }
-
-    generatePDF(reportData) {
-        // En una implementación real, usaríamos jsPDF
-        // Por ahora devolvemos un string simple
-        return `PDF Report: ${reportData.titulo}\nPeríodo: ${reportData.periodo}\n\nEste es un reporte PDF generado localmente.`;
     }
 
     downloadBlob(blob, fileName, mimeType) {
@@ -247,35 +128,6 @@ export class ReportsManager {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-    }
-
-    getMimeType(format) {
-        const mimeTypes = {
-            'pdf': 'application/pdf',
-            'csv': 'text/csv',
-            'excel': 'application/vnd.ms-excel',
-            'json': 'application/json'
-        };
-        return mimeTypes[format] || 'text/plain';
-    }
-
-    getPeriodoTexto() {
-        const { fechaInicio, fechaFin } = this.currentFilters;
-        
-        if (fechaInicio && fechaFin) {
-            return `${fechaInicio} al ${fechaFin}`;
-        }
-        return 'Todo el período';
-    }
-
-    formatMetricaNombre(key) {
-        const nombres = {
-            ingresosTotales: 'Ingresos Totales',
-            reservasTotales: 'Reservas Totales',
-            promedioPorReserva: 'Promedio por Reserva',
-            reservasActivas: 'Reservas Activas'
-        };
-        return nombres[key] || key;
     }
 
     // Estados de UI

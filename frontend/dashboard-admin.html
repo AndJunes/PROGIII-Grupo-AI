@@ -404,9 +404,10 @@
           </div>
 
           <div class="reports-grid">
-            <div class="report-card">
+            
+                        <div class="report-card">
               <h3>Reporte de Reservas</h3>
-              <p>Genera reportes completos de todas las reservas</p>
+              <p>Genera un listado detallado de todas las reservas.</p>
               <div class="report-actions">
                 <button
                   class="btn btn-outline"
@@ -427,21 +428,13 @@
               </div>
             </div>
 
-            <div class="report-card">
-              <h3>Reporte Financiero</h3>
-              <p>Informes de ingresos y gastos del sistema</p>
+                        <div class="report-card">
+              <h3>Estadísticas de Salones</h3>
+              <p>Informe estadístico de reservas y facturación por salón.</p>
               <div class="report-actions">
                 <button
                   class="btn btn-outline"
-                  data-report="financiero"
-                  data-format="pdf"
-                >
-                  <span class="btn-icon material-icons">picture_as_pdf</span>
-                  PDF
-                </button>
-                <button
-                  class="btn btn-outline"
-                  data-report="financiero"
+                  data-report="salones"
                   data-format="csv"
                 >
                   <span class="btn-icon material-icons">table_chart</span>
@@ -450,21 +443,13 @@
               </div>
             </div>
 
-            <div class="report-card">
-              <h3>Reporte de Usuarios</h3>
-              <p>Listado completo de usuarios registrados</p>
+                        <div class="report-card">
+              <h3>Estadísticas de Servicios</h3>
+              <p>Informe estadístico de servicios más contratados.</p>
               <div class="report-actions">
                 <button
                   class="btn btn-outline"
-                  data-report="usuarios"
-                  data-format="pdf"
-                >
-                  <span class="btn-icon material-icons">picture_as_pdf</span>
-                  PDF
-                </button>
-                <button
-                  class="btn btn-outline"
-                  data-report="usuarios"
+                  data-report="servicios"
                   data-format="csv"
                 >
                   <span class="btn-icon material-icons">table_chart</span>
@@ -472,6 +457,22 @@
                 </button>
               </div>
             </div>
+
+                        <div class="report-card">
+              <h3>Estadísticas de Turnos</h3>
+              <p>Informe estadístico de reservas por turno.</p>
+              <div class="report-actions">
+                <button
+                  class="btn btn-outline"
+                  data-report="turnos"
+                  data-format="csv"
+                >
+                  <span class="btn-icon material-icons">table_chart</span>
+                  CSV
+                </button>
+              </div>
+            </div>
+        
           </div>
 
           <div class="report-filters">

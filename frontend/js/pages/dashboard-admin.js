@@ -44,7 +44,7 @@ class DashboardAdmin {
 
     initializeModules() {
         this.modules.sidebar = new SidebarManager();
-        this.modules.notifications = new NotificationsManager();
+        //this.modules.notifications = new NotificationsManager();
         this.modules.crud = new CRUDManager();
         this.modules.reports = new ReportsManager();
         this.modules.dashboard = new DashboardManager();
@@ -52,7 +52,7 @@ class DashboardAdmin {
 
         // Hacer disponibles globalmente para compatibilidad
         window.sidebarManager = this.modules.sidebar;
-        window.notificationsManager = this.modules.notifications;
+        //window.notificationsManager = this.modules.notifications;
         window.crudManager = this.modules.crud;
         window.reportsManager = this.modules.reports;
         window.dashboardManager = this.modules.dashboard;
