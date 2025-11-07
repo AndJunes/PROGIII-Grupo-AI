@@ -77,7 +77,7 @@ PROGIII-Grupo-AI/
 
 ---
 
-##  Configuracion de la Base de Datos - (En el caso que sea la primera vez)
+##  Configuracion de la Base de Datos - (Primera interaccion con una API Desconocida)
 
 1.  Crea la base de datos (con usuario adminsitrador). Se recomienda
 usar un usuario con permisos de administrador (como root) para crear
