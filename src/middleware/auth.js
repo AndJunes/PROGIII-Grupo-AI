@@ -25,7 +25,11 @@ const auth = async (req, res, next) => {
         //guardamos el usuario en la request
         req.usuario = {
             usuario_id: usuario.usuario_id,
-            tipo_usuario: usuario.tipo_usuario
+            tipo_usuario: usuario.tipo_usuario,
+            nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            nombre_usuario: usuario.nombre_usuario,
+            email: usuario.email || null,
         };
 
         

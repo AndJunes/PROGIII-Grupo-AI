@@ -2,29 +2,25 @@ import TurnosDAO from '../database/TurnosDAO.js';
 
 class TurnosService {
 
-    // Crear turno
     async create(data) {
-        return TurnosDAO.create(data);
+        return await TurnosDAO.create(data);
     }
 
-    // Listar todos los turnos activos
-    async getAll() {
-        return TurnosDAO.getAll();
+    async getAllWithPagination(limit, offset, includeInactive) {
+        const { rows, total } = await TurnosDAO.findAllWithPagination(limit, offset, includeInactive);
+        return { turnos: rows, total };
     }
 
-    // Obtener turno por ID
     async getById(id) {
-        return TurnosDAO.getById(id);
+        return await TurnosDAO.getById(id);
     }
 
-    // Actualizar turno
     async update(id, data) {
-        return TurnosDAO.update(id, data);
+        return await TurnosDAO.update(id, data);
     }
 
-    // Eliminar turno (soft delete)
     async delete(id) {
-        return TurnosDAO.delete(id);
+        return await TurnosDAO.delete(id);
     }
 }
 

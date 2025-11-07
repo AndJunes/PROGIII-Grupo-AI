@@ -2,9 +2,13 @@
 body.login {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   min-height: 100vh;
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   position: relative;
+  margin: 0;
+  padding: var(--space-xl);
 }
 
 body.login::before {
@@ -20,20 +24,23 @@ body.login::before {
   pointer-events: none;
 }
 
+/* Contenedor principal - CORREGIDO */
 .login .container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  width: 100%;
   max-width: 450px;
-  padding: var(--space-xl) var(--space-md);
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
 }
 
+/* Header centrado */
 .login-header {
   text-align: center;
   margin-bottom: var(--space-xxl);
+  width: 100%;
 }
 
 .login-header h1 {
@@ -48,8 +55,15 @@ body.login::before {
 .login-header p {
   color: var(--text-secondary);
   font-size: 1.1rem;
+  margin: 0;
 }
 
+/* Clases de centrado adicionales */
+.text-center {
+  text-align: center;
+}
+
+/* Formulario centrado */
 .loginForm {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -57,75 +71,208 @@ body.login::before {
   padding: var(--space-xxl);
   box-shadow: var(--shadow-lg);
   margin-bottom: var(--space-xl);
+  width: 100%;
 }
 
+/* Grupos de inputs */
+.input-group {
+  margin-bottom: var(--space-lg);
+  width: 100%;
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-md);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input-success {
+  border-color: var(--success);
+}
+
+.input-error {
+  border-color: var(--error);
+}
+
+.error-message {
+  display: block;
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-top: var(--space-xs);
+  min-height: 1.25rem;
+}
+
+/* Opciones del login */
 .login-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-md);
-}
-
-.login-links {
-  text-align: center;
-  margin-top: var(--space-lg);
-}
-
-.login-links p {
-  margin-bottom: var(--space-sm);
-}
-
-.system-info {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  padding: var(--space-xl);
-  margin-top: var(--space-xl);
-}
-
-.system-info h3 {
-  text-align: center;
-  color: var(--accent-primary);
   margin-bottom: var(--space-lg);
+  width: 100%;
 }
 
-.user-types {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-md);
+/* Checkbox personalizado */
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
-.user-type {
-  text-align: center;
-  padding: var(--space-md);
-  background: var(--bg-tertiary);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  transition: all var(--transition-normal);
+.checkbox input {
+  display: none;
 }
 
-.user-type:hover {
-  transform: translateY(-2px);
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 3px;
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.checkbox input:checked + .checkmark {
+  background-color: var(--accent-primary);
   border-color: var(--accent-primary);
 }
 
-.user-type h4 {
-  color: var(--accent-primary);
-  margin-bottom: var(--space-sm);
+.checkbox input:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--bg-primary);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
-.user-type p {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin: 0;
+/* Botón de login - CORREGIDO para la clase .button */
+.button {
+  width: 100%;
+  padding: var(--space-md);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border: none;
+  border-radius: var(--border-radius);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
 }
 
-.login-footer {
-  margin-top: auto;
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Mensajes del sistema */
+#system-messages {
+  width: 100%;
+  max-width: 450px;
+  margin-bottom: var(--space-lg);
+}
+
+.system-message {
+  padding: var(--space-md);
+  border-radius: var(--border-radius);
   text-align: center;
-  padding: var(--space-lg) 0;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
+  font-weight: 500;
+  margin-bottom: var(--space-sm);
+  width: 100%;
+}
+
+.system-message.success {
+  background-color: rgba(0, 255, 136, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.system-message.error {
+  background-color: rgba(255, 51, 102, 0.1);
+  color: var(--error);
+  border: 1px solid rgba(255, 51, 102, 0.2);
+}
+
+/* Responsive para login */
+@media (max-width: 768px) {
+  body.login {
+    padding: var(--space-lg);
+  }
+  
+  .login .container {
+    max-width: 100%;
+  }
+  
+  .loginForm {
+    padding: var(--space-xl);
+  }
+  
+  .login-header h1 {
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body.login {
+    padding: var(--space-md);
+    justify-content: flex-start;
+    padding-top: var(--space-xl);
+  }
+  
+  .loginForm {
+    padding: var(--space-lg);
+  }
+  
+  .login-header h1 {
+    font-size: 2rem;
+  }
+  
+  .login-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
 }

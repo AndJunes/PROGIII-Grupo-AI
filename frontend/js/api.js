@@ -36,7 +36,8 @@ export class API {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+                const msg = errorData.mensaje || errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`;
+                throw new Error(msg);
             }
 
             // Para endpoints que devuelven archivos (PDF, CSV)
@@ -56,16 +57,30 @@ export class API {
     }
 
     // ===== USUARIOS =====
-    async getUsuarios() {
-        return this.request(CONSTANTS.API_ENDPOINTS.USUARIOS);
+    async getUsuarios({ includeInactive = false, pagina = 1, limite = 1000, orden, direccion } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        if (orden) params.set('orden', String(orden));
+        if (direccion) params.set('direccion', String(direccion));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.USUARIOS}?${qs}` : CONSTANTS.API_ENDPOINTS.USUARIOS;
+        return this.request(url);
     }
 
     async getClientes() {
         return this.request(CONSTANTS.API_ENDPOINTS.CLIENTES);
     }
 
-    async getUsuario(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.USUARIOS}/${id}`);
+    async getUsuario(id, { includeInactive = false } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const sep = qs ? `?${qs}` : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.USUARIOS}/${id}${sep}`);
     }
 
     async createUsuario(data) {
@@ -89,16 +104,39 @@ export class API {
     }
 
     // ===== RESERVAS =====
-    async getReservas() {
-        return this.request(CONSTANTS.API_ENDPOINTS.RESERVAS);
+    async getReservas({ includeInactive = false, pagina = 1, limite = 1000, orden, direccion } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        if (orden) params.set('orden', String(orden));
+        if (direccion) params.set('direccion', String(direccion));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.RESERVAS}?${qs}` : CONSTANTS.API_ENDPOINTS.RESERVAS;
+        return this.request(url);
     }
 
-    async getAllReservas() {
-        return this.request(CONSTANTS.API_ENDPOINTS.RESERVAS_ALL);
+    async getAllReservas({ includeInactive = false, pagina = 1, limite = 1000, orden, direccion } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        if (orden) params.set('orden', String(orden));
+        if (direccion) params.set('direccion', String(direccion));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.RESERVAS_ALL}?${qs}` : CONSTANTS.API_ENDPOINTS.RESERVAS_ALL;
+        return this.request(url);
     }
 
-    async getReserva(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.RESERVAS}/${id}`);
+    async getReserva(id, { includeInactive = false } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const sep = qs ? `?${qs}` : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.RESERVAS}/${id}${sep}`);
     }
 
     async createReserva(data) {
@@ -121,13 +159,26 @@ export class API {
         });
     }
 
-    // ===== SALONES =====
-    async getSalones() {
-        return this.request(CONSTANTS.API_ENDPOINTS.SALONES);
+    async getReservaServicios(id) {
+        return this.request(`${CONSTANTS.API_ENDPOINTS.RESERVAS}/${id}/servicios`);
     }
 
-    async getSalon(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.SALONES}/${id}`);
+    // ===== SALONES =====
+    async getSalones({ includeInactive = false, pagina = 1, limite = 1000 } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (pagina != null) params.set('pagina', String(pagina));
+        if (limite != null) params.set('limite', String(limite));
+        // Evitar respuestas viejas en cambios rápidos del toggle
+        params.set('ts', String(Date.now()));
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.SALONES}?${qs}` : CONSTANTS.API_ENDPOINTS.SALONES;
+        return this.request(url);
+    }
+
+    async getSalon(id, { includeInactive = false } = {}) {
+        const qs = includeInactive ? '?include_inactive=true' : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.SALONES}/${id}${qs}`);
     }
 
     async createSalon(data) {
@@ -151,12 +202,24 @@ export class API {
     }
 
     // ===== SERVICIOS =====
-    async getServicios() {
-        return this.request(CONSTANTS.API_ENDPOINTS.SERVICIOS);
+    async getServicios({ includeInactive = false, page = 1, limit = 1000 } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        if (page != null) params.set('page', String(page));
+        if (limit != null) params.set('limit', String(limit));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.SERVICIOS}?${qs}` : CONSTANTS.API_ENDPOINTS.SERVICIOS;
+        return this.request(url);
     }
 
-    async getServicio(id) {
-        return this.request(`${CONSTANTS.API_ENDPOINTS.SERVICIOS}/${id}`);
+    async getServicio(id, { includeInactive = false } = {}) {
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const sep = qs ? `?${qs}` : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.SERVICIOS}/${id}${sep}`);
     }
 
     async createServicio(data) {
@@ -180,8 +243,16 @@ export class API {
     }
 
     // ===== TURNOS =====
-    async getTurnos() {
-        return this.request(CONSTANTS.API_ENDPOINTS.TURNOS);
+    async getTurnos({ page = 1, limit = 100, includeInactive=false} = {}) {
+        const params = new URLSearchParams();
+        if (page != null) params.set('page', String(page));
+        if (limit != null) params.set('limit', String(limit));
+        if(includeInactive) params.set('include_inactive', 'true');
+        // Evitar respuestas viejas en cache
+        params.set('ts', String(Date.now())); 
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.TURNOS}?${qs}` : CONSTANTS.API_ENDPOINTS.TURNOS;
+        return this.request(url);
     }
 
     async getTurno(id) {
@@ -232,6 +303,29 @@ export class API {
             `${CONSTANTS.API_ENDPOINTS.ESTADISTICAS_TURNOS}?formato=${formato}` :
             CONSTANTS.API_ENDPOINTS.ESTADISTICAS_TURNOS;
         return this.request(endpoint);
+    }
+
+    // ===== AUDITORIA =====
+    async getAuditoria({ entity, action, user_id, from, to, page = 1, limit = 20 } = {}) {
+        const params = new URLSearchParams();
+        if (entity) params.set('entity', entity);
+        if (action) params.set('action', action);
+        if (user_id) params.set('user_id', String(user_id));
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        if (page != null) params.set('page', String(page));
+        if (limit != null) params.set('limit', String(limit));
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const url = qs ? `${CONSTANTS.API_ENDPOINTS.AUDITORIA}?${qs}` : CONSTANTS.API_ENDPOINTS.AUDITORIA;
+        return this.request(url);
+    }
+
+    async getAuditoriaById(id) {
+        const params = new URLSearchParams();
+        params.set('_ts', Date.now().toString());
+        const sep = `?${params.toString()}`;
+        return this.request(`${CONSTANTS.API_ENDPOINTS.AUDITORIA}/${id}${sep}`);
     }
 }
 

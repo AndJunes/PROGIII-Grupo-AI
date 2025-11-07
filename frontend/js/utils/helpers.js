@@ -12,6 +12,15 @@ export class Helpers {
         return date.toLocaleString('es-ES');
     }
 
+    static formatTime(timeString) {
+        if (!timeString) return 'N/A';
+        if (typeof timeString === 'string' && timeString.includes(':')) {
+            const parts = timeString.split(':');
+            return `${parts[0]}:${parts[1]}`;
+        }
+        return timeString; 
+    }
+
     static formatCurrency(amount) {
         return new Intl.NumberFormat('es-AR', {
             style: 'currency',

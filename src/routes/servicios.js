@@ -9,6 +9,8 @@ import ServiciosController from '../controllers/Servicios/ServiciosController.js
 
 const router = express.Router();
 const cache = apicache.middleware;
+// middleware para etiquetar el grupo de caché 'servicios'
+const tagServicios = (req, res, next) => { res.apicacheGroup = 'servicios'; next(); };
 
 /**
  * @swagger
@@ -18,12 +20,19 @@ const cache = apicache.middleware;
  *     summary: Obtener todos los servicios
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Incluir servicios inactivos (activo = 0)
  *     responses:
  *       200:
  *         description: Lista de todos los servicios
  */
 router.get(
   '/',
+  tagServicios,
   cache('5 minutes'),
   auth,
   roleCheck([CLIENTE, EMPLEADO, ADMINISTRADOR]),
@@ -39,6 +48,11 @@ router.get(
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
+ *         description: Permite obtener un servicio inactivo
  *       - in: path
  *         name: id
  *         required: true
@@ -50,6 +64,7 @@ router.get(
  */
 router.get(
   '/:id',
+  tagServicios,
   cache('5 minutes'),
   auth,
   roleCheck([EMPLEADO, ADMINISTRADOR]),

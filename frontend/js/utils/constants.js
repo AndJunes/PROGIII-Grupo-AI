@@ -26,6 +26,7 @@ export const CONSTANTS = {
         SALONES: '/salones',
         SERVICIOS: '/servicios',
         TURNOS: '/turnos',
+        AUDITORIA: '/auditoria',
         REPORTE_RESERVAS: '/reservas/informe',
         ESTADISTICAS_SALONES: '/reservas/estadisticas/salones',
         ESTADISTICAS_SERVICIOS: '/reservas/estadisticas/servicios',

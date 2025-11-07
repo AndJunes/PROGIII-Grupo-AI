@@ -2,11 +2,20 @@ import pool from "../database/database.js";
 
 class ServiciosDAO {
 
-    async getAll() {
+    async findAllWithFilters(limit, offset, includeInactive = false) {
+        // Consulta de paginación (opcionalmente incluye inactivos)
+        const where = includeInactive ? '1=1' : 'activo = 1';
         const [rows] = await pool.query(
-            `SELECT * FROM servicios WHERE activo = 1 ORDER BY servicio_id ASC`
+            `SELECT * FROM servicios WHERE ${where} ORDER BY servicio_id ASC LIMIT ? OFFSET ?`,
+            [Number(limit), Number(offset)]
         );
-        return rows;
+
+        // Total de registros
+        const [[{ total }]] = await pool.query(
+            `SELECT COUNT(*) AS total FROM servicios WHERE ${where}`
+        );
+
+        return { rows, total };
     }
 
     async getByUser(usuarioId) {
@@ -21,9 +30,10 @@ class ServiciosDAO {
         return rows;
     }
 
-    async getById(id) {
+    async getById(id, includeInactive = false) {
+        const where = includeInactive ? 'servicio_id = ?' : 'servicio_id = ? AND activo = 1';
         const [rows] = await pool.query(
-            `SELECT * FROM servicios WHERE servicio_id = ? AND activo = 1`,
+            `SELECT * FROM servicios WHERE ${where}`,
             [id]
         );
         return rows[0];

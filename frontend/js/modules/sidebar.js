@@ -35,13 +35,16 @@ export class SidebarManager {
             this.closeMobileMenu();
         });
 
-        // Navegación entre secciones
+        // Navegación entre secciones (solo links internos con data-section)
         this.navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                e.preventDefault();
                 const section = link.getAttribute('data-section');
-                this.setActiveSection(section);
-                this.closeMobileMenu();
+                if (section) {
+                    e.preventDefault();
+                    this.setActiveSection(section);
+                    this.closeMobileMenu();
+                }
+                // Si no hay data-section, es un enlace externo (dejar que el navegador navegue)
             });
         });
 
@@ -110,12 +113,14 @@ export class SidebarManager {
         const titles = {
             'dashboard': 'Dashboard',
             'reservas': 'Gestión de Reservas',
+            'clientes': 'Clientes',
             'salones': 'Gestión de Salones',
             'servicios': 'Gestión de Servicios',
             'turnos': 'Gestión de Turnos',
             'usuarios': 'Gestión de Usuarios',
             'reportes': 'Generación de Reportes',
-            'estadisticas': 'Estadísticas del Sistema'
+            'estadisticas': 'Estadísticas del Sistema',
+            'auditoria': 'Auditoría'
         };
 
         if (this.pageTitle) {

@@ -1,14 +1,35 @@
 import pool from "../database/database.js";
 
 class SalonesDAO {
-    async findAll() {
-        const [rows] = await pool.execute('SELECT * FROM salones WHERE activo = 1');
+    async findAllWithFilters({ pagina = 1, limite = 10, orden = 'salon_id', direccion = 'ASC', filtro_titulo = '' }, includeInactive = false) {
+        let sql = `SELECT * FROM salones WHERE ${includeInactive ? '1=1' : 'activo = 1'}`;
+        const params = [];
+
+        if (filtro_titulo) {
+            sql += ` AND titulo LIKE ?`;
+            params.push(`%${filtro_titulo}%`);
+        }
+
+        const columnasPermitidas = ['salon_id', 'titulo', 'importe', 'capacidad'];
+        const direccionPermitida = direccion.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        const ordenFinal = columnasPermitidas.includes(orden) ? orden : 'salon_id';
+        sql += ` ORDER BY ${ordenFinal} ${direccionPermitida}`;
+
+        const limit = Number(limite);
+        const offset = (Number(pagina) - 1) * limit;
+
+        if (Number.isFinite(limit) && Number.isFinite(offset)) {
+            sql += ` LIMIT ${limit} OFFSET ${offset}`;
+        }
+
+        const [rows] = await pool.execute(sql, params);
         return rows;
     }
 
-    async findById(id) {
+    async findById(id, includeInactive = false) {
+        const where = includeInactive ? 'salon_id = ?' : 'salon_id = ? AND activo = 1';
         const [rows] = await pool.execute(
-            'SELECT * FROM salones WHERE salon_id = ? AND activo = 1',
+            `SELECT * FROM salones WHERE ${where}`,
             [id]
         );
         return rows[0] || null;

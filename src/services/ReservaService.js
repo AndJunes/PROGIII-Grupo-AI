@@ -17,32 +17,35 @@ class ReservaService {
     }
 
 
-    async listar(usuarioId) {
-        return ReservaDAO.listarPorUsuario(usuarioId);
+    async listar(usuarioId, opciones = {}, includeInactive = false) {
+        return ReservaDAO.listarPorUsuario(usuarioId, opciones, includeInactive);
     }
 
-    async obtenerPorId(id) {
-        const reserva = await ReservaDAO.obtenerPorId(id);
-        if (!reserva) throw new Error("no se encontro");
+    async obtenerPorId(id, includeInactive = false) {
+        const reserva = await ReservaDAO.obtenerPorId(id, includeInactive);
+        if (!reserva) throw new Error("not_found");
         return reserva;
     }
 
     async actualizar(id, data) {
-        const existente = await ReservaDAO.obtenerPorId(id);
-        if (!existente) throw new Error("no se encontro");
+        const existente = await ReservaDAO.obtenerPorId(id, true);
+        if (!existente) throw new Error("not_found");
         await ReservaDAO.actualizarReserva(id, data);
-        return this.obtenerPorId(id);
+        if (Array.isArray(data.servicios)) {
+            await ReservaDAO.reemplazarServicios(id, data.servicios);
+        }
+        return this.obtenerPorId(id, true);
     }
 
     async eliminar(id) {
-        const existente = await ReservaDAO.obtenerPorId(id);
-        if (!existente) throw new Error("no se encontro");
+        const existente = await ReservaDAO.obtenerPorId(id, true);
+        if (!existente) throw new Error("not_found");
         await ReservaDAO.eliminarReserva(id);
         return { mensaje: "Reserva eliminada correctamente (soft delete)" };
     }
 
-    async listarTodas() {
-        return ReservaDAO.listarTodas();
+    async listarTodas(opciones = {}, includeInactive = false) {
+        return ReservaDAO.listarTodas(opciones, includeInactive);
     }
 
     async generarReporteDetalle() {
@@ -72,6 +75,10 @@ class ReservaService {
             const csvPath = await InformeService.informeReservasCsv(datos);
             return { path: csvPath, headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="reporte_reservas.csv"' } };
         }
+    }
+
+    async obtenerServiciosPorReserva(reservaId) {
+        return ReservaDAO.obtenerServiciosPorReserva(reservaId);
     }
 }
 

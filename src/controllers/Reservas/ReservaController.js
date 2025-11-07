@@ -1,15 +1,26 @@
 import ReservaService from "../../services/ReservaService.js";
 import InformeService from '../../services/InformeService.js';
 import fs from 'fs';
+import apicache from 'apicache';
+import AuditLogger from '../../utils/AuditLogger.js';
 
 class ReservaController {
     // POST -> crea una reserva (cliente)
-    static async crear(req, res) {
+    async crear(req, res) {
     try {
         const nuevaReserva = await ReservaService.crear(req.body, req.usuario.usuario_id);
         res.status(201).json({
             mensaje: 'Reserva creada correctamente',
             reserva: nuevaReserva
+        });
+        apicache.clear('reservas');
+        // auditoría
+        await AuditLogger.log({
+            req,
+            entity: 'reservas',
+            entityId: nuevaReserva?.id || nuevaReserva?.reserva_id,
+            action: 'create',
+            changes: { after: nuevaReserva }
         });
     } catch (error) {
         console.error('error al crear reserva:', error);
@@ -19,39 +30,57 @@ class ReservaController {
 
 
     // GET -> listar reservas del usuario logueado
-static async listar(req, res) {
-    try {
-        const { tipo_usuario, usuario_id } = req.usuario;
+    async listar(req, res) {
+        try {
+            const { tipo_usuario, usuario_id } = req.usuario;
+            const { pagina, limite, orden, direccion } = req.query;
+            const includeInactive = req.query.include_inactive === 'true';
+            const usuarioIdNum = Number(usuario_id);
 
-        // Convertimos a number por seguridad
-        const usuarioIdNum = Number(usuario_id);
-        
-        let reservas;
+            let reservas;
+            if (tipo_usuario === 3) {
+                // Cliente: solo sus reservas
+                reservas = await ReservaService.listar(usuarioIdNum, { pagina, limite, orden, direccion }, includeInactive);
+            } else {
+                // Admin/Empleado: todas las reservas
+                reservas = await ReservaService.listarTodas({
+                    pagina: parseInt(pagina) || 1,
+                    limite: parseInt(limite) || 10,
+                    orden,
+                    direccion
+                }, includeInactive);
+            }
 
-        if (tipo_usuario === 3) {
-            // CLIENTE → siempre solo sus reservas
-            reservas = await ReservaService.listar(usuarioIdNum);
-        } else {
-            // EMPLEADO / ADMIN → por defecto solo sus reservas
-            reservas = await ReservaService.listar(usuarioIdNum);
+            if (!reservas || reservas.length === 0) {
+                return res.json({ mensaje: "No hay reservas disponibles para este usuario" });
+            }
+
+            res.json(reservas);
+        } catch (error) {
+            console.error('Error al listar reservas:', error);
+            res.status(500).json({ mensaje: 'Error al listar reservas', error });
         }
-
-        if (!reservas || reservas.length === 0) {
-            return res.json({ mensaje: "No hay reservas disponibles para este usuario" });
-        }
-
-        res.json(reservas);
-    } catch (error) {
-        console.error('Error al listar reservas:', error);
-        res.status(500).json({ mensaje: 'Error al listar reservas', error });
     }
-}
+
+    // GET -> servicios asociados a una reserva
+    async serviciosPorReserva(req, res) {
+        try {
+            const id = Number(req.params.id);
+            const servicios = await ReservaService.obtenerServiciosPorReserva(id);
+            res.json(servicios);
+        } catch (error) {
+            console.error('error al obtener servicios de reserva:', error);
+            res.status(500).json({ mensaje: 'error al obtener servicios de la reserva', error });
+        }
+    }
+
 
 
     // GET -> obtener una reserva específica por ID
-    static async obtenerPorId(req, res) {
+    async obtenerPorId(req, res) {
         try {
-            const reserva = await ReservaService.obtenerPorId(req.params.id);
+            const includeInactive = req.query.include_inactive === 'true';
+            const reserva = await ReservaService.obtenerPorId(req.params.id, includeInactive);
             res.json(reserva);
         } catch (error) {
             if (error.message === "not_found") {
@@ -63,10 +92,20 @@ static async listar(req, res) {
     }
 
     // PUT -> actualizar reservas (solo admin)
-    static async actualizar(req, res) {
+    async actualizar(req, res) {
         try {
+            const before = await ReservaService.obtenerPorId(req.params.id, true);
             const reserva = await ReservaService.actualizar(req.params.id, req.body);
             res.json({ mensaje: 'reserva actualizada correctamente', reserva });
+            apicache.clear('reservas');
+            // auditoría
+            await AuditLogger.log({
+                req,
+                entity: 'reservas',
+                entityId: Number(req.params.id),
+                action: 'update',
+                changes: { before, after: reserva }
+            });
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'reserva no encontrada'});
@@ -77,10 +116,20 @@ static async listar(req, res) {
     }
 
     // DELETE -> eliminar reserva (soft delete, solo admin)
-    static async eliminar(req, res) {
+    async eliminar(req, res) {
         try {
+            const before = await ReservaService.obtenerPorId(req.params.id, true);
             const resultado = await ReservaService.eliminar(req.params.id);
             res.json(resultado);
+            apicache.clear('reservas');
+            // auditoría
+            await AuditLogger.log({
+                req,
+                entity: 'reservas',
+                entityId: Number(req.params.id),
+                action: 'delete',
+                changes: { before }
+            });
         } catch (error) {
             if (error.message === "not_found") {
                 return res.status(404).json({ mensaje: 'reserva no encontrada o ya eliminada'});
@@ -91,9 +140,20 @@ static async listar(req, res) {
     }
 
     // GET -> listar todas las reservas (solo admin o empleado)
-    static async listarTodas(req, res) {
+    async listarTodas(req, res) {
         try {
-            const reservas = await ReservaService.listarTodas();
+            const { pagina, limite, orden, direccion, filtro_salon, filtro_usuario } = req.query;
+            const includeInactive = req.query.include_inactive === 'true';
+
+            const reservas = await ReservaService.listarTodas({
+                pagina: parseInt(pagina) || 1,
+                limite: parseInt(limite) || 10,
+                orden,
+                direccion,
+                filtro_salon,
+                filtro_usuario
+            }, includeInactive);
+
             res.json(reservas);
         } catch (error) {
             console.error('error al listar todas las reservas:', error);
@@ -101,7 +161,8 @@ static async listar(req, res) {
         }
     }
 
-    static async informe(req, res) {
+
+    async informe(req, res) {
         try {
             // Lee el formato de la URL
             const formato = req.query.formato;
@@ -134,7 +195,7 @@ static async listar(req, res) {
         }
     }
 
-    static async estadisticaSalones(req, res) {
+    async estadisticaSalones(req, res) {
         try {
             const formato = req.query.formato;
             // sacamos los datos del procedure
@@ -169,7 +230,7 @@ static async listar(req, res) {
     }
 
     // GET -> Devuelve la estadística de Servicios (JSON o CSV)
-    static async estadisticaServicios(req, res) {
+    async estadisticaServicios(req, res) {
         try {
             const formato = req.query.formato;
             const datos = await ReservaService.generarReporteEstadisticoServicios();
@@ -203,7 +264,7 @@ static async listar(req, res) {
     }
 
     // GET -> Devuelve la estadística de Turnos (JSON o CSV)
-    static async estadisticaTurnos(req, res) {
+    async estadisticaTurnos(req, res) {
         try {
             const formato = req.query.formato;
             const datos = await ReservaService.generarReporteEstadisticoTurnos();
@@ -237,5 +298,4 @@ static async listar(req, res) {
         }
     }
 }
-
-export default ReservaController;
+export default new ReservaController();

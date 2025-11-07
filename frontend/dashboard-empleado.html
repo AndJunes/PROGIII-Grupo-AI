@@ -4,66 +4,224 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Empleado</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link rel="stylesheet" href="./css/style.css" />
+    <link rel="icon" href="./images/birthday-cake-icon.jpg" />
     <script defer src="./js/auth.js"></script>
     <script defer src="./js/api.js"></script>
-    <script defer src="./js/init.js"></script>
   </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1>Panel de Empleado</h1>
-        <div class="user-info"></div>
-        <p><a href="#" class="logout">Cerrar Sesión</a></p>
-      </header>
+  <body class="dashboard-admin">
+    <!-- Sidebar similar al admin, con menú reducido -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-logo">Empleado</h2>
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <span class="material-icons">menu</span>
+        </button>
+      </div>
 
-      <nav class="empleado-only">
-        <ul>
-          <li><a href="#clientes">Gestión de Clientes</a></li>
-          <li><a href="#ventas">Ventas</a></li>
-        </ul>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <h3 class="nav-section-title">Gestión</h3>
+          <ul class="nav-menu">
+            <li class="nav-item">
+              <a href="#reservas" class="nav-link" data-section="reservas">
+                <span class="nav-icon material-icons">event</span>
+                <span class="nav-text">Reservas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#clientes" class="nav-link" data-section="clientes">
+                <span class="nav-icon material-icons">people</span>
+                <span class="nav-text">Clientes</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#reportes" class="nav-link" data-section="reportes">
+                <span class="nav-icon material-icons">assessment</span>
+                <span class="nav-text">Reportes</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <h3 class="nav-section-title">Atajos CRUD</h3>
+          <ul class="nav-menu">
+            <li class="nav-item"><a href="#salones" class="nav-link" data-section="salones"><span class="nav-icon material-icons">meeting_room</span><span class="nav-text">Salones</span></a></li>
+            <li class="nav-item"><a href="#servicios" class="nav-link" data-section="servicios"><span class="nav-icon material-icons">celebration</span><span class="nav-text">Servicios</span></a></li>
+            <li class="nav-item"><a href="#turnos" class="nav-link" data-section="turnos"><span class="nav-icon material-icons">schedule</span><span class="nav-text">Turnos</span></a></li>
+          </ul>
+        </div>
       </nav>
 
-      <main>
-        <section id="clientes" class="empleado-only">
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <span class="logout-icon material-icons">logout</span>
+          <span class="logout-text">Cerrar Sesión</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Overlay para móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Contenido principal -->
+    <main class="main-content" id="mainContent">
+      <header class="content-header">
+        <div class="header-left">
+          <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <h1 class="page-title" id="pageTitle">Panel de Empleado</h1>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+        <div class="content-wrapper">
+        <section id="reservas-section" class="empleado-only content-section">
+          <h2>Reservas</h2>
+          <div id="reservas-list"></div>
+        </section>
+
+        <!-- Gestión de Salones (Empleado) -->
+        <section id="salones-section" class="empleado-only content-section">
+          <div class="section-header">
+            <h2>Gestión de Salones</h2>
+            <button class="btn btn-primary" id="addSalonBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nuevo Salón
+            </button>
+            <label class="checkbox" style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="toggleInactivosSalones" />
+              <span class="checkmark"></span>
+              Mostrar inactivos
+            </label>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="salonesTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Capacidad</th>
+                  <th>Precio Base</th>
+                  <th>Dirección</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="salonesTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Gestión de Servicios (Empleado) -->
+        <section id="servicios-section" class="empleado-only content-section">
+          <div class="section-header">
+            <h2>Gestión de Servicios</h2>
+            <button class="btn btn-primary" id="addServicioBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nuevo Servicio
+            </button>
+            <label class="checkbox" style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="toggleInactivos" />
+              <span class="checkmark"></span>
+              Mostrar inactivos
+            </label>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="serviciosTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Descripción</th>
+                  <th>Precio</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="serviciosTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Gestión de Turnos (Empleado) -->
+        <section id="turnos-section" class="empleado-only content-section">
+          <div class="section-header">
+            <h2>Gestión de Turnos</h2>
+            <button class="btn btn-primary" id="addTurnoBtn">
+              <span class="btn-icon material-icons">add</span>
+              Nuevo Turno
+            </button>
+            <label class="checkbox" style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="toggleInactivosTurnos" />
+              <span class="checkmark"></span>
+              Mostrar inactivos
+            </label>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="turnosTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Hora Inicio</th>
+                  <th>Hora Fin</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="turnosTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="clientes-section" class="empleado-only content-section">
           <h2>Clientes</h2>
           <div id="clientes-list"></div>
         </section>
-      </main>
-    </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", async function () {
-        try {
-          const clientes = await apiClient.getClientes();
-          displayClientes(clientes);
-        } catch (error) {
-          console.error("Error cargando clientes:", error);
-          document.getElementById("clientes-list").innerHTML =
-            '<p class="error">Error cargando clientes: ' +
-            error.message +
-            "</p>";
-        }
-      });
+        <section id="reportes-section" class="empleado-only content-section">
+          <div class="section-header">
+            <h2>Generación de Reportes</h2>
+          </div>
+          <div class="reports-grid">
+            <div class="report-card">
+              <h3>Agenda diaria (hoy)</h3>
+              <div id="reporte-agenda"></div>
+              <div class="report-actions">
+                <button class="btn btn-outline" id="csv-agenda">Exportar CSV</button>
+              </div>
+            </div>
+            <div class="report-card">
+              <h3>Próximas reservas</h3>
+              <div id="reporte-proximas"></div>
+              <div class="report-actions">
+                <button class="btn btn-outline" id="csv-proximas">Exportar CSV</button>
+              </div>
+            </div>
+            <div class="report-card">
+              <h3>Ocupación por salón (hoy/semana)</h3>
+              <div id="reporte-ocupacion"></div>
+              <div class="report-actions">
+                <button class="btn btn-outline" id="csv-ocupacion">Exportar CSV</button>
+              </div>
+            </div>
+            <div class="report-card">
+              <h3>Uso de servicios (hoy/semana)</h3>
+              <div id="reporte-servicios"></div>
+              <div class="report-actions">
+                <button class="btn btn-outline" id="csv-servicios">Exportar CSV</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        </div>
+      </div>
+    </main>
+    <div id="modalContainer"></div>
 
-      function displayClientes(clientes) {
-        const container = document.getElementById("clientes-list");
-        if (clientes && clientes.length > 0) {
-          container.innerHTML = clientes
-            .map(
-              (cliente) => `
-                <div class="cliente-card">
-                  <h3>${cliente.nombre} ${cliente.apellido}</h3>
-                  <p>Usuario: ${cliente.nombre_usuario}</p>
-                  <p>Teléfono: ${cliente.celular || "No especificado"}</p>
-                </div>
-              `
-            )
-            .join("");
-        } else {
-          container.innerHTML = "<p>No hay clientes registrados</p>";
-        }
-      }
-    </script>
+    <script type="module" src="./js/pages/dashboard-empleado.js"></script>
   </body>
 </html>
