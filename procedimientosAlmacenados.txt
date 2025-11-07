@@ -1,122 +1,102 @@
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_detalle_reservas
+-- Detalle de Reservas (para informes CSV/PDF)
 -- --------------------------------------------------------
-USE (nombre_de_la_base_de_datos);
+USE reservas;
 
+DROP PROCEDURE IF EXISTS reporte_detalle_reservas;
 DELIMITER $$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE reporte_detalle_reservas()
+CREATE PROCEDURE reporte_detalle_reservas()
 BEGIN
     SELECT
+        r.reserva_id,
         r.fecha_reserva,
-        r.tematica,
+        s.titulo AS salon,
         t.hora_desde,
         t.hora_hasta,
-        s.titulo AS salon_titulo,
-        s.direccion AS salon_direccion,
-        se.descripcion AS servicio_descripcion,
-        rs.importe AS servicio_importe,
-        u.nombre AS cliente_nombre,
-        u.apellido AS cliente_apellido
-    FROM reservas AS r
-    INNER JOIN turnos AS t ON t.turno_id = r.turno_id
-    INNER JOIN salones AS s ON s.salon_id = r.salon_id
-    INNER JOIN usuarios AS u ON u.usuario_id = r.usuario_id
-    LEFT JOIN reservas_servicios AS rs ON rs.reserva_id = r.reserva_id
-    LEFT JOIN servicios AS se ON se.servicio_id = rs.servicio_id
-    WHERE r.activo = 1;
-END $$
-
+        u.usuario_id,
+        u.nombre,
+        u.nombre_usuario,
+        r.importe_total
+    FROM reservas r
+    LEFT JOIN salones s  ON r.salon_id = s.salon_id
+    LEFT JOIN turnos t   ON r.turno_id = t.turno_id
+    LEFT JOIN usuarios u ON r.usuario_id = u.usuario_id
+    WHERE r.activo = 1
+    ORDER BY r.fecha_reserva DESC, r.reserva_id DESC;
+END$$
 DELIMITER ;
 
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_estadistico_salones
+-- Salones (usa salones.titulo)
 -- --------------------------------------------------------
-USE (nombre_de_la_base_de_datos);
+USE reservas;
 
+DROP PROCEDURE IF EXISTS reporte_estadistico_salones;
 DELIMITER $$
-
-CREATE DEFINER=root@localhost PROCEDURE reporte_estadistico_salones()
+CREATE PROCEDURE reporte_estadistico_salones()
 BEGIN
-    -- consulta estadistica
     SELECT
+        s.salon_id,
         s.titulo AS salon,
         COUNT(r.reserva_id) AS cantidad_reservas,
-        SUM(r.importe_total) AS total_facturado 
-    FROM
-        salones AS s
-    LEFT JOIN
-        reservas AS r ON s.salon_id = r.salon_id AND r.activo=1
-    WHERE
-        s.activo = 1
-    GROUP BY
-        s.titulo 
-    ORDER BY
-        total_facturado DESC;
-
--- fin del procedimiento
-END
-
+        COALESCE(SUM(r.importe_total), 0) AS ingresos_totales
+    FROM salones s
+    LEFT JOIN reservas r
+        ON r.salon_id = s.salon_id
+       AND r.activo = 1
+    GROUP BY s.salon_id, s.titulo
+    ORDER BY cantidad_reservas DESC, s.titulo ASC;
+END$$
 DELIMITER ;
 
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_estadistico_servicios
 -- --------------------------------------------------------
-USE (nombre_de_la_base_de_datos);
+USE reservas;
+
+DROP PROCEDURE IF EXISTS reporte_estadistico_servicios;
 
 DELIMITER $$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `reporte_estadistico_servicios`()
+CREATE PROCEDURE reporte_estadistico_servicios()
 BEGIN
-
     SELECT
-        s.descripcion AS servicio,
-        COUNT(r.reserva_id) AS cantidad_contratada,
-        SUM(rs.importe) AS total_facturado_servicio
-    FROM
-        servicios AS s
-    LEFT JOIN
-        reservas_servicios AS rs ON s.servicio_id = rs.servicio_id
-        LEFT JOIN
-                reservas AS r ON rs.reserva_id = r.reserva_id AND r.activo = 1
-    WHERE
-        s.activo = 1 
-    GROUP BY
-        s.descripcion 
-    ORDER BY
-        cantidad_contratada DESC;
-
--- termina el procedure
-END
-
+        sv.servicio_id,
+        sv.descripcion AS servicio,
+        COUNT(rs.reserva_id) AS veces_contratado,
+        COALESCE(SUM(rs.importe), 0) AS ingresos_servicio
+    FROM servicios sv
+    LEFT JOIN reservas_servicios rs
+        ON rs.servicio_id = sv.servicio_id
+    LEFT JOIN reservas r
+        ON r.reserva_id = rs.reserva_id
+       AND r.activo = 1
+    GROUP BY sv.servicio_id, sv.descripcion
+    ORDER BY veces_contratado DESC, sv.descripcion ASC;
+END$$
 DELIMITER ;
 
 
 -- --------------------------------------------------------
 -- Procedimiento almacenado: reporte_estadistico_turnos
+-- Turnos (usa turnos.hora_desde / hora_hasta que son TIME)
 -- --------------------------------------------------------
-USE (nombre_de_la_base_de_datos);
+USE reservas;
 
+DROP PROCEDURE IF EXISTS reporte_estadistico_turnos;
 DELIMITER $$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `reporte_estadistico_turnos`()
+CREATE PROCEDURE reporte_estadistico_turnos()
 BEGIN
-    -- consulta mas usados
     SELECT
-        CONCAT(t.hora_desde, ' a ', t.hora_hasta) AS turno,
+        t.turno_id,
+        CONCAT(DATE_FORMAT(t.hora_desde, '%H:%i'), ' - ', DATE_FORMAT(t.hora_hasta, '%H:%i')) AS turno,
         COUNT(r.reserva_id) AS cantidad_reservas
-    FROM
-        turnos AS t
-    LEFT JOIN 
-        reservas AS r ON t.turno_id = r.turno_id AND r.activo=1
-    WHERE
-        t.activo = 1 
-    GROUP BY
-        turno 
-    ORDER BY
-        cantidad_reservas DESC; 
-
--- fin
-END
-
+    FROM turnos t
+    LEFT JOIN reservas r
+        ON r.turno_id = t.turno_id
+       AND r.activo = 1
+    GROUP BY t.turno_id, turno
+    ORDER BY cantidad_reservas DESC, turno ASC;
+END$$
 DELIMITER ;
