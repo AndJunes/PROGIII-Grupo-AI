@@ -1,0 +1,27 @@
+meta {
+  name: PUT Usuarios
+  type: http
+  seq: 3
+}
+
+put {
+  url: https://localhost:3006/api/usuarios/11
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjQ2MjY5NCwiZXhwIjoxNzYyNTQ5MDk0fQ.HyuoeJILKbvotS5PZ8Gcc5yfmDowNQbFYVOXNlc73is
+}
+
+body:json {
+  {
+    "nombre": "pepito123"
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

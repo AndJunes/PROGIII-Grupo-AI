@@ -1,0 +1,20 @@
+meta {
+  name: DELETE Salones
+  type: http
+  seq: 6
+}
+
+delete {
+  url: https://localhost:3006/api/salones/6
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjM4ODcwOSwiZXhwIjoxNzYyNDc1MTA5fQ.ewvS0LWE6JZkz7FZexZJhZNAHnM56OCgfSqD1nh8dSI
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

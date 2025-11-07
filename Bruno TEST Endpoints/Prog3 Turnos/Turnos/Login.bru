@@ -1,0 +1,22 @@
+meta {
+  name: Login
+  type: http
+  seq: 5
+}
+
+post {
+  url: https://localhost:3006/auth/login
+  body: json
+  auth: bearer
+}
+
+body:json {
+  {
+    "nombre_usuario": "pamgom@correo.com",
+    "contrasenia": "pamgom"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Iniciar sesion
+  type: http
+  seq: 2
+}
+
+post {
+  url: https:/localhost:3006/auth/login
+  body: json
+  auth: bearer
+}
+
+body:json {
+  {
+    "nombre_usuario": "oscram@correo.com",
+    "contrasenia": "oscram"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,37 @@
+meta {
+  name: POST Reservas
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://localhost:3006/api/reservas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo5LCJ0aXBvX3VzdWFyaW8iOjMsImlhdCI6MTc2MjM4NzYyMSwiZXhwIjoxNzYyNDc0MDIxfQ.SqgKmYd26Xb0VVCSEDbzKzoNFyY-0vSshNhGaSObWbE
+}
+
+body:json {
+  {
+    "fecha_reserva": "2025-11-20",
+    "salon_id": 1,
+    "turno_id": 3,
+    "foto_cumpleaniero": "foto.png",
+    "tematica": "Enanos",
+    "importe_salon": 80000,
+    "importe_total": 95000,
+    "servicios": [
+      { "servicio_id": 2, "importe": 1 },
+      { "servicio_id": 3, "importe": 2 }
+    ]
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

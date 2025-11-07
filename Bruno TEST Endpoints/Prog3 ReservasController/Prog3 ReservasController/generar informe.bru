@@ -1,0 +1,24 @@
+meta {
+  name: generar informe
+  type: http
+  seq: 6
+}
+
+get {
+  url: https://localhost:3006/api/reservas/informe?formato=pdf
+  body: json
+  auth: bearer
+}
+
+params:query {
+  formato: pdf
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjM4NjI1NiwiZXhwIjoxNzYyNDcyNjU2fQ.mUwkUbenKbN2tun9LhCImKtsC-GR6kZSlWWSbRlUJf0
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,20 @@
+meta {
+  name: GET Servicios Asociadas
+  type: http
+  seq: 7
+}
+
+get {
+  url: https://localhost:3006/api/reservas/2/servicios
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjUzNTQxNywiZXhwIjoxNzYyNjIxODE3fQ.4xCv6sn_JaSkPG7POepPRuGsZJiHsk8_592fIY0fbsE
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,26 @@
+meta {
+  name: PUT Servicios
+  type: http
+  seq: 3
+}
+
+put {
+  url: https://localhost:3006/api/servicios/10
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjM4ODcwOSwiZXhwIjoxNzYyNDc1MTA5fQ.ewvS0LWE6JZkz7FZexZJhZNAHnM56OCgfSqD1nh8dSI
+}
+
+body:json {
+  {
+    "descripcion": "Enanos strippers"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

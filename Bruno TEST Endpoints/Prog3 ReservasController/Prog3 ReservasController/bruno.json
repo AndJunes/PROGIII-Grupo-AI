@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Prog3 ReservasController",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

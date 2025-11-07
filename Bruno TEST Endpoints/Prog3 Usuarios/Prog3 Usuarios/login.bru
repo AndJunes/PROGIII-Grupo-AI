@@ -1,0 +1,27 @@
+meta {
+  name: login
+  type: http
+  seq: 5
+}
+
+post {
+  url: https:/localhost:3006/auth/login
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: 
+}
+
+body:json {
+  {
+    "nombre_usuario": "oscram@correo.com",
+    "contrasenia": "oscram"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

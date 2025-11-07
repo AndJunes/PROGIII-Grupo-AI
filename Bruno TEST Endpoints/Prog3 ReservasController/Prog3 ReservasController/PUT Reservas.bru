@@ -1,0 +1,30 @@
+meta {
+  name: PUT Reservas
+  type: http
+  seq: 3
+}
+
+put {
+  url: https://localhost:3006/api/reservas/4
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjM4NjI1NiwiZXhwIjoxNzYyNDcyNjU2fQ.mUwkUbenKbN2tun9LhCImKtsC-GR6kZSlWWSbRlUJf0
+}
+
+body:json {
+  {
+    "fecha_reserva": "2025-10-15",
+    "salon_id": 3,
+    "turno_id": 2,
+    "tematica": "Fiesta de cumpleaños VIP 2",
+    "importe_total": 750000
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

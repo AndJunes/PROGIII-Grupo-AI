@@ -1,0 +1,32 @@
+meta {
+  name: POST Salones
+  type: http
+  seq: 3
+}
+
+post {
+  url: https://localhost:3006/api/salones
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjM4ODcwOSwiZXhwIjoxNzYyNDc1MTA5fQ.ewvS0LWE6JZkz7FZexZJhZNAHnM56OCgfSqD1nh8dSI
+}
+
+body:json {
+  { 
+    "titulo": "prueba 2", 
+    "direccion": "Calle", 
+    "importe": 5000, 
+    "capacidad": 100, 
+    "latitud": -20.6037, 
+    "longitud": -10.3816 
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

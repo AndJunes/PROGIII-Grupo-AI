@@ -1,0 +1,28 @@
+meta {
+  name: POST Turnos
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://localhost:3006/api/turnos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo0LCJ0aXBvX3VzdWFyaW8iOjEsImlhdCI6MTc2MjM4ODcwOSwiZXhwIjoxNzYyNDc1MTA5fQ.ewvS0LWE6JZkz7FZexZJhZNAHnM56OCgfSqD1nh8dSI
+}
+
+body:json {
+  {
+    "orden": 4,
+    "hora_desde": "14:00:00",
+    "hora_hasta": "17:00:00"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
