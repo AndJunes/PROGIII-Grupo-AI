@@ -203,14 +203,19 @@ export class API {
         if (includeInactive) params.set('include_inactive', 'true');
         if (page != null) params.set('page', String(page));
         if (limit != null) params.set('limit', String(limit));
+        params.set('_ts', Date.now().toString());
         const qs = params.toString();
         const url = qs ? `${CONSTANTS.API_ENDPOINTS.SERVICIOS}?${qs}` : CONSTANTS.API_ENDPOINTS.SERVICIOS;
         return this.request(url);
     }
 
     async getServicio(id, { includeInactive = false } = {}) {
-        const qs = includeInactive ? '?include_inactive=true' : '';
-        return this.request(`${CONSTANTS.API_ENDPOINTS.SERVICIOS}/${id}${qs}`);
+        const params = new URLSearchParams();
+        if (includeInactive) params.set('include_inactive', 'true');
+        params.set('_ts', Date.now().toString());
+        const qs = params.toString();
+        const sep = qs ? `?${qs}` : '';
+        return this.request(`${CONSTANTS.API_ENDPOINTS.SERVICIOS}/${id}${sep}`);
     }
 
     async createServicio(data) {

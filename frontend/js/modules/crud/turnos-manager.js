@@ -23,10 +23,10 @@ export class TurnosManager extends BaseCRUDManager {
             const checkbox = document.getElementById('toggleInactivosTurnos');
             const includeInactive = checkbox ? checkbox.checked : false;
             const response = await this.api.getTurnos({ page: 1, limit: 100, includeInactive: includeInactive });
-            console.log('📦 Respuesta completa de API turnos:', response);
+            console.log('Respuesta completa de API turnos:', response);
             // Extraer el array de turnos de la respuesta
             const turnos = response.turnos || [];
-            console.log('👥 Turnos extraídos:', turnos);
+            console.log('Turnos extraídos:', turnos);
             
             this.renderTurnos(turnos);
         } catch (error) {

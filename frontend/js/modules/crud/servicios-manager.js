@@ -4,12 +4,17 @@ import { Validators } from '../../utils/validators.js';
 export class ServiciosManager extends BaseCRUDManager {
     constructor() {
         super();
+        this.entityName = 'Servicio';
         this.currentEntity = 'Servicio';
         this.servicios = [];
     }
 
     async loadServicios() {
         try {
+            // Mostrar estado de carga y generar token anti-carreras
+            this.showLoadingState('serviciosTableBody');
+            const loadToken = (this._lastLoadToken = Date.now());
+
             // Enganchar el toggle si existe para recargar automáticamente
             const toggle = document.getElementById('toggleInactivos');
             if (toggle && !toggle._serviciosListenerAttached) {
@@ -20,12 +25,17 @@ export class ServiciosManager extends BaseCRUDManager {
             const includeInactive = document.getElementById('toggleInactivos')?.checked || false;
             const response = await this.api.getServicios({ includeInactive });
 
-            this.servicios = response.servicios.map(s => ({
+            // Si llegó otra respuesta más nueva, ignorar esta
+            if (loadToken !== this._lastLoadToken) return;
+
+            const list = Array.isArray(response) ? response : (response?.servicios || []);
+
+            this.servicios = list.map(s => ({
                 servicio_id: s.servicio_id,
                 id: s.servicio_id,      // importante para BaseCRUDManager
                 descripcion: s.descripcion || 'N/A',
                 importe: parseFloat(s.importe) || 0,
-                activo: Boolean(s.activo)
+                activo: Number(s.activo) === 1
             }));
 
             this.renderServicios();
@@ -87,7 +97,7 @@ export class ServiciosManager extends BaseCRUDManager {
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-outline" onclick="crudManager.closeModal()">Cancelar</button>
-                        <button class="btn btn-primary" id="saveServicioBtn">
+                        <button type="button" class="btn btn-primary" id="saveServicioBtn">
                             ${servicio ? 'Actualizar' : 'Crear'} Servicio
                         </button>
                     </div>
@@ -97,7 +107,10 @@ export class ServiciosManager extends BaseCRUDManager {
 
         document.getElementById('modalContainer').innerHTML = modalHTML;
 
-        document.getElementById('saveServicioBtn').addEventListener('click', () => this.saveServicio());
+        document.getElementById('saveServicioBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.saveServicio();
+        });
 
         // Si existe un toggle de inactivos en el layout, enganchar cambio para recargar
         const toggle = document.getElementById('toggleInactivos');

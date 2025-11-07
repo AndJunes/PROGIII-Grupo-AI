@@ -12,16 +12,16 @@ export class Auth {
                 this.userData = payload;
                 // Actualizar localStorage con los datos decodificados del token
                 localStorage.setItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA, JSON.stringify(payload));
-                console.log('✅ UserData actualizado desde token:', this.userData);
+                console.log('UserData actualizado desde token:', this.userData);
             } catch (error) {
-                console.error('❌ Error decodificando token:', error);
+                console.error('Error decodificando token:', error);
                 this.userData = JSON.parse(localStorage.getItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA) || "{}");
             }
         } else {
             this.userData = JSON.parse(localStorage.getItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA) || "{}");
         }
         
-        console.log('🔐 Auth initialized - Token:', !!this.token, 'UserData:', this.userData);
+        console.log('Auth initialized - Token:', !!this.token, 'UserData:', this.userData);
         
         // Debug del token
         this.debugToken();
@@ -30,7 +30,7 @@ export class Auth {
             this.validateAuth();
         } else {
             if (this.isLoggedIn()) {
-                console.log('🔄 Ya hay sesión, redirigiendo...');
+                console.log('Ya hay sesión, redirigiendo...');
                 this.redirectToDashboard(this.userData.tipo_usuario);
             }
         }
@@ -41,7 +41,7 @@ export class Auth {
             const payload = JSON.parse(atob(token.split('.')[1]));
             return payload;
         } catch (err) {
-            console.error('❌ Error al decodificar token:', err);
+            console.error('Error al decodificar token:', err);
             return null;
         }
     }
@@ -50,13 +50,13 @@ export class Auth {
         if (this.token) {
             try {
                 const payload = this.decodeToken(this.token);
-                console.log('🔍 DEBUG - Token payload:', payload);
-                console.log('🔍 DEBUG - UserData en localStorage:', this.userData);
-                console.log('🔍 DEBUG - Coinciden?', JSON.stringify(payload) === JSON.stringify(this.userData));
+                console.log('DEBUG - Token payload:', payload);
+                console.log('DEBUG - UserData en localStorage:', this.userData);
+                console.log('DEBUG - Coinciden?', JSON.stringify(payload) === JSON.stringify(this.userData));
                 
                 // Verificar campos específicos
                 if (payload) {
-                    console.log('🔍 DEBUG - Campos del token:');
+                    console.log('DEBUG - Campos del token:');
                     console.log('  - usuario_id:', payload.usuario_id);
                     console.log('  - nombre:', payload.nombre);
                     console.log('  - apellido:', payload.apellido);
@@ -64,10 +64,10 @@ export class Auth {
                     console.log('  - email:', payload.email);
                 }
             } catch (error) {
-                console.error('❌ Error en debug:', error);
+                console.error('Error en debug:', error);
             }
         } else {
-            console.log('🔍 DEBUG - No hay token disponible');
+            console.log('DEBUG - No hay token disponible');
         }
     }
 
@@ -79,27 +79,27 @@ export class Auth {
         const hasToken = this.token && this.token.length > 10;
         const hasUserData = this.userData && this.userData.usuario_id;
         
-        console.log('🔐 Verificando sesión - Token:', hasToken, 'UserData:', hasUserData);
+        console.log('Verificando sesión - Token:', hasToken, 'UserData:', hasUserData);
         
         return hasToken && hasUserData;
     }
 
     validateAuth() {
-        console.log('🔄 Validando autenticación...');
+        console.log('Validando autenticación...');
         
         if (!this.isLoggedIn()) {
-            console.log('❌ No hay sesión activa, redirigiendo a login');
+            console.log('No hay sesión activa, redirigiendo a login');
             this.redirectToLogin();
             return;
         }
 
         // Verificación local del token JWT
         if (this.isTokenValid()) {
-            console.log('✅ Token válido, mostrando página');
+            console.log('Token válido, mostrando página');
             this.updateUIWithUserData(this.userData);
             this.setupLogout();
         } else {
-            console.log('❌ Token inválido o expirado, haciendo logout');
+            console.log('Token inválido o expirado, haciendo logout');
             this.logOut();
         }
     }
@@ -116,27 +116,27 @@ export class Auth {
             
             // Verificar que el token no esté expirado
             if (payload.exp && payload.exp < now) {
-                console.log('❌ Token expirado');
+                console.log('Token expirado');
                 return false;
             }
             
             // Verificar que tenemos userData completo
             if (!this.userData || !this.userData.usuario_id) {
-                console.log('❌ UserData incompleto');
+                console.log('UserData incompleto');
                 return false;
             }
             
-            console.log('✅ Token válido');
+            console.log('Token válido');
             return true;
             
         } catch (error) {
-            console.error('❌ Error validando token:', error);
+            console.error('Error validando token:', error);
             return false;
         }
     }
 
     updateUIWithUserData(userData) {
-        console.log('🎨 Actualizando UI con datos:', userData);
+        console.log('Actualizando UI con datos:', userData);
         
         // Actualizar user-info en sidebar
         const userElement = document.querySelector('.user-info');
@@ -144,7 +144,7 @@ export class Auth {
             const nombreCompleto = `${userData.nombre || ''} ${userData.apellido || ''}`.trim();
             const tipoUsuario = this.getUserTypeText(userData.tipo_usuario);
             
-            console.log('👤 Mostrando usuario:', nombreCompleto, '- Tipo:', tipoUsuario);
+            console.log('Mostrando usuario:', nombreCompleto, '- Tipo:', tipoUsuario);
             
             userElement.innerHTML = `
                 <div class="user-avatar">
@@ -156,7 +156,7 @@ export class Auth {
                 </div>
             `;
         } else {
-            console.log('❌ No se encontró .user-info en el DOM');
+            console.log('No se encontró .user-info en el DOM');
         }
         
         // Actualizar también el nombre en el header si existe
@@ -182,7 +182,7 @@ export class Auth {
         const empleadoElements = document.querySelectorAll('.empleado-only');
         const clienteElements = document.querySelectorAll('.cliente-only');
 
-        console.log('🎯 Mostrando elementos para tipo:', userType);
+        console.log('Mostrando elementos para tipo:', userType);
         console.log('   - Admin elements:', adminElements.length);
         console.log('   - Empleado elements:', empleadoElements.length);
         console.log('   - Cliente elements:', clienteElements.length);
@@ -207,14 +207,14 @@ export class Auth {
     }
 
     setupLogout() {
-        console.log('🔧 Configurando botones de logout...');
+        console.log('Configurando botones de logout...');
         
         // Buscar todos los botones de logout
         const logoutButtons = document.querySelectorAll('.logout, .logout-btn, [id="logoutBtn"]');
-        console.log('🔍 Botones de logout encontrados:', logoutButtons.length);
+        console.log('Botones de logout encontrados:', logoutButtons.length);
         
         logoutButtons.forEach((button, index) => {
-            console.log(`🔧 Configurando botón ${index + 1}:`, button);
+            console.log(`Configurando botón ${index + 1}:`, button);
             
             // Remover event listeners previos
             button.replaceWith(button.cloneNode(true));
@@ -227,7 +227,7 @@ export class Auth {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log(`🚪 Logout clickeado en botón ${index + 1}`);
+                console.log(`Logout clickeado en botón ${index + 1}`);
                 this.logOut();
             });
         });
@@ -243,16 +243,16 @@ export class Auth {
                 target.closest('#logoutBtn')) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🚪 Logout clickeado (delegación de eventos)');
+                console.log('Logout clickeado (delegación de eventos)');
                 this.logOut();
             }
         });
 
-        console.log('✅ Configuración de logout completada');
+        console.log('Configuración de logout completada');
     }
 
     redirectToDashboard(userType) {
-        console.log('🔄 Redirigiendo a dashboard tipo:', userType);
+        console.log('Redirigiendo a dashboard tipo:', userType);
         const dashboards = {
             1: 'dashboard-admin.html',
             2: 'dashboard-empleado.html',
@@ -264,21 +264,21 @@ export class Auth {
             // Usar replace para evitar que el navegador guarde la página de login en el historial
             window.location.replace(`./${dashboard}`);
         } else {
-            console.error('❌ Tipo de usuario no reconocido:', userType);
+            console.error('Tipo de usuario no reconocido:', userType);
             this.redirectToLogin();
         }
     }
 
     redirectToLogin() {
-        console.log('🔄 Redirigiendo a login');
+        console.log('Redirigiendo a login');
         window.location.href = './index.html?auth=failed';
     }
 
     logOut() {
-        console.log('🚪 Cerrando sesión...');
+        console.log('Cerrando sesión...');
         localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.USER_DATA);
-        console.log('✅ Sesión cerrada, redirigiendo...');
+        console.log('Sesión cerrada, redirigiendo...');
         window.location.href = './index.html?logout=success';
     }
 
@@ -287,7 +287,7 @@ export class Auth {
         try {
             const API_URL = 'https://localhost:3006/auth/login';
             
-            console.log('📤 Enviando login a:', API_URL);
+            console.log('Enviando login a:', API_URL);
             
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -309,7 +309,7 @@ export class Auth {
 
             return data;
         } catch (error) {
-            console.error('❌ Login error:', error);
+            console.error('Login error:', error);
             throw error;
         }
     }
@@ -324,7 +324,7 @@ export class Auth {
             localStorage.removeItem(CONSTANTS.LOCAL_STORAGE_KEYS.REMEMBERED_USER);
         }
         
-        console.log('💾 Sesión guardada:', { 
+        console.log('Sesión guardada:', { 
             token: !!token, 
             userData: userData,
             rememberUser: rememberUser 
